@@ -1,0 +1,295 @@
+import './style.css';
+import { initLanguageFromStorage, hasChosenLanguage, getLanguage, setLanguage, t } from './i18n/index.js';
+import { openLanguagePicker } from './i18n/picker.js';
+import { renderQuote, newQuote } from './quotes.js';
+import { renderWorkouts, filterCategory, filterMuscle, filterEnv, filterSportList, selectSportOrProgram, backToBrowseList, openWorkout, closeWorkout, initPlans, teardownPlans, startWorkoutSession, toggleWorkoutTimer, toggleExerciseChecked, finishWorkout } from './plans.js';
+import { renderBrainArticles, selectBrainCategory, backToBrainCategories, openArticle, closeArticle, markArticleRead, initBrain, teardownBrain } from './brain.js';
+import { calcCalories } from './nutrition.js';
+import { handlePhotoUpload, removePhoto, analyzeBody, initAnalyzer, teardownAnalyzer } from './analyzer.js';
+import { sendChip, chatKeydown, autoGrow, sendChatMessage, saveChatMessage, toggleSavedView, deleteSavedChatItem, initCoach, teardownCoach } from './coach.js';
+import { renderVideoLibrary, filterVideoLibrary, openExerciseInfo, closeExerciseInfo } from './videos.js';
+import { initQuests, teardownQuests } from './quests.js';
+import { initForum, teardownForum } from './forum.js';
+import { fetchDisplayName, updateDisplayName, fetchHandle, fetchLanguage, updateLanguage, fetchAccentColor, updateAccentColor, fetchBgTheme, updateBgTheme } from './api/profile.js';
+import { initThemeFromStorage, applyAccentColor, renderAccentUI, getAccentColor, applyBgTheme, renderBgThemeUI, getBgThemeId } from './theme.js';
+import { getLanguageMeta, isSupported } from './i18n/languages.js';
+import { maybeStartTour, tourNext, tourBack, finishTour } from './onboarding.js';
+import { initDMs, teardownDMs } from './dm.js';
+import { initLeaderboard, teardownLeaderboard } from './leaderboard.js';
+import { getRankMap } from './rank-cache.js';
+import {
+  signUpWithPassword,
+  signInWithPassword,
+  signInWithMagicLink,
+  signOut,
+  getSession,
+  onAuthStateChange,
+  resolveLoginIdentifier,
+  setUsername,
+} from './auth.js';
+
+// ===================== NAV =====================
+const pageOrder = ['home', 'about', 'quests', 'plans', 'nutrition', 'analyze', 'chat', 'videos', 'forum', 'messages', 'account'];
+
+// Applies immediately regardless of login state (works for guests too, via
+// localStorage) and syncs to the profile in the background when logged in
+// so the choice follows the user across devices — same pattern as language.
+function selectAccentColor(color) {
+  applyAccentColor(color);
+  if (lastUserId) updateAccentColor(lastUserId, color).catch(() => {});
+}
+
+function selectBgTheme(id) {
+  applyBgTheme(id);
+  if (lastUserId) updateBgTheme(lastUserId, id).catch(() => {});
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  const idx = pageOrder.indexOf(id);
+  if (idx > -1) document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// Legacy inline onclick/onchange handlers in index.html call these on window.
+Object.assign(window, {
+  showPage,
+  newQuote,
+  filterCategory,
+  filterMuscle,
+  filterEnv,
+  filterSportList,
+  selectSportOrProgram,
+  backToBrowseList,
+  openWorkout,
+  closeWorkout,
+  startWorkoutSession,
+  toggleWorkoutTimer,
+  toggleExerciseChecked,
+  finishWorkout,
+  selectBrainCategory,
+  backToBrainCategories,
+  openArticle,
+  closeArticle,
+  markArticleRead,
+  calcCalories,
+  handlePhotoUpload,
+  removePhoto,
+  analyzeBody,
+  sendChip,
+  chatKeydown,
+  autoGrow,
+  sendChatMessage,
+  saveChatMessage,
+  toggleSavedView,
+  deleteSavedChatItem,
+  closeExerciseInfo,
+  selectAccentColor,
+  selectBgTheme,
+});
+
+// Applies the detected/stored language immediately (first paint is already
+// localized), then — on a true first visit — opens the picker as a
+// confirm/change prompt on top of everything else, including the login screen.
+initLanguageFromStorage();
+if (!hasChosenLanguage()) {
+  openLanguagePicker();
+}
+
+initThemeFromStorage();
+renderAccentUI();
+renderBgThemeUI();
+
+renderQuote();
+renderWorkouts();
+renderVideoLibrary();
+renderBrainArticles();
+
+document.getElementById('video-search').addEventListener('input', (e) => {
+  filterVideoLibrary(e.target.value);
+});
+
+document.getElementById('modal-body').addEventListener('click', (e) => {
+  const row = e.target.closest('.exercise-row[data-exercise]');
+  if (row) openExerciseInfo(row.dataset.exercise);
+});
+
+// ===================== ACCOUNT / AUTH =====================
+const authTabLogin = document.getElementById('auth-tab-login');
+const authTabSignup = document.getElementById('auth-tab-signup');
+const loginForm = document.getElementById('login-form');
+const signupForm = document.getElementById('signup-form');
+const magicLinkBtn = document.getElementById('magic-link-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const authMessage = document.getElementById('auth-message');
+const guestView = document.getElementById('account-guest-view');
+const loggedInView = document.getElementById('account-logged-in-view');
+
+function setAuthMessage(text, isError) {
+  authMessage.textContent = text;
+  authMessage.style.color = isError ? '#ff6040' : '#4ade80';
+}
+
+let lastUserId = null;
+
+function updateAccountUI(session) {
+  document.body.classList.toggle('locked', !session?.user);
+  if (session?.user) {
+    guestView.style.display = 'none';
+    loggedInView.style.display = 'block';
+    const email = session.user.email || '';
+    document.getElementById('account-email-display').textContent = email;
+    document.getElementById('account-avatar').textContent = email[0]?.toUpperCase() || 'A';
+    if (session.user.id !== lastUserId) {
+      lastUserId = session.user.id;
+      initQuests(session.user.id);
+      initForum(session.user.id);
+      initDMs(session.user.id);
+      initLeaderboard(session.user.id);
+      initPlans(session.user.id);
+      initBrain(session.user.id).then(() => renderBrainArticles());
+      initCoach(session.user.id);
+      initAnalyzer(session.user.id);
+      fetchDisplayName(session.user.id).then((name) => {
+        document.getElementById('display-name-input').value = name || '';
+      });
+      fetchHandle(session.user.id).then((handle) => {
+        document.getElementById('account-handle-display').textContent = handle ? '@' + handle : t('account.noUsernameSet');
+      });
+      getRankMap().then((map) => {
+        const rank = map.get(session.user.id);
+        document.getElementById('account-rank-display').textContent = rank ? '#' + rank : '—';
+      });
+      fetchLanguage(session.user.id).then((lang) => {
+        if (lang && isSupported(lang) && lang !== getLanguage()) {
+          setLanguage(lang);
+        } else if (!lang) {
+          updateLanguage(session.user.id, getLanguage()).catch(() => {});
+        }
+        document.getElementById('account-language-display').textContent = getLanguageMeta(getLanguage()).nativeName;
+      }).catch(() => {
+        document.getElementById('account-language-display').textContent = getLanguageMeta(getLanguage()).nativeName;
+      });
+      fetchAccentColor(session.user.id).then((color) => {
+        if (color) applyAccentColor(color);
+        else updateAccentColor(session.user.id, getAccentColor()).catch(() => {});
+      }).catch(() => {});
+      fetchBgTheme(session.user.id).then((themeId) => {
+        if (themeId) applyBgTheme(themeId);
+        else updateBgTheme(session.user.id, getBgThemeId()).catch(() => {});
+      }).catch(() => {});
+      maybeStartTour(session.user.id);
+    }
+  } else {
+    guestView.style.display = 'block';
+    loggedInView.style.display = 'none';
+    if (lastUserId !== null) {
+      lastUserId = null;
+      teardownQuests();
+      teardownForum();
+      teardownDMs();
+      teardownLeaderboard();
+      teardownPlans();
+      teardownBrain();
+      renderBrainArticles();
+      teardownCoach();
+      teardownAnalyzer();
+    }
+  }
+}
+
+authTabLogin.addEventListener('click', () => {
+  authTabLogin.classList.add('active');
+  authTabSignup.classList.remove('active');
+  loginForm.style.display = 'flex';
+  signupForm.style.display = 'none';
+  setAuthMessage('', false);
+});
+
+authTabSignup.addEventListener('click', () => {
+  authTabSignup.classList.add('active');
+  authTabLogin.classList.remove('active');
+  signupForm.style.display = 'flex';
+  loginForm.style.display = 'none';
+  setAuthMessage('', false);
+});
+
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const identifier = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  try {
+    const email = await resolveLoginIdentifier(identifier);
+    const { error } = await signInWithPassword(email, password);
+    setAuthMessage(error ? error.message : t('account.loggedIn'), !!error);
+  } catch (err) {
+    setAuthMessage(err.message, true);
+  }
+});
+
+signupForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('signup-username').value.trim();
+  const email = document.getElementById('signup-email').value;
+  const password = document.getElementById('signup-password').value;
+  const { data, error } = await signUpWithPassword(email, password);
+  if (error) {
+    setAuthMessage(error.message, true);
+    return;
+  }
+  if (data?.user?.id) {
+    try {
+      await setUsername(data.user.id, username);
+    } catch (err) {
+      setAuthMessage(t('account.usernameSetupFailed', { reason: err.message }), true);
+      return;
+    }
+  }
+  setAuthMessage(t('account.checkEmailConfirm'), false);
+});
+
+magicLinkBtn.addEventListener('click', async () => {
+  const email = document.getElementById('magic-email').value;
+  if (!email) { setAuthMessage(t('account.enterEmailFirst'), true); return; }
+  const { error } = await signInWithMagicLink(email);
+  setAuthMessage(error ? error.message : t('account.magicLinkSent'), !!error);
+});
+
+logoutBtn.addEventListener('click', async () => {
+  await signOut();
+});
+
+document.getElementById('save-display-name-btn').addEventListener('click', async () => {
+  const msgEl = document.getElementById('display-name-message');
+  const name = document.getElementById('display-name-input').value.trim();
+  if (!lastUserId) return;
+  try {
+    await updateDisplayName(lastUserId, name || null);
+    msgEl.textContent = t('account.saved');
+    msgEl.style.color = '#4ade80';
+  } catch (err) {
+    msgEl.textContent = t('account.errorSaveDisplayName', { reason: err.message });
+    msgEl.style.color = '#ff6040';
+  }
+});
+
+document.getElementById('accent-color-picker').addEventListener('input', (e) => {
+  selectAccentColor(e.target.value);
+});
+
+// ===================== ONBOARDING TOUR =====================
+document.getElementById('tour-next-btn').addEventListener('click', tourNext);
+document.getElementById('tour-back-btn').addEventListener('click', tourBack);
+document.getElementById('tour-skip-btn').addEventListener('click', finishTour);
+
+onAuthStateChange(updateAccountUI);
+getSession().then(updateAccountUI);
+
+// Keeps the Account page's language readout in sync, and persists the new
+// choice to the signed-in user's profile so it follows them across devices.
+window.addEventListener('ax:languagechange', () => {
+  document.getElementById('account-language-display').textContent = getLanguageMeta(getLanguage()).nativeName;
+  if (lastUserId) updateLanguage(lastUserId, getLanguage()).catch(() => {});
+});

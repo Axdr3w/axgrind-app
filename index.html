@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AX.GRIND — Free Training</title>
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon.svg">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+</head>
+<body class="locked">
+<div class="nav-wrapper">
+  <nav>
+    <div class="nav-top-row">
+      <div class="logo">AX<span>.</span>GRIND</div>
+      <button class="globe-btn" id="globe-lang-btn" type="button" title="Language" data-i18n-title="account.languageLabel">🌐</button>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab gated active" onclick="showPage('home')" data-i18n="nav.home">Home</button>
+      <span class="nav-sep">|</span>
+      <button class="nav-tab gated" onclick="showPage('about')" data-i18n="nav.about">About</button>
+      <span class="nav-sep">|</span>
+      <button class="nav-tab gated" onclick="showPage('quests')" data-i18n="nav.quests">Quests</button>
+      <span class="nav-sep">|</span>
+      <button class="nav-tab gated" onclick="showPage('plans')" data-i18n="nav.plans">Plans</button>
+      <span class="nav-sep">|</span>
+      <button class="nav-tab gated" onclick="showPage('nutrition')" data-i18n="nav.nutrition">Nutrition</button>
+      <span class="nav-sep">|</span>
+      <button class="nav-tab gated" onclick="showPage('analyze')" data-i18n="nav.analyze">Analyze</button>
+      <span class="nav-sep">|</span>
+      <button class="nav-tab gated" onclick="showPage('chat')" data-i18n="nav.coach">Coach</button>
+      <span class="nav-sep">|</span>
+      <button class="nav-tab gated" onclick="showPage('videos')" data-i18n="nav.videos">Videos</button>
+      <span class="nav-sep">|</span>
+      <button class="nav-tab gated" onclick="showPage('forum')" data-i18n="nav.forum">Forum</button>
+      <span class="nav-sep">|</span>
+      <button class="nav-tab gated" onclick="showPage('messages')" data-i18n="nav.messages">Messages</button>
+      <span class="nav-sep">|</span>
+      <button class="nav-tab" onclick="showPage('account')" data-i18n="nav.account">Account</button>
+    </div>
+  </nav>
+</div>
+
+<div class="container">
+  <div class="motivation-banner">
+    <div style="font-size:18px;flex-shrink:0;">⚡</div>
+    <div class="quote-text" id="quote-text" data-i18n="common.loading">Loading...</div>
+    <button class="quote-refresh" onclick="newQuote()" title="New quote" data-i18n-title="common.newQuoteTitle">↻</button>
+  </div>
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="hero">
+      <div class="hero-tag" data-i18n="home.heroTag">Free Training — No Excuses</div>
+      <h1><span data-i18n="home.heroTitleLine1">TRAIN</span><br><span data-i18n="home.heroTitleLine2">DIFFERENT.</span></h1>
+      <p data-i18n="home.heroSubtitle">Real workouts, real results. Built for people serious about their grind — 100% free.</p>
+      <div class="hero-stats">
+        <div><div class="stat-num">300+</div><div class="stat-label" data-i18n="home.statWorkouts">Workouts</div></div>
+        <div><div class="stat-num">55</div><div class="stat-label" data-i18n="home.statSports">Sports</div></div>
+        <div><div class="stat-num">1200+</div><div class="stat-label" data-i18n="home.statExercises">Exercises</div></div>
+        <div><div class="stat-num">100%</div><div class="stat-label" data-i18n="home.statFree">Free</div></div>
+      </div>
+      <button class="btn-accent" onclick="showPage('plans')" data-i18n="home.ctaButton">Get Free Program →</button>
+    </div>
+    <div class="section-header"><div class="section-title" data-i18n="videos.title">EXERCISE LIBRARY</div><button class="section-link" onclick="showPage('videos')" data-i18n="home.browseAll">Browse all →</button></div>
+    <div onclick="showPage('videos')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;margin-bottom:20px;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="font-size:26px;margin-bottom:7px;">🎥</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.dontRecognize">Don't recognize a move?</div>
+      <div style="font-size:11px;color:var(--muted);" data-i18n="home.dontRecognizeDesc">Every exercise in the app has a form cue and a video tutorial link — search the full library</div>
+    </div>
+    <div class="section-header"><div class="section-title" data-i18n="home.aiFeaturesTitle">AI FEATURES</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+      <div onclick="showPage('analyze')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:26px;margin-bottom:7px;">📸</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.bodyAnalyzerTitle">Body Analyzer</div>
+        <div style="font-size:11px;color:var(--muted);" data-i18n="home.bodyAnalyzerDesc">AI reads your physique & recommends a plan</div>
+      </div>
+      <div onclick="showPage('chat')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="font-size:26px;margin-bottom:7px;">🤖</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.aiCoachTitle">AI Coach</div>
+        <div style="font-size:11px;color:var(--muted);" data-i18n="home.aiCoachDesc">Ask anything about training & nutrition</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTS -->
+  <div class="page" id="page-quests">
+    <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="quests.title">QUESTS</div></div>
+
+    <div class="quest-header-card">
+      <div class="quest-level-row">
+        <div class="quest-level-badge">LVL <span id="quest-level">1</span></div>
+        <div class="quest-streak">🔥 <span id="quest-streak">0</span> <span data-i18n="quests.dayStreak">day streak</span></div>
+        <button class="btn-follow" id="open-leaderboard-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;margin-inline-start:auto;">🏆 <span data-i18n="quests.leaderboardBtn">Leaderboard</span></button>
+      </div>
+      <div class="xp-bar-track"><div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div></div>
+      <div class="xp-bar-label"><span id="xp-into-level">0</span>/100 <span data-i18n="quests.xpToNextLevel">XP to next level</span></div>
+    </div>
+
+    <div id="quest-day-view">
+      <div class="day-strip" id="day-strip"></div>
+
+      <div class="calc-box" style="margin-bottom:16px;">
+        <h3 data-i18n="quests.addQuestTitle">ADD A QUEST</h3>
+        <div class="calc-row">
+          <div class="calc-field" style="flex:2;"><div class="calc-label" data-i18n="quests.fieldTitle">Title</div><input class="calc-input" type="text" id="quest-title" placeholder="e.g. Leg day workout" data-i18n-placeholder="quests.titlePlaceholder"></div>
+          <div class="calc-field"><div class="calc-label" data-i18n="quests.timeLabel">Time (optional)</div><input class="calc-input" type="time" id="quest-time"></div>
+        </div>
+        <div class="calc-row">
+          <div class="calc-field">
+            <div class="calc-label" data-i18n="quests.remindMeLabel">Remind me</div>
+            <select class="calc-select" id="quest-reminder">
+              <option value="" data-i18n="quests.reminderNone">No reminder</option>
+              <option value="0" data-i18n="quests.reminderAtTime">At the time</option>
+              <option value="5" data-i18n="quests.reminder5">5 min before</option>
+              <option value="10" data-i18n="quests.reminder10">10 min before</option>
+              <option value="15" data-i18n="quests.reminder15">15 min before</option>
+              <option value="30" data-i18n="quests.reminder30">30 min before</option>
+              <option value="60" data-i18n="quests.reminder60">1 hour before</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn-accent btn-full" id="add-quest-btn" data-i18n="quests.addQuestBtn">Add Quest</button>
+        <div id="quest-add-message" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+      </div>
+
+      <div id="push-enable-banner" class="quest-push-banner" style="display:none;">
+        <div style="font-size:12px;color:var(--muted);flex:1;" data-i18n="quests.pushBannerText">Get a real notification when a quest reminder is due — even if the app is closed.</div>
+        <button class="btn-follow" id="enable-reminders-btn" style="width:auto;white-space:nowrap;margin-top:0;">🔔 <span data-i18n="quests.enableRemindersBtn">Enable Reminders</span></button>
+      </div>
+
+      <div id="quest-list"></div>
+    </div>
+
+    <div id="quest-leaderboard-view" style="display:none;">
+      <button class="section-link" id="close-leaderboard-btn" type="button" style="margin-bottom:12px;">← <span data-i18n="quests.backToQuests">Back to Quests</span></button>
+      <div class="plan-intro-card" style="margin-bottom:14px;">
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;" data-i18n="quests.leaderboardDesc">Ranked by total XP earned from completing quests. Everyone's rank shows next to their name on the Forum and in Messages too.</div>
+      </div>
+      <div id="leaderboard-list"></div>
+    </div>
+  </div>
+
+  <!-- VIDEOS / EXERCISE LIBRARY -->
+  <div class="page" id="page-videos">
+    <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="videos.title">EXERCISE LIBRARY</div><span style="font-size:11px;color:var(--muted);" id="video-count"></span></div>
+    <div class="plan-intro-card" style="margin-bottom:14px;">
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;" data-i18n="videos.intro">Don't recognize a move from one of the plans? Look it up here — every exercise has a form cue and a video tutorial link. You can also tap any exercise inside a workout to jump straight to it.</div>
+    </div>
+    <input class="calc-input" type="text" id="video-search" placeholder="Search exercises (e.g. squat, curl, push-up)..." style="margin-bottom:16px;" data-i18n-placeholder="videos.searchPlaceholder">
+    <div id="video-library"></div>
+  </div>
+
+  <!-- PLANS -->
+  <div class="page" id="page-plans">
+    <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="plans.title">WORKOUT LIBRARY</div><span style="font-size:11px;color:var(--muted);" data-i18n="plans.tapHint">Tap any workout to see full exercises</span></div>
+    <div class="plan-intro-card" style="margin-bottom:14px;">
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;"><span data-i18n="plans.introPrefix">Every workout is ordered</span> <strong style="color:var(--accent);" data-i18n="plans.orderedBold">Beginner → Intermediate → Advanced</strong><span data-i18n="plans.introSuffix">. Choose Strength Training, a specific sport, a structured program, or Brain training below.</span></div>
+    </div>
+
+    <div class="category-tabs">
+      <button class="category-tab active" onclick="filterCategory('strength', this)">💪 <span data-i18n="plans.strengthTab">Strength Training</span></button>
+      <button class="category-tab" onclick="filterCategory('sport', this)">🏅 <span data-i18n="plans.sportTab">Sport-Specific</span></button>
+      <button class="category-tab" onclick="filterCategory('programs', this)">📋 <span data-i18n="plans.programsTab">Programs</span></button>
+      <button class="category-tab" onclick="filterCategory('brain', this)">🧠 <span data-i18n="plans.brainTab">Brain</span></button>
+    </div>
+
+    <div id="strength-filters">
+      <div class="muscle-tabs" id="muscle-tabs">
+        <button class="muscle-tab active" onclick="filterMuscle('all', this)" data-i18n="plans.muscleAll">All</button>
+        <button class="muscle-tab" onclick="filterMuscle('chest', this)" data-i18n="plans.muscleChest">Chest</button>
+        <button class="muscle-tab" onclick="filterMuscle('back', this)" data-i18n="plans.muscleBack">Back</button>
+        <button class="muscle-tab" onclick="filterMuscle('shoulders', this)" data-i18n="plans.muscleShoulders">Shoulders</button>
+        <button class="muscle-tab" onclick="filterMuscle('arms', this)" data-i18n="plans.muscleArms">Arms</button>
+        <button class="muscle-tab" onclick="filterMuscle('legs', this)" data-i18n="plans.muscleLegs">Legs</button>
+        <button class="muscle-tab" onclick="filterMuscle('glutes', this)" data-i18n="plans.muscleGlutes">Glutes</button>
+        <button class="muscle-tab" onclick="filterMuscle('core', this)" data-i18n="plans.muscleCore">Core</button>
+        <button class="muscle-tab" onclick="filterMuscle('fullbody', this)" data-i18n="plans.muscleFullBody">Full Body</button>
+        <button class="muscle-tab" onclick="filterMuscle('cardio', this)" data-i18n="plans.muscleCardio">Cardio</button>
+      </div>
+      <div class="env-toggle">
+        <button class="env-btn active" id="env-all" onclick="filterEnv('all')">🌐 <span data-i18n="plans.envAll">All</span></button>
+        <button class="env-btn" id="env-gym" onclick="filterEnv('gym')">🏋️ <span data-i18n="plans.envGym">Gym</span></button>
+        <button class="env-btn" id="env-home" onclick="filterEnv('home')">🏠 <span data-i18n="plans.envHome">Home</span></button>
+      </div>
+    </div>
+
+    <div id="sport-filters" style="display:none;">
+      <input class="calc-input" type="text" id="sport-search" placeholder="Search sports..." style="margin-bottom:14px;" oninput="filterSportList(this.value)" data-i18n-placeholder="plans.sportSearchPlaceholder">
+      <div id="sport-browse-list"></div>
+    </div>
+
+    <div id="programs-filters" style="display:none;">
+      <div id="program-browse-list"></div>
+    </div>
+
+    <div id="drill-workout-view" style="display:none;">
+      <button class="section-link" onclick="backToBrowseList()" style="margin-bottom:10px;">← <span data-i18n="plans.backToList">Back to list</span></button>
+      <div class="section-title" id="drill-workout-title" style="margin-bottom:12px;"></div>
+    </div>
+
+    <div id="brain-filters" style="display:none;">
+      <div id="plans-brain-category-list"></div>
+      <div id="plans-brain-article-view" style="display:none;">
+        <button class="section-link" onclick="backToBrainCategories()" style="margin-bottom:10px;">← <span data-i18n="plans.backToList">Back to list</span></button>
+        <div class="section-title" id="plans-brain-category-title" style="margin-bottom:12px;"></div>
+        <div id="plans-brain-article-list"></div>
+      </div>
+    </div>
+
+    <div class="workout-cards" id="workout-cards"></div>
+    <div class="cta-box"><div><h3 data-i18n="plans.wantCustomTitle">Want a custom plan?</h3><p data-i18n="plans.wantCustomDesc">DM me on Instagram or TikTok</p></div><a class="btn-dark" href="https://www.instagram.com/ax.grind" target="_blank" data-i18n="plans.dmNow">DM Now →</a></div>
+  </div>
+
+  <!-- ARTICLE MODAL -->
+  <div class="workout-modal" id="article-modal" onclick="if(event.target===this)closeArticle()">
+    <div class="workout-sheet">
+      <div class="workout-sheet-header"><h2 id="article-modal-title" data-i18n="modal.articleDefaultTitle">ARTICLE</h2><button class="close-btn" onclick="closeArticle()">✕</button></div>
+      <div class="workout-sheet-body">
+        <div class="brain-article-meta" id="article-modal-meta"></div>
+        <div id="article-modal-text"></div>
+        <div id="article-modal-footer" style="margin-top:16px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WORKOUT MODAL -->
+  <div class="workout-modal" id="workout-modal" onclick="if(event.target===this)closeWorkout()">
+    <div class="workout-sheet">
+      <div class="workout-sheet-header"><h2 id="modal-title" data-i18n="modal.workoutDefaultTitle">WORKOUT</h2><button class="close-btn" onclick="closeWorkout()">✕</button></div>
+      <div class="workout-sheet-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- EXERCISE INFO MODAL -->
+  <div class="workout-modal" id="exercise-modal" onclick="if(event.target===this)closeExerciseInfo()">
+    <div class="workout-sheet" style="max-width:420px;">
+      <div class="workout-sheet-header"><h2 id="exercise-modal-title" data-i18n="modal.exerciseDefaultTitle">EXERCISE</h2><button class="close-btn" onclick="closeExerciseInfo()">✕</button></div>
+      <div class="workout-sheet-body">
+        <p id="exercise-modal-caption" style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;"></p>
+        <a id="exercise-modal-video-link" class="btn-accent btn-full" style="text-decoration:none;display:block;text-align:center;box-sizing:border-box;" target="_blank" rel="noopener" data-i18n="modal.watchVideo">Watch Video Tutorial →</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- LANGUAGE PICKER (first thing shown on any first visit, before login) -->
+  <div class="workout-modal" id="language-modal">
+    <div class="workout-sheet" style="max-width:420px;">
+      <div class="workout-sheet-header"><h2 data-i18n="language.pickerTitle">Choose your language</h2><button class="close-btn" id="language-close-btn" style="display:none;">✕</button></div>
+      <div class="workout-sheet-body">
+        <div id="language-list" class="language-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONBOARDING TOUR -->
+  <div class="workout-modal" id="onboarding-modal">
+    <div class="workout-sheet" style="max-width:420px;">
+      <div class="tour-body-wrap">
+        <div class="tour-progress" id="tour-progress"></div>
+        <div class="tour-icon" id="tour-icon"></div>
+        <div class="tour-title" id="tour-title"></div>
+        <div class="tour-desc" id="tour-body"></div>
+        <div class="tour-dots" id="tour-dots"></div>
+        <div class="tour-nav">
+          <button class="btn-follow" id="tour-back-btn" type="button" style="width:auto;margin-top:0;" data-i18n="tour.back">Back</button>
+          <button class="section-link" id="tour-skip-btn" type="button" data-i18n="tour.skip">Skip Tour</button>
+          <button class="btn-accent" id="tour-next-btn" type="button" style="width:auto;" data-i18n="tour.next">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NUTRITION -->
+  <div class="page" id="page-nutrition">
+    <div class="section-header" style="margin-bottom:16px;"><div class="section-title" data-i18n="nutrition.title">NUTRITION</div><span style="font-size:12px;color:var(--muted);" data-i18n="nutrition.subtitle">Fuel the grind</span></div>
+    <div class="calc-box">
+      <h3 data-i18n="nutrition.calcTitle">CALORIE CALCULATOR</h3>
+      <div class="calc-row">
+        <div class="calc-field"><div class="calc-label" data-i18n="nutrition.weightLabel">Weight (lbs)</div><input class="calc-input" type="number" id="c-weight" placeholder="185"></div>
+        <div class="calc-field"><div class="calc-label" data-i18n="nutrition.heightLabel">Height (in)</div><input class="calc-input" type="number" id="c-height" placeholder="70"></div>
+        <div class="calc-field"><div class="calc-label" data-i18n="nutrition.ageLabel">Age</div><input class="calc-input" type="number" id="c-age" placeholder="25"></div>
+      </div>
+      <div class="calc-row">
+        <div class="calc-field"><div class="calc-label" data-i18n="nutrition.goalLabel">Goal</div><select class="calc-select" id="c-goal"><option value="cut" data-i18n="nutrition.goalCut">Cut (lose fat)</option><option value="maintain" data-i18n="nutrition.goalMaintain">Maintain</option><option value="bulk" data-i18n="nutrition.goalBulk">Bulk (gain muscle)</option></select></div>
+        <div class="calc-field"><div class="calc-label" data-i18n="nutrition.activityLabel">Activity</div><select class="calc-select" id="c-activity"><option value="1.2" data-i18n="nutrition.activitySedentary">Sedentary</option><option value="1.375" data-i18n="nutrition.activityLight">Light</option><option value="1.55" selected data-i18n="nutrition.activityModerate">Moderate</option><option value="1.725" data-i18n="nutrition.activityActive">Active</option><option value="1.9" data-i18n="nutrition.activityVeryActive">Very active</option></select></div>
+      </div>
+      <button class="btn-accent btn-full" onclick="calcCalories()" data-i18n="nutrition.calculateBtn">Calculate My Calories</button>
+      <div class="calc-result" id="calc-result">
+        <div class="result-num" id="result-cals">—</div>
+        <div class="result-label" data-i18n="nutrition.caloriesPerDay">calories per day</div>
+        <div class="result-macros">
+          <div class="result-macro-item"><span data-i18n="nutrition.proteinLabel">Protein:</span> <span id="r-protein">—</span>g</div>
+          <div class="result-macro-item"><span data-i18n="nutrition.carbsLabel">Carbs:</span> <span id="r-carbs">—</span>g</div>
+          <div class="result-macro-item"><span data-i18n="nutrition.fatsLabel">Fats:</span> <span id="r-fats">—</span>g</div>
+        </div>
+      </div>
+    </div>
+    <div class="section-header"><div class="section-title" data-i18n="nutrition.mealPlanTitle">SAMPLE MEAL PLAN</div><span style="font-size:12px;color:var(--muted);" data-i18n="nutrition.mealPlanCals">~2,400 cal</span></div>
+    <div class="meal-grid" style="margin-bottom:20px;">
+      <div class="meal-row"><div class="meal-time" data-i18n="nutrition.meal1Time">7 AM</div><div class="meal-name" data-i18n="nutrition.meal1Name">6 egg whites + 2 whole eggs, oats, banana</div><div class="meal-cals">480</div></div>
+      <div class="meal-row"><div class="meal-time" data-i18n="nutrition.meal2Time">10 AM</div><div class="meal-name" data-i18n="nutrition.meal2Name">Greek yogurt, berries, almonds</div><div class="meal-cals">320</div></div>
+      <div class="meal-row"><div class="meal-time" data-i18n="nutrition.meal3Time">1 PM</div><div class="meal-name" data-i18n="nutrition.meal3Name">Chicken breast, white rice, broccoli</div><div class="meal-cals">550</div></div>
+      <div class="meal-row"><div class="meal-time" data-i18n="nutrition.meal4Time">4 PM</div><div class="meal-name" data-i18n="nutrition.meal4Name">Rice cakes + peanut butter (pre-workout)</div><div class="meal-cals">280</div></div>
+      <div class="meal-row"><div class="meal-time" data-i18n="nutrition.meal5Time">Post WO</div><div class="meal-name" data-i18n="nutrition.meal5Name">Whey protein shake + dextrose</div><div class="meal-cals">270</div></div>
+      <div class="meal-row"><div class="meal-time" data-i18n="nutrition.meal6Time">7 PM</div><div class="meal-name" data-i18n="nutrition.meal6Name">Salmon or lean beef, sweet potato, veggies</div><div class="meal-cals">500</div></div>
+    </div>
+    <div class="section-header"><div class="section-title" data-i18n="nutrition.macroTitle">MACRO BREAKDOWN</div></div>
+    <div class="macro-grid">
+      <div class="macro-card"><div class="macro-icon">🍗</div><div class="macro-num">1g</div><div class="macro-unit" data-i18n="nutrition.proteinUnit">per lb bodyweight</div><div class="macro-label" data-i18n="nutrition.proteinCard">Protein</div></div>
+      <div class="macro-card"><div class="macro-icon">🍚</div><div class="macro-num">40%</div><div class="macro-unit" data-i18n="nutrition.carbsUnit">of total calories</div><div class="macro-label" data-i18n="nutrition.carbsCard">Carbs</div></div>
+      <div class="macro-card"><div class="macro-icon">🥑</div><div class="macro-num">25%</div><div class="macro-unit" data-i18n="nutrition.carbsUnit">of total calories</div><div class="macro-label" data-i18n="nutrition.fatsCard">Fats</div></div>
+    </div>
+    <div class="section-header" style="margin-top:20px;"><div class="section-title" data-i18n="nutrition.rulesTitle">AX NUTRITION RULES</div></div>
+    <div class="tip-card"><div class="tip-num">1</div><div><div class="tip-title" data-i18n="nutrition.tip1Title">Protein first, every meal</div><div class="tip-body" data-i18n="nutrition.tip1Body">Hit your protein goal before anything else. It keeps you full, protects muscle, and makes everything easier.</div></div></div>
+    <div class="tip-card"><div class="tip-num">2</div><div><div class="tip-title" data-i18n="nutrition.tip2Title">Time your carbs around training</div><div class="tip-body" data-i18n="nutrition.tip2Body">Eat most carbs before and after your workout — that's when your body actually uses them.</div></div></div>
+    <div class="tip-card"><div class="tip-num">3</div><div><div class="tip-title" data-i18n="nutrition.tip3Title">1 gallon of water minimum</div><div class="tip-body" data-i18n="nutrition.tip3Body">Performance, recovery, and body comp all suffer when you're dehydrated. No excuses.</div></div></div>
+    <div class="tip-card"><div class="tip-num">4</div><div><div class="tip-title" data-i18n="nutrition.tip4Title">Track everything for 2 weeks</div><div class="tip-body" data-i18n="nutrition.tip4Body">Use MyFitnessPal. You can't manage what you don't measure. Just 2 weeks will change your perspective.</div></div></div>
+    <div class="cta-box"><div><h3 data-i18n="nutrition.customTitle">Need a custom nutrition plan?</h3><p data-i18n="nutrition.customDesc">DM me on Instagram</p></div><a class="btn-dark" href="https://www.instagram.com/ax.grind" target="_blank" data-i18n="plans.dmNow">DM Now →</a></div>
+  </div>
+
+  <!-- BODY ANALYZER -->
+  <div class="page" id="page-analyze">
+    <div class="analyzer-intro">
+      <div class="big-icon">📸</div>
+      <h2><span data-i18n="analyze.titlePrefix">AI Body</span> <span data-i18n="analyze.titleHighlight">Analyzer</span></h2>
+      <p data-i18n="analyze.intro">Upload a photo and the AI will give you a detailed assessment of your physique, your strengths, your potential, and a personalized plan recommendation.</p>
+    </div>
+    <div id="upload-section">
+      <div class="upload-zone" onclick="document.getElementById('body-file-input').click()">
+        <i class="ti ti-camera"></i>
+        <p><strong data-i18n="analyze.uploadPrompt">Tap to upload a photo</strong></p>
+        <p style="margin-top:5px;font-size:11px;" data-i18n="analyze.uploadHint">Front or side pose works best · JPG, PNG, or HEIC</p>
+      </div>
+      <input type="file" id="body-file-input" accept="image/*,.heic,.heif" onchange="handlePhotoUpload(event)">
+      <p class="privacy-note" data-i18n="analyze.privacyNote">🔒 Your photo is only used for this analysis and never stored</p>
+    </div>
+    <div id="photo-preview-section" style="display:none;">
+      <div class="photo-preview"><img id="preview-img" src="" alt="Your photo"><button class="remove-btn" onclick="removePhoto()">✕ <span data-i18n="analyze.removeBtn">Remove</span></button></div>
+      <button class="btn-accent btn-full" onclick="analyzeBody()" data-i18n="analyze.analyzeBtn">Analyze My Physique →</button>
+    </div>
+    <div id="analyze-loading" style="display:none;" class="analysis-result">
+      <div class="loading-state"><div class="spin"></div><p id="analyze-loading-text" data-i18n="analyze.loadingText">Analyzing your physique...</p></div>
+    </div>
+    <div id="analyze-result" style="display:none;" class="analysis-result">
+      <h3 data-i18n="analyze.resultTitle">YOUR ANALYSIS</h3>
+      <div id="analysis-content"></div>
+      <div style="margin-top:16px;"><button class="btn-accent btn-full" onclick="removePhoto();document.getElementById('analyze-result').style.display='none';" data-i18n="analyze.analyzeAnother">Analyze Another Photo</button></div>
+    </div>
+  </div>
+
+  <!-- AI COACH -->
+  <div class="page" id="page-chat">
+    <div class="chat-wrap">
+      <div class="chat-header">
+        <div class="chat-avatar">AX</div>
+        <div class="chat-header-info"><h3 data-i18n="coach.name">AX Coach AI</h3><p><span class="online-dot"></span><span data-i18n="coach.status">Online — ask me anything</span></p></div>
+        <button type="button" class="chat-saved-toggle" onclick="toggleSavedView()">💾 <span id="chat-saved-toggle-label" data-i18n="coach.viewSaved">Saved</span></button>
+      </div>
+      <div class="chat-save-notice" data-i18n="coach.saveNotice">💬 Chats aren't saved automatically — tap Save on any response to keep up to 20.</div>
+      <div id="chat-live-view">
+        <div class="quick-chips">
+          <button class="chip" onclick="sendChip(this)" data-i18n="coach.chip1">Best chest exercises?</button>
+          <button class="chip" onclick="sendChip(this)" data-i18n="coach.chip2">How much protein do I need?</button>
+          <button class="chip" onclick="sendChip(this)" data-i18n="coach.chip3">Can't do squats — alternatives?</button>
+          <button class="chip" onclick="sendChip(this)" data-i18n="coach.chip4">How to lose belly fat?</button>
+          <button class="chip" onclick="sendChip(this)" data-i18n="coach.chip5">What to eat pre-workout?</button>
+          <button class="chip" onclick="sendChip(this)" data-i18n="coach.chip6">Best home back workout?</button>
+        </div>
+        <div class="chat-messages" id="chat-messages">
+          <div class="msg ai"><div class="msg-bubble" data-i18n="coach.welcomeMsg">Yo! I'm the AX Coach. Ask me anything about training, nutrition, recovery — whatever you need. I'll give you real answers, no fluff. 💪</div><div class="msg-time" data-i18n="coach.nowLabel">Now</div></div>
+        </div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chat-input" placeholder="Ask about workouts, nutrition, recovery..." rows="1" onkeydown="chatKeydown(event)" oninput="autoGrow(this)" data-i18n-placeholder="coach.inputPlaceholder"></textarea>
+          <button class="chat-send" id="chat-send-btn" onclick="sendChatMessage()"><i class="ti ti-send"></i></button>
+        </div>
+      </div>
+      <div id="chat-saved-view" style="display:none;">
+        <div class="saved-chat-count" id="chat-saved-count"></div>
+        <div id="chat-saved-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="page" id="page-about">
+    <div class="about-card">
+      <div class="about-header"><div class="avatar">AX</div><div><div class="about-name">AX.GRIND</div><div class="about-tagline" data-i18n="about.tagline">Free Fitness Coach · Content Creator</div></div></div>
+      <div class="about-bio" data-i18n="about.bio">I built this to give everyone access to real training — no paywalls, no BS. Whether you're just starting out or you've been grinding for years, there's a program here for you.</div>
+      <div class="values-grid">
+        <div class="value-item"><i class="ti ti-heart"></i><span data-i18n="about.valueFree">Free forever</span></div>
+        <div class="value-item"><i class="ti ti-users"></i><span data-i18n="about.valueCommunity">Community first</span></div>
+        <div class="value-item"><i class="ti ti-target"></i><span data-i18n="about.valueResults">Results-driven</span></div>
+        <div class="value-item"><i class="ti ti-star"></i><span data-i18n="about.valueNoExcuses">No excuses</span></div>
+      </div>
+    </div>
+    <div class="section-header"><div class="section-title" data-i18n="about.findMe">FIND ME ON</div></div>
+    <div class="social-grid">
+      <div class="social-card" onclick="window.open('https://www.instagram.com/ax.grind','_blank')">
+        <div class="social-icon-row"><i class="ti ti-brand-instagram" style="font-size:20px;color:#E1306C;"></i><div class="social-name" data-i18n="about.instagram">Instagram</div></div>
+        <div class="social-handle">@ax.grind</div><div class="social-followers" data-i18n="about.instagramDesc">Daily clips & tips</div>
+        <button class="btn-follow" data-i18n="about.follow">Follow →</button>
+      </div>
+      <div class="social-card" onclick="window.open('https://www.tiktok.com/@ax.grind','_blank')">
+        <div class="social-icon-row"><i class="ti ti-brand-tiktok" style="font-size:20px;color:#f0f0f0;"></i><div class="social-name" data-i18n="about.tiktok">TikTok</div></div>
+        <div class="social-handle">@ax.grind</div><div class="social-followers" data-i18n="about.tiktokDesc">Workout videos & reels</div>
+        <button class="btn-follow" data-i18n="about.follow">Follow →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FORUM -->
+  <div class="page" id="page-forum">
+    <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="forum.title">FORUM</div></div>
+    <div class="plan-intro-card" style="margin-bottom:14px;">
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;" data-i18n="forum.intro">Share your progress, ask questions, post photos. Be respectful — you can report anything that shouldn't be here.</div>
+    </div>
+
+    <div class="calc-box" style="margin-bottom:16px;">
+      <textarea class="chat-input" id="forum-post-body" placeholder="Share your progress..." rows="3" style="width:100%;height:auto;resize:vertical;margin-bottom:10px;box-sizing:border-box;" data-i18n-placeholder="forum.postPlaceholder"></textarea>
+      <div id="forum-image-preview" style="display:none;margin-bottom:10px;position:relative;">
+        <img id="forum-image-preview-img" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px;" alt="">
+        <button class="remove-btn" onclick="removeForumImage()" style="position:absolute;top:8px;right:8px;">✕ <span data-i18n="analyze.removeBtn">Remove</span></button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-follow" id="forum-add-photo-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;" data-i18n="forum.addPhoto">Add Photo</button>
+        <input type="file" id="forum-image-input" accept="image/*" style="display:none;">
+        <button class="btn-accent" id="forum-post-btn" type="button" style="flex:1;" data-i18n="forum.postBtn">Post</button>
+      </div>
+      <div id="forum-post-message" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+    </div>
+
+    <div id="forum-feed"></div>
+    <button class="btn-follow" id="forum-load-more-btn" type="button" style="display:none;margin-bottom:20px;" data-i18n="forum.loadMore">Load More</button>
+  </div>
+
+  <!-- MESSAGES -->
+  <div class="page" id="page-messages">
+    <div id="dm-list-view">
+      <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="messages.title">MESSAGES</div></div>
+      <div class="calc-box" style="margin-bottom:16px;">
+        <div class="calc-label" style="margin-bottom:8px;" data-i18n="messages.newMessageLabel">New message — enter a username</div>
+        <div style="display:flex;gap:8px;">
+          <input class="calc-input" type="text" id="dm-new-handle" placeholder="e.g. andrew" style="flex:1;" data-i18n-placeholder="messages.usernamePlaceholder">
+          <button class="btn-follow" id="dm-new-message-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;" data-i18n="messages.messageBtn">Message</button>
+        </div>
+        <div id="dm-list-message" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+      </div>
+      <div id="dm-conversation-list"></div>
+    </div>
+
+    <div id="dm-thread-view" style="display:none;flex-direction:column;height:calc(100vh - 140px);min-height:480px;">
+      <div class="chat-header" style="border-radius:14px 14px 0 0;">
+        <button class="close-btn" id="dm-back-btn">←</button>
+        <div class="chat-header-info"><h3 id="dm-thread-name">—</h3><span id="dm-thread-rank"></span></div>
+      </div>
+      <div class="chat-messages" id="dm-messages"></div>
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="dm-input" placeholder="Message..." rows="1" data-i18n-placeholder="messages.inputPlaceholder"></textarea>
+        <button class="chat-send" id="dm-send-btn"><i class="ti ti-send"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT -->
+  <div class="page" id="page-account">
+    <div class="section-header" style="margin-bottom:16px;"><div class="section-title" data-i18n="account.title">ACCOUNT</div></div>
+
+    <div id="account-guest-view">
+      <div class="about-card">
+        <div class="auth-tabs">
+          <button class="muscle-tab active" id="auth-tab-login" type="button" data-i18n="account.loginTab">Log In</button>
+          <button class="muscle-tab" id="auth-tab-signup" type="button" data-i18n="account.signupTab">Sign Up</button>
+        </div>
+
+        <form id="login-form" class="auth-form">
+          <div class="calc-field" style="margin-bottom:10px;"><div class="calc-label" data-i18n="account.emailOrUsername">Email or Username</div><input class="calc-input" type="text" id="login-email" required></div>
+          <div class="calc-field" style="margin-bottom:14px;"><div class="calc-label" data-i18n="account.password">Password</div><input class="calc-input" type="password" id="login-password" required></div>
+          <button class="btn-accent btn-full" type="submit" data-i18n="account.loginTab">Log In</button>
+        </form>
+
+        <form id="signup-form" class="auth-form" style="display:none;">
+          <div class="calc-field" style="margin-bottom:10px;"><div class="calc-label" data-i18n="account.usernameLabel">Username</div><input class="calc-input" type="text" id="signup-username" placeholder="e.g. andrew" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 characters: letters, numbers, underscores only" required data-i18n-title="account.usernameHint"></div>
+          <div class="calc-field" style="margin-bottom:10px;"><div class="calc-label" data-i18n="account.email">Email</div><input class="calc-input" type="email" id="signup-email" required></div>
+          <div class="calc-field" style="margin-bottom:14px;"><div class="calc-label" data-i18n="account.password">Password</div><input class="calc-input" type="password" id="signup-password" required minlength="6"></div>
+          <button class="btn-accent btn-full" type="submit" data-i18n="account.signupTab">Sign Up</button>
+        </form>
+
+        <div class="auth-divider">
+          <div class="calc-label" style="margin-bottom:8px;" data-i18n="account.skipPassword">Or skip the password</div>
+          <div style="display:flex;gap:8px;">
+            <input class="calc-input" type="email" id="magic-email" placeholder="you@email.com" style="flex:1;" data-i18n-placeholder="account.emailPlaceholder">
+            <button class="btn-follow" id="magic-link-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;" data-i18n="account.sendLink">Send Link</button>
+          </div>
+        </div>
+
+        <div id="auth-message"></div>
+      </div>
+    </div>
+
+    <div id="account-logged-in-view" style="display:none;">
+      <div class="about-card">
+        <div class="about-header"><div class="avatar" id="account-avatar">A</div><div><div class="about-name" id="account-email-display">—</div><div class="about-tagline"><span data-i18n="account.loggedInPrefix">Logged in</span> · <span id="account-handle-display">—</span> · <span data-i18n="account.rankLabel">Rank</span> <span id="account-rank-display">—</span></div></div></div>
+        <div class="calc-field" style="margin-bottom:14px;">
+          <div class="calc-label" data-i18n="account.displayNameLabel">Display name (shown on Forum posts &amp; Messages)</div>
+          <div style="display:flex;gap:8px;">
+            <input class="calc-input" type="text" id="display-name-input" placeholder="e.g. GrindMode22" style="flex:1;" maxlength="30" data-i18n-placeholder="account.displayNamePlaceholder">
+            <button class="btn-follow" id="save-display-name-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;" data-i18n="account.save">Save</button>
+          </div>
+          <div id="display-name-message" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+        </div>
+        <div class="calc-field" style="margin-bottom:14px;">
+          <div class="calc-label" data-i18n="account.languageLabel">Language</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span id="account-language-display" style="font-size:13px;color:var(--muted);flex:1;">—</span>
+            <button class="btn-follow" id="change-language-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;" data-i18n="account.changeLanguage">Change</button>
+          </div>
+        </div>
+        <div class="calc-field" style="margin-bottom:14px;">
+          <div class="calc-label" data-i18n="account.accentColorLabel">App Color</div>
+          <div id="accent-swatches" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>
+          <input type="color" id="accent-color-picker" value="#e8ff00">
+        </div>
+        <div class="calc-field" style="margin-bottom:14px;">
+          <div class="calc-label" data-i18n="account.bgThemeLabel">Background</div>
+          <div id="bg-theme-swatches" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+        </div>
+        <button class="btn-follow" id="logout-btn" data-i18n="account.logout">Log Out</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>

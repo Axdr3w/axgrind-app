@@ -1,0 +1,42 @@
+import { supabase } from './supabaseClient.js';
+
+// Both writes go through service_role-backed Netlify Functions, never a
+// direct client insert — see the plan's "XP must never be client-settable"
+// note. These wrappers throw a clean Error with the function's message
+// (including the "already completed/read" case) for the caller to display.
+async function callXpFunction(path, body) {
+  const resp = await fetch(`/.netlify/functions/${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await resp.json();
+  if (!resp.ok) throw new Error(data.error?.message || 'Something went wrong.');
+  return data;
+}
+
+export function completeWorkout(userId, workoutId, dayKey) {
+  return callXpFunction('complete-workout', { userId, workoutId, dayKey });
+}
+
+export function completeArticle(userId, articleId) {
+  return callXpFunction('complete-article', { userId, articleId });
+}
+
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+export async function fetchCompletedWorkoutKeysToday(userId) {
+  if (!supabase) return new Set();
+  const { data } = await supabase
+    .from('workout_completions')
+    .select('workout_id, day_key')
+    .eq('user_id', userId)
+    .eq('completed_date', todayStr());
+  return new Set((data ?? []).map((r) => `${r.workout_id}::${r.day_key}`));
+}
+
+export async function fetchReadArticleIds(userId) {
+  if (!supabase) return new Set();
+  const { data } = await supabase.from('article_reads').select('article_id').eq('user_id', userId);
+  return new Set((data ?? []).map((r) => r.article_id));
+}

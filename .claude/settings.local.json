@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netlify functions:invoke send-reminders --no-identity)"
+    ]
+  }
+}
