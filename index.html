@@ -287,6 +287,24 @@
     </div>
   </div>
 
+  <!-- USERNAME GATE (mandatory the moment a signed-in user has no handle yet, e.g. after a magic-link sign-up) -->
+  <div class="workout-modal" id="username-modal">
+    <div class="workout-sheet" style="max-width:420px;">
+      <div class="workout-sheet-header"><h2 data-i18n="account.pickUsernameTitle">Pick a username</h2></div>
+      <div class="workout-sheet-body">
+        <p style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;" data-i18n="account.pickUsernameDesc">One more step — pick a username so people see you as you, not "AX.GRIND member," in the Forum and Messages.</p>
+        <form id="pick-username-form">
+          <div class="calc-field" style="margin-bottom:14px;">
+            <div class="calc-label" data-i18n="account.usernameLabel">Username</div>
+            <input class="calc-input" type="text" id="pick-username-input" placeholder="e.g. andrew" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 characters: letters, numbers, underscores only" data-i18n-title="account.usernameHint" required autofocus>
+          </div>
+          <button class="btn-accent btn-full" type="submit" data-i18n="account.pickUsernameSave">Continue</button>
+        </form>
+        <div id="pick-username-message" style="margin-top:10px;font-size:13px;"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- NUTRITION -->
   <div class="page" id="page-nutrition">
     <div class="section-header" style="margin-bottom:16px;"><div class="section-title" data-i18n="nutrition.title">NUTRITION</div><span style="font-size:12px;color:var(--muted);" data-i18n="nutrition.subtitle">Fuel the grind</span></div>

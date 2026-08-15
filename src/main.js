@@ -157,6 +157,11 @@ function updateAccountUI(session) {
       });
       fetchHandle(session.user.id).then((handle) => {
         document.getElementById('account-handle-display').textContent = handle ? '@' + handle : t('account.noUsernameSet');
+        if (handle) {
+          maybeStartTour(session.user.id);
+        } else {
+          promptForUsername();
+        }
       });
       getRankMap().then((map) => {
         const rank = map.get(session.user.id);
@@ -180,11 +185,12 @@ function updateAccountUI(session) {
         if (themeId) applyBgTheme(themeId);
         else updateBgTheme(session.user.id, getBgThemeId()).catch(() => {});
       }).catch(() => {});
-      maybeStartTour(session.user.id);
     }
   } else {
     guestView.style.display = 'block';
     loggedInView.style.display = 'none';
+    usernameModal.classList.remove('open');
+    document.body.style.overflow = '';
     if (lastUserId !== null) {
       lastUserId = null;
       teardownQuests();
@@ -248,6 +254,39 @@ signupForm.addEventListener('submit', async (e) => {
     }
   }
   setAuthMessage(t('account.checkEmailConfirm'), false);
+});
+
+const usernameModal = document.getElementById('username-modal');
+const pickUsernameForm = document.getElementById('pick-username-form');
+const pickUsernameInput = document.getElementById('pick-username-input');
+const pickUsernameMessage = document.getElementById('pick-username-message');
+
+// Forces anyone who reaches a signed-in state with no handle yet (currently
+// only magic-link sign-ins, since password sign-up already collects one) to
+// pick a username before they can do anything else — otherwise they'd show
+// up everywhere as the generic "AX.GRIND member" fallback.
+function promptForUsername() {
+  pickUsernameInput.value = '';
+  pickUsernameMessage.textContent = '';
+  usernameModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  pickUsernameInput.focus();
+}
+
+pickUsernameForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!lastUserId) return;
+  const handle = pickUsernameInput.value.trim();
+  try {
+    await setUsername(lastUserId, handle);
+    document.getElementById('account-handle-display').textContent = '@' + handle;
+    usernameModal.classList.remove('open');
+    document.body.style.overflow = '';
+    maybeStartTour(lastUserId);
+  } catch (err) {
+    pickUsernameMessage.textContent = err.message;
+    pickUsernameMessage.style.color = '#ff6040';
+  }
 });
 
 magicLinkBtn.addEventListener('click', async () => {
