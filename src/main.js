@@ -49,7 +49,13 @@ function showPage(id) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   const idx = pageOrder.indexOf(id);
-  if (idx > -1) document.querySelectorAll('.nav-tab')[idx].classList.add('active');
+  if (idx > -1) {
+    const tab = document.querySelectorAll('.nav-tab')[idx];
+    tab.classList.add('active');
+    // On mobile the nav scrolls horizontally instead of wrapping, so keep
+    // the active tab in view instead of leaving it scrolled off-screen.
+    tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }
   window.scrollTo(0, 0);
 }
 
