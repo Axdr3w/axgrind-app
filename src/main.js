@@ -8,7 +8,7 @@ import { calcCalories } from './nutrition.js';
 import { handlePhotoUpload, removePhoto, analyzeBody, initAnalyzer, teardownAnalyzer } from './analyzer.js';
 import { sendChip, chatKeydown, autoGrow, sendChatMessage, saveChatMessage, toggleSavedView, deleteSavedChatItem, initCoach, teardownCoach } from './coach.js';
 import { renderVideoLibrary, filterVideoLibrary, openExerciseInfo, closeExerciseInfo } from './videos.js';
-import { initQuests, teardownQuests } from './quests.js';
+import { initQuests, teardownQuests, toggleWorkoutHistory } from './quests.js';
 import { initForum, teardownForum } from './forum.js';
 import { fetchDisplayName, updateDisplayName, fetchHandle, fetchLanguage, updateLanguage, fetchAccentColor, updateAccentColor, fetchBgTheme, updateBgTheme } from './api/profile.js';
 import { initThemeFromStorage, applyAccentColor, renderAccentUI, getAccentColor, applyBgTheme, renderBgThemeUI, getBgThemeId } from './theme.js';
@@ -95,6 +95,7 @@ Object.assign(window, {
   closeExerciseInfo,
   selectAccentColor,
   selectBgTheme,
+  toggleWorkoutHistory,
 });
 
 // Applies the detected/stored language immediately (first paint is already

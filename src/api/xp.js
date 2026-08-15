@@ -40,3 +40,25 @@ export async function fetchReadArticleIds(userId) {
   const { data } = await supabase.from('article_reads').select('article_id').eq('user_id', userId);
   return new Set((data ?? []).map((r) => r.article_id));
 }
+
+export async function fetchWorkoutHistory(userId, limit = 30) {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('workout_completions')
+    .select('workout_id, day_key, completed_date')
+    .eq('user_id', userId)
+    .order('completed_date', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchWorkoutCompletionCount(userId) {
+  if (!supabase) return 0;
+  const { count, error } = await supabase
+    .from('workout_completions')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', userId);
+  if (error) throw error;
+  return count ?? 0;
+}

@@ -32,6 +32,10 @@ export default {
   // Quests
   'quests.title': 'QUESTS',
   'quests.dayStreak': 'day streak',
+  'quests.historyLabel': 'Workout History',
+  'quests.historyCompletedTotal': 'workouts completed all-time',
+  'quests.historyEmpty': "No completed workouts yet — finish one from Plans and it'll show up here.",
+  'quests.historyErrorLoad': "Couldn't load history: {reason}",
   'quests.leaderboardBtn': 'Leaderboard',
   'quests.xpToNextLevel': 'XP to next level',
   'quests.addQuestTitle': 'ADD A QUEST',

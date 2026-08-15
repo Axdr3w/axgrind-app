@@ -113,6 +113,15 @@
       <div class="xp-bar-label"><span id="xp-into-level">0</span>/100 <span data-i18n="quests.xpToNextLevel">XP to next level</span></div>
     </div>
 
+    <div class="calc-box" id="history-toggle-box" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleWorkoutHistory()">
+      <div>
+        <div class="calc-label" style="margin-bottom:2px;" data-i18n="quests.historyLabel">Workout History</div>
+        <div style="font-size:12px;color:var(--muted);"><span id="history-total-count">0</span> <span data-i18n="quests.historyCompletedTotal">workouts completed all-time</span></div>
+      </div>
+      <span class="section-link" id="history-toggle-arrow">▾</span>
+    </div>
+    <div id="workout-history-list" style="display:none;margin-bottom:16px;"></div>
+
     <div id="quest-day-view">
       <div class="day-strip" id="day-strip"></div>
 

@@ -6,6 +6,8 @@ import {
   deleteQuest,
   fetchProfileXp,
 } from './api/quests.js';
+import { fetchWorkoutHistory, fetchWorkoutCompletionCount } from './api/xp.js';
+import { findWorkoutById } from './workout-lookup.js';
 import { levelFromXp, xpIntoLevel, computeStreak } from './gamification.js';
 import { toDateStr, todayStr } from './date-utils.js';
 import { isPushSupported, getExistingSubscription, enablePushReminders } from './push.js';
@@ -13,6 +15,7 @@ import { t, getLanguage } from './i18n/index.js';
 
 let currentUserId = null;
 let selectedDate = todayStr();
+let historyOpen = false;
 
 function renderDayStrip() {
   const strip = document.getElementById('day-strip');
@@ -109,6 +112,45 @@ async function renderHeader() {
   document.getElementById('xp-bar-fill').style.width = into + '%';
 }
 
+async function renderHistoryCount() {
+  try {
+    const count = await fetchWorkoutCompletionCount(currentUserId);
+    document.getElementById('history-total-count').textContent = count;
+  } catch {
+    document.getElementById('history-total-count').textContent = '0';
+  }
+}
+
+async function renderWorkoutHistoryList() {
+  const container = document.getElementById('workout-history-list');
+  container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">${t('common.loading')}</div>`;
+  let rows;
+  try {
+    rows = await fetchWorkoutHistory(currentUserId);
+  } catch (err) {
+    container.innerHTML = `<div style="text-align:center;padding:20px;color:#ff6040;font-size:12px;">${t('quests.historyErrorLoad', { reason: err.message })}</div>`;
+    return;
+  }
+  if (rows.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">${t('quests.historyEmpty')}</div>`;
+    return;
+  }
+  const dateFmt = new Intl.DateTimeFormat(getLanguage(), { month: 'short', day: 'numeric', year: 'numeric' });
+  container.innerHTML = rows.map((r) => {
+    const workout = findWorkoutById(r.workout_id);
+    const title = workout ? `${workout.icon ?? ''} ${workout.title}` : r.workout_id;
+    const date = dateFmt.format(new Date(r.completed_date + 'T00:00:00'));
+    return `
+      <div class="quest-row">
+        <div class="quest-info">
+          <div class="quest-title">${title}</div>
+          <div class="quest-time">${date}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 function setAddQuestMessage(text, isError) {
   const el = document.getElementById('quest-add-message');
   el.textContent = text;
@@ -173,6 +215,15 @@ async function handleEnableReminders() {
   }
 }
 
+export async function toggleWorkoutHistory() {
+  historyOpen = !historyOpen;
+  const list = document.getElementById('workout-history-list');
+  const arrow = document.getElementById('history-toggle-arrow');
+  list.style.display = historyOpen ? 'block' : 'none';
+  arrow.textContent = historyOpen ? '▴' : '▾';
+  if (historyOpen) await renderWorkoutHistoryList();
+}
+
 // Attached once at module load — initQuests() runs on every login, so wiring
 // this inside it would stack a duplicate listener on each login/logout cycle.
 document.getElementById('add-quest-btn').addEventListener('click', handleAddQuest);
@@ -181,11 +232,15 @@ document.getElementById('enable-reminders-btn').addEventListener('click', handle
 export async function initQuests(userId) {
   currentUserId = userId;
   selectedDate = todayStr();
+  historyOpen = false;
+  document.getElementById('workout-history-list').style.display = 'none';
+  document.getElementById('history-toggle-arrow').textContent = '▾';
   renderDayStrip();
-  await Promise.all([renderQuestList(), renderHeader(), refreshPushBanner()]);
+  await Promise.all([renderQuestList(), renderHeader(), refreshPushBanner(), renderHistoryCount()]);
 }
 
 export function teardownQuests() {
   currentUserId = null;
   document.getElementById('quest-list').innerHTML = '';
+  document.getElementById('workout-history-list').innerHTML = '';
 }
