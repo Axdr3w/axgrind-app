@@ -26,6 +26,7 @@ import {
   onAuthStateChange,
   resolveLoginIdentifier,
   setUsername,
+  deleteAccount,
 } from './auth.js';
 
 // ===================== NAV =====================
@@ -197,6 +198,9 @@ function updateAccountUI(session) {
     loggedInView.style.display = 'none';
     usernameModal.classList.remove('open');
     document.body.style.overflow = '';
+    deleteAccountConfirm.style.display = 'none';
+    deleteAccountBtn.style.display = 'block';
+    deleteAccountMessage.textContent = '';
     if (lastUserId !== null) {
       lastUserId = null;
       teardownQuests();
@@ -304,6 +308,32 @@ magicLinkBtn.addEventListener('click', async () => {
 
 logoutBtn.addEventListener('click', async () => {
   await signOut();
+});
+
+const deleteAccountBtn = document.getElementById('delete-account-btn');
+const deleteAccountConfirm = document.getElementById('delete-account-confirm');
+const deleteAccountConfirmBtn = document.getElementById('delete-account-confirm-btn');
+const deleteAccountCancelBtn = document.getElementById('delete-account-cancel-btn');
+const deleteAccountMessage = document.getElementById('delete-account-message');
+
+deleteAccountBtn.addEventListener('click', () => {
+  deleteAccountConfirm.style.display = 'block';
+  deleteAccountBtn.style.display = 'none';
+});
+deleteAccountCancelBtn.addEventListener('click', () => {
+  deleteAccountConfirm.style.display = 'none';
+  deleteAccountBtn.style.display = 'block';
+  deleteAccountMessage.textContent = '';
+});
+deleteAccountConfirmBtn.addEventListener('click', async () => {
+  deleteAccountConfirmBtn.disabled = true;
+  try {
+    await deleteAccount();
+  } catch (err) {
+    deleteAccountMessage.textContent = t('account.deleteFailed', { reason: err.message });
+    deleteAccountMessage.style.color = '#ff6040';
+    deleteAccountConfirmBtn.disabled = false;
+  }
 });
 
 document.getElementById('save-display-name-btn').addEventListener('click', async () => {

@@ -1,8 +1,17 @@
-import { BRAIN_CATEGORIES, BRAIN_ARTICLES } from './brain-data.js';
 import { t, getLanguage } from './i18n/index.js';
 import { translateBatch } from './i18n/content-translate.js';
 import { completeArticle, fetchReadArticleIds } from './api/xp.js';
 import { getRankMap, invalidateRankCache } from './rank-cache.js';
+
+// brain-data.js is a large long-form article library (1.5MB+ of source) —
+// split into its own chunk and fetched in the background instead of being
+// part of the initial bundle every visitor downloads, since most sessions
+// never open the Brain tab.
+let dataPromise = null;
+function loadData() {
+  if (!dataPromise) dataPromise = import('./brain-data.js');
+  return dataPromise;
+}
 
 function escapeHtml(str) {
   return String(str ?? '')
@@ -56,8 +65,8 @@ function refreshRankDisplay() {
   });
 }
 
-function categoryListRow(cat) {
-  const count = BRAIN_ARTICLES.filter(a => a.category === cat.id).length;
+function categoryListRow(cat, articles) {
+  const count = articles.filter(a => a.category === cat.id).length;
   return `
     <div class="sport-list-row" onclick="selectBrainCategory('${cat.id}')">
       <div class="sport-list-icon">${cat.icon}</div>
@@ -73,19 +82,19 @@ function categoryListRow(cat) {
 // Category names are Tier-1 static translations (already resolved
 // synchronously via t()), so — unlike the sport browse list's dev-authored
 // English sort — this can sort directly by the displayed, localized name.
-function renderBrainCategoryList() {
+function renderBrainCategoryList(categories, articles) {
   const container = document.getElementById(LIST_ID);
   if (!container) return;
-  const sorted = [...BRAIN_CATEGORIES].sort((a, b) =>
+  const sorted = [...categories].sort((a, b) =>
     t('brain.category.' + a.id).localeCompare(t('brain.category.' + b.id))
   );
-  container.innerHTML = sorted.map(categoryListRow).join('');
+  container.innerHTML = sorted.map(c => categoryListRow(c, articles)).join('');
 }
 
-function articleCard(article, tr) {
+function articleCard(article, tr, categories) {
   const title = tr?.get(article.title) ?? article.title;
   const excerpt = tr?.get(article.excerpt) ?? article.excerpt;
-  const cat = BRAIN_CATEGORIES.find(c => c.id === article.category);
+  const cat = categories.find(c => c.id === article.category);
   const isRead = readArticleIds.has(article.id);
   return `
     <div class="exercise-card brain-article-card" onclick="openArticle('${article.id}')">
@@ -102,16 +111,17 @@ function articleCard(article, tr) {
 
 // The entry point called on init/login/logout/language-change/tab-select —
 // refreshes whichever of category-list/article-list is currently showing.
-export function renderBrainArticles() {
+export async function renderBrainArticles() {
+  const { BRAIN_CATEGORIES, BRAIN_ARTICLES } = await loadData();
   if (!selectedCategory) {
-    renderBrainCategoryList();
+    renderBrainCategoryList(BRAIN_CATEGORIES, BRAIN_ARTICLES);
     return;
   }
   const container = document.getElementById(ARTICLE_LIST_ID);
   if (!container) return;
   const filtered = BRAIN_ARTICLES.filter(a => a.category === selectedCategory);
   const myGen = ++listGen;
-  container.innerHTML = filtered.map(a => articleCard(a, null)).join('');
+  container.innerHTML = filtered.map(a => articleCard(a, null, BRAIN_CATEGORIES)).join('');
 
   const lang = getLanguage();
   if (lang === 'en') return;
@@ -121,11 +131,12 @@ export function renderBrainArticles() {
     if (myGen !== listGen) return;
     const map = new Map();
     texts.forEach((text, i) => map.set(text, translated[i]));
-    container.innerHTML = filtered.map(a => articleCard(a, map)).join('');
+    container.innerHTML = filtered.map(a => articleCard(a, map, BRAIN_CATEGORIES)).join('');
   });
 }
 
-export function selectBrainCategory(id) {
+export async function selectBrainCategory(id) {
+  const { BRAIN_CATEGORIES } = await loadData();
   selectedCategory = id;
   document.getElementById(LIST_ID).style.display = 'none';
   document.getElementById(VIEW_ID).style.display = 'block';
@@ -134,20 +145,21 @@ export function selectBrainCategory(id) {
   renderBrainArticles();
 }
 
-export function backToBrainCategories() {
+export async function backToBrainCategories() {
+  const { BRAIN_CATEGORIES, BRAIN_ARTICLES } = await loadData();
   selectedCategory = null;
   document.getElementById(VIEW_ID).style.display = 'none';
   document.getElementById(LIST_ID).style.display = 'block';
-  renderBrainCategoryList();
+  renderBrainCategoryList(BRAIN_CATEGORIES, BRAIN_ARTICLES);
 }
 
 function bodyParagraphs(body) {
   return body.split(/\n\n+/).filter(p => p.trim());
 }
 
-function renderArticleModal(article, tr) {
+function renderArticleModal(article, tr, categories) {
   const pick = (text) => tr?.get(text) ?? text;
-  const cat = BRAIN_CATEGORIES.find(c => c.id === article.category);
+  const cat = categories.find(c => c.id === article.category);
   document.getElementById('article-modal-title').textContent = `${cat?.icon ?? ''} ${pick(article.title)}`;
   document.getElementById('article-modal-meta').textContent = `📖 ${article.readMinutes} ${t('brain.minRead')} · ${t('brain.category.' + article.category)}`;
   const paragraphs = bodyParagraphs(article.body);
@@ -166,7 +178,8 @@ function renderArticleModal(article, tr) {
 
 let modalGen = 0;
 
-export function openArticle(id) {
+export async function openArticle(id) {
+  const { BRAIN_ARTICLES, BRAIN_CATEGORIES } = await loadData();
   const article = BRAIN_ARTICLES.find(a => a.id === id);
   if (!article) return;
   currentArticle = article;
@@ -175,7 +188,7 @@ export function openArticle(id) {
   modalMessageError = false;
 
   const myGen = ++modalGen;
-  renderArticleModal(article, null);
+  renderArticleModal(article, null, BRAIN_CATEGORIES);
   document.getElementById('article-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
 
@@ -187,7 +200,7 @@ export function openArticle(id) {
     const map = new Map();
     texts.forEach((text, i) => map.set(text, translated[i]));
     currentTrMap = map;
-    renderArticleModal(article, map);
+    renderArticleModal(article, map, BRAIN_CATEGORIES);
   });
 }
 
@@ -200,6 +213,7 @@ export function closeArticle() {
 }
 
 export async function markArticleRead(id) {
+  const { BRAIN_CATEGORIES } = await loadData();
   if (!currentUserId || !currentArticle) return;
   try {
     await completeArticle(currentUserId, id);
@@ -212,10 +226,11 @@ export async function markArticleRead(id) {
     modalMessage = err.message;
     modalMessageError = true;
   }
-  renderArticleModal(currentArticle, currentTrMap);
+  renderArticleModal(currentArticle, currentTrMap, BRAIN_CATEGORIES);
 }
 
-window.addEventListener('ax:languagechange', () => {
+window.addEventListener('ax:languagechange', async () => {
+  const { BRAIN_CATEGORIES } = await loadData();
   if (selectedCategory) {
     const cat = BRAIN_CATEGORIES.find(c => c.id === selectedCategory);
     const titleEl = document.getElementById(TITLE_ID);

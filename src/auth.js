@@ -51,6 +51,20 @@ export async function resolveLoginIdentifier(identifier) {
   return data.email;
 }
 
+export async function deleteAccount() {
+  if (!supabase) throw new Error('Not configured');
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error('Not signed in.');
+  const resp = await fetch('/.netlify/functions/delete-account', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const result = await resp.json();
+  if (result.error) throw new Error(result.error.message);
+  await supabase.auth.signOut();
+}
+
 export async function setUsername(userId, handle) {
   const resp = await fetch('/.netlify/functions/set-username', {
     method: 'POST',

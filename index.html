@@ -368,6 +368,7 @@
       </div>
       <input type="file" id="body-file-input" accept="image/*,.heic,.heif" onchange="handlePhotoUpload(event)">
       <p class="privacy-note" data-i18n="analyze.privacyNote">🔒 Your photo is only used for this analysis and never stored</p>
+      <p class="privacy-note" data-i18n="analyze.disclaimer">⚠️ AI-generated estimate, not a medical or fitness assessment — results can be inaccurate</p>
     </div>
     <div id="photo-preview-section" style="display:none;">
       <div class="photo-preview"><img id="preview-img" src="" alt="Your photo"><button class="remove-btn" onclick="removePhoto()">✕ <span data-i18n="analyze.removeBtn">Remove</span></button></div>
@@ -392,6 +393,7 @@
         <button type="button" class="chat-saved-toggle" onclick="toggleSavedView()">💾 <span id="chat-saved-toggle-label" data-i18n="coach.viewSaved">Saved</span></button>
       </div>
       <div class="chat-save-notice" data-i18n="coach.saveNotice">💬 Chats aren't saved automatically — tap Save on any response to keep up to 20.</div>
+      <div class="chat-save-notice" data-i18n="coach.disclaimer">⚠️ AI-generated, not medical advice — consult a doctor before starting any new exercise or nutrition program.</div>
       <div id="chat-live-view">
         <div class="quick-chips">
           <button class="chip" onclick="sendChip(this)" data-i18n="coach.chip1">Best chest exercises?</button>
@@ -441,6 +443,11 @@
         <button class="btn-follow" data-i18n="about.follow">Follow →</button>
       </div>
     </div>
+    <div style="text-align:center;margin-top:20px;font-size:11px;color:var(--muted);">
+      <a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--muted);">Privacy Policy</a>
+      <span style="margin:0 8px;opacity:.4;">·</span>
+      <a href="/terms.html" target="_blank" rel="noopener" style="color:var(--muted);">Terms of Service</a>
+    </div>
   </div>
 
   <!-- FORUM -->
@@ -481,12 +488,15 @@
         <div id="dm-list-message" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
       </div>
       <div id="dm-conversation-list"></div>
+      <button class="section-link" id="dm-manage-blocked-btn" type="button" style="margin-top:10px;" data-i18n="messages.manageBlocked">Blocked users</button>
+      <div id="dm-blocked-list" style="display:none;margin-top:10px;"></div>
     </div>
 
     <div id="dm-thread-view" style="display:none;flex-direction:column;height:calc(100vh - 140px);min-height:480px;">
       <div class="chat-header" style="border-radius:14px 14px 0 0;">
         <button class="close-btn" id="dm-back-btn">←</button>
         <div class="chat-header-info"><h3 id="dm-thread-name">—</h3><span id="dm-thread-rank"></span></div>
+        <button class="forum-mod-btn" id="dm-block-btn" type="button" style="flex-shrink:0;" data-i18n="messages.blockUser">Block</button>
       </div>
       <div class="chat-messages" id="dm-messages"></div>
       <div class="chat-input-row">
@@ -517,6 +527,10 @@
           <div class="calc-field" style="margin-bottom:10px;"><div class="calc-label" data-i18n="account.usernameLabel">Username</div><input class="calc-input" type="text" id="signup-username" placeholder="e.g. andrew" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 characters: letters, numbers, underscores only" required data-i18n-title="account.usernameHint"></div>
           <div class="calc-field" style="margin-bottom:10px;"><div class="calc-label" data-i18n="account.email">Email</div><input class="calc-input" type="email" id="signup-email" required></div>
           <div class="calc-field" style="margin-bottom:14px;"><div class="calc-label" data-i18n="account.password">Password</div><input class="calc-input" type="password" id="signup-password" required minlength="6"></div>
+          <label style="display:flex;gap:8px;align-items:flex-start;font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:14px;cursor:pointer;">
+            <input type="checkbox" id="signup-agree" required style="margin-top:2px;flex-shrink:0;">
+            <span>I'm 13 or older and agree to the <a href="/terms.html" target="_blank" rel="noopener" style="color:var(--accent);">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--accent);">Privacy Policy</a>. I understand AX.GRIND isn't medical advice and I should consult a doctor before starting any exercise or nutrition program.</span>
+          </label>
           <button class="btn-accent btn-full" type="submit" data-i18n="account.signupTab">Sign Up</button>
         </form>
 
@@ -526,6 +540,7 @@
             <input class="calc-input" type="email" id="magic-email" placeholder="you@email.com" style="flex:1;" data-i18n-placeholder="account.emailPlaceholder">
             <button class="btn-follow" id="magic-link-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;" data-i18n="account.sendLink">Send Link</button>
           </div>
+          <div style="font-size:10px;color:var(--muted);line-height:1.5;margin-top:8px;">By continuing you confirm you're 13 or older and agree to our <a href="/terms.html" target="_blank" rel="noopener" style="color:var(--accent);">Terms</a> & <a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--accent);">Privacy Policy</a>. Not medical advice.</div>
         </div>
 
         <div id="auth-message"></div>
@@ -560,6 +575,18 @@
           <div id="bg-theme-swatches" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
         </div>
         <button class="btn-follow" id="logout-btn" data-i18n="account.logout">Log Out</button>
+      </div>
+      <div class="about-card" style="border-color:rgba(255,80,50,.3);">
+        <div class="calc-label" style="margin-bottom:10px;color:#ff6040;" data-i18n="account.dangerZone">DANGER ZONE</div>
+        <button class="btn-follow" id="delete-account-btn" type="button" style="border-color:rgba(255,80,50,.4);color:#ff6040;" data-i18n="account.deleteAccount">Delete Account</button>
+        <div id="delete-account-confirm" style="display:none;margin-top:12px;">
+          <p style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;" data-i18n="account.deleteWarning">This permanently deletes your account, profile, posts, messages, and progress. This can't be undone.</p>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-follow" id="delete-account-cancel-btn" type="button" style="flex:1;" data-i18n="account.cancel">Cancel</button>
+            <button class="btn-follow" id="delete-account-confirm-btn" type="button" style="flex:1;border-color:#ff6040;color:#ff6040;" data-i18n="account.deleteConfirm">Yes, delete everything</button>
+          </div>
+          <div id="delete-account-message" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+        </div>
       </div>
     </div>
   </div>

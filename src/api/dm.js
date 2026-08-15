@@ -94,3 +94,26 @@ export async function reportDmMessage(reporterId, dmMessageId, reason) {
   });
   if (error) throw error;
 }
+
+export async function blockUser(blockerId, blockedId) {
+  if (!supabase) throw new Error('Not configured');
+  const { error } = await supabase.from('blocked_users').insert({ blocker_id: blockerId, blocked_id: blockedId });
+  if (error) throw error;
+}
+
+export async function unblockUser(blockerId, blockedId) {
+  if (!supabase) throw new Error('Not configured');
+  const { error } = await supabase.from('blocked_users').delete().eq('blocker_id', blockerId).eq('blocked_id', blockedId);
+  if (error) throw error;
+}
+
+// Selects only public-safe columns on the blocked user, same rule as findUserByHandle.
+export async function fetchBlockedUsers(blockerId) {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('blocked_users')
+    .select('blocked_id, blocked:blocked_id(id, handle, display_name)')
+    .eq('blocker_id', blockerId);
+  if (error) throw error;
+  return data ?? [];
+}

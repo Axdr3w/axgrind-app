@@ -6,6 +6,9 @@ import {
   markConversationRead,
   deleteMessage,
   reportDmMessage,
+  blockUser,
+  unblockUser,
+  fetchBlockedUsers,
 } from './api/dm.js';
 import { findUserByHandle } from './api/profile.js';
 import { getRankMap } from './rank-cache.js';
@@ -15,6 +18,16 @@ let currentUserId = null;
 let activeConversation = null;
 let activeOtherUserId = null;
 let rankMap = new Map();
+let blockedIds = new Set();
+
+async function refreshBlockedIds() {
+  try {
+    const rows = await fetchBlockedUsers(currentUserId);
+    blockedIds = new Set(rows.map((r) => r.blocked_id));
+  } catch {
+    blockedIds = new Set();
+  }
+}
 
 function rankBadge(userId) {
   const rank = rankMap.get(userId);
@@ -57,6 +70,7 @@ async function renderConversationList() {
     container.innerHTML = `<div style="text-align:center;padding:20px;color:#ff6040;font-size:12px;">${t('messages.errorLoad', { reason: err.message })}</div>`;
     return;
   }
+  conversations = conversations.filter((c) => !blockedIds.has(c.otherUser?.id));
   if (conversations.length === 0) {
     container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">${t('messages.emptyConversations')}</div>`;
     return;
@@ -162,6 +176,10 @@ async function handleNewMessage() {
       setListMessage(t('messages.ownUsername'), true);
       return;
     }
+    if (blockedIds.has(target.id)) {
+      setListMessage(t('messages.userIsBlocked'), true);
+      return;
+    }
     const convo = await findOrCreateConversation(currentUserId, target.id);
     input.value = '';
     await renderConversationList();
@@ -180,11 +198,51 @@ function backToList() {
   renderConversationList();
 }
 
+async function handleBlockUser() {
+  if (!activeOtherUserId) return;
+  const name = document.getElementById('dm-thread-name').textContent;
+  if (!confirm(t('messages.confirmBlock', { name }))) return;
+  try {
+    await blockUser(currentUserId, activeOtherUserId);
+    await refreshBlockedIds();
+    alert(t('messages.blockedThanks'));
+    backToList();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function renderBlockedList() {
+  const container = document.getElementById('dm-blocked-list');
+  const rows = await fetchBlockedUsers(currentUserId).catch(() => []);
+  if (rows.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">${t('messages.noBlockedUsers')}</div>`;
+    return;
+  }
+  container.innerHTML = rows.map((r) => {
+    const name = escapeHtml(r.blocked?.display_name || r.blocked?.handle || t('common.memberFallback'));
+    return `
+      <div class="dm-convo-row" data-blocked-id="${r.blocked_id}" style="cursor:default;">
+        <div class="dm-convo-avatar">${name[0]?.toUpperCase() || 'A'}</div>
+        <div class="dm-convo-info"><div class="dm-convo-name">${name}</div></div>
+        <button class="forum-mod-btn" data-action="unblock" data-id="${r.blocked_id}">${t('messages.unblock')}</button>
+      </div>
+    `;
+  }).join('');
+}
+
+async function handleUnblock(blockedId) {
+  await unblockUser(currentUserId, blockedId);
+  await refreshBlockedIds();
+  await renderBlockedList();
+}
+
 // Attached once at module load — initDMs() runs on every login.
 document.getElementById('dm-new-message-btn').addEventListener('click', handleNewMessage);
 document.getElementById('dm-send-btn').addEventListener('click', handleSendMessage);
 document.getElementById('dm-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') handleSendMessage(); });
 document.getElementById('dm-back-btn').addEventListener('click', backToList);
+document.getElementById('dm-block-btn').addEventListener('click', handleBlockUser);
 document.getElementById('dm-conversation-list').addEventListener('click', (e) => {
   const row = e.target.closest('.dm-convo-row');
   if (row) openConversation(row.dataset.id, row.dataset.otherName, row.dataset.otherId);
@@ -192,6 +250,16 @@ document.getElementById('dm-conversation-list').addEventListener('click', (e) =>
 document.getElementById('dm-messages').addEventListener('click', (e) => {
   const btn = e.target.closest('.forum-mod-btn');
   if (btn) handleModAction(btn.dataset.action, btn.dataset.id);
+});
+document.getElementById('dm-manage-blocked-btn').addEventListener('click', async () => {
+  const panel = document.getElementById('dm-blocked-list');
+  const willOpen = panel.style.display === 'none';
+  panel.style.display = willOpen ? 'block' : 'none';
+  if (willOpen) await renderBlockedList();
+});
+document.getElementById('dm-blocked-list').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action="unblock"]');
+  if (btn) handleUnblock(btn.dataset.id);
 });
 
 export async function initDMs(userId) {
@@ -201,7 +269,9 @@ export async function initDMs(userId) {
   document.getElementById('dm-thread-view').style.display = 'none';
   document.getElementById('dm-list-view').style.display = 'block';
   document.getElementById('dm-new-handle').value = '';
+  document.getElementById('dm-blocked-list').style.display = 'none';
   setListMessage('', false);
+  await refreshBlockedIds();
   await renderConversationList();
 }
 
