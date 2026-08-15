@@ -517,9 +517,32 @@
 
   <!-- ACCOUNT -->
   <div class="page" id="page-account">
-    <div class="section-header" style="margin-bottom:16px;"><div class="section-title" data-i18n="account.title">ACCOUNT</div></div>
+    <div class="section-header" id="account-page-title" style="margin-bottom:16px;"><div class="section-title" data-i18n="account.title">ACCOUNT</div></div>
 
     <div id="account-guest-view">
+      <div class="hero" style="margin-bottom:20px;">
+        <div class="hero-tag" data-i18n="home.heroTag">Free Training — No Excuses</div>
+        <h1><span data-i18n="home.heroTitleLine1">TRAIN</span><br><span data-i18n="home.heroTitleLine2">DIFFERENT.</span></h1>
+        <p data-i18n="home.heroSubtitle">Real workouts, real results. Built for people serious about their grind — 100% free.</p>
+        <div class="hero-stats">
+          <div><div class="stat-num">300+</div><div class="stat-label" data-i18n="home.statWorkouts">Workouts</div></div>
+          <div><div class="stat-num">55</div><div class="stat-label" data-i18n="home.statSports">Sports</div></div>
+          <div><div class="stat-num">1200+</div><div class="stat-label" data-i18n="home.statExercises">Exercises</div></div>
+          <div><div class="stat-num">100%</div><div class="stat-label" data-i18n="home.statFree">Free</div></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;">
+          <div style="font-size:26px;margin-bottom:7px;">📸</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.bodyAnalyzerTitle">Body Analyzer</div>
+          <div style="font-size:11px;color:var(--muted);" data-i18n="home.bodyAnalyzerDesc">AI reads your physique & recommends a plan</div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;">
+          <div style="font-size:26px;margin-bottom:7px;">🤖</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.aiCoachTitle">AI Coach</div>
+          <div style="font-size:11px;color:var(--muted);" data-i18n="home.aiCoachDesc">Ask anything about training & nutrition</div>
+        </div>
+      </div>
       <div class="about-card">
         <div class="auth-tabs">
           <button class="muscle-tab active" id="auth-tab-login" type="button" data-i18n="account.loginTab">Log In</button>

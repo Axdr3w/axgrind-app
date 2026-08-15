@@ -379,6 +379,7 @@ body.locked .nav-sep { display:none; }
 body.locked .motivation-banner { display:none; }
 body.locked .page { display:none !important; }
 body.locked #page-account { display:block !important; }
+body.locked #account-page-title { display:none; }
 
 /* ===== RESPONSIVE / MOBILE =====
    Same page for phone and desktop — these breakpoints are what make it
