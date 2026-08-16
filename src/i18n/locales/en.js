@@ -161,6 +161,7 @@ export default {
   'analyze.sectionOverall': 'Overall Assessment', 'analyze.sectionBodyType': 'Body Type',
   'analyze.sectionStrengths': 'Strengths 💪',  'analyze.sectionWorkoutTips': 'Workout Advice', 'analyze.sectionNutritionNote': 'Nutrition Note',
   'analyze.sectionRecommendedPlan': 'Recommended Plan',
+  'analyze.viewPlan': 'View this plan',
   'analyze.errorGeneric': 'Something went wrong: {reason}\n\nMake sure you are using this app from the Netlify link.',
 
   // Coach

@@ -1,5 +1,6 @@
 import { t, getLanguage } from './i18n/index.js';
 import { getLanguageMeta } from './i18n/languages.js';
+import { findWorkoutById } from './workout-lookup.js';
 
 let uploadedImageBase64 = null, uploadedMediaType = 'image/jpeg';
 let currentUserId = null;
@@ -115,7 +116,12 @@ export async function analyzeBody() {
     if (result.potential?.length) html += `<div class="analysis-section"><h4>${t('analyze.sectionPotential')}</h4><div class="analysis-tags">${result.potential.map(s=>`<span class="a-tag yellow">${s}</span>`).join('')}</div></div>`;
     if (result.workout_tips) html += `<div class="analysis-section"><h4>${t('analyze.sectionWorkoutTips')}</h4><p>${result.workout_tips}</p></div>`;
     if (result.nutrition_note) html += `<div class="analysis-section"><h4>${t('analyze.sectionNutritionNote')}</h4><p>${result.nutrition_note}</p></div>`;
-    if (result.recommended_plan) html += `<div class="analysis-section"><h4>${t('analyze.sectionRecommendedPlan')}</h4><div class="analysis-tags"><span class="a-tag yellow">${result.recommended_plan}</span></div></div>`;
+    const recommendedWorkout = result.recommended_plan ? findWorkoutById(result.recommended_plan) : null;
+    if (recommendedWorkout) {
+      html += `<div class="analysis-section"><h4>${t('analyze.sectionRecommendedPlan')}</h4><div class="workout-card featured" style="cursor:pointer;" onclick="openWorkout('${recommendedWorkout.id}')"><div class="wc-top"><span class="wc-icon">${recommendedWorkout.icon ?? ''}</span></div><div class="wc-title">${recommendedWorkout.title}</div><div class="section-link" style="margin-top:6px;">${t('analyze.viewPlan')} →</div></div></div>`;
+    } else if (result.recommended_plan) {
+      html += `<div class="analysis-section"><h4>${t('analyze.sectionRecommendedPlan')}</h4><div class="analysis-tags"><span class="a-tag yellow">${result.recommended_plan}</span></div></div>`;
+    }
     if (result.motivation) html += `<div style="margin-top:14px;padding:12px 14px;background:var(--surface2);border-radius:10px;font-style:italic;color:var(--accent);font-size:13px;">"${result.motivation}"</div>`;
     document.getElementById('analysis-content').innerHTML = html;
     document.getElementById('analyze-loading').style.display = 'none';

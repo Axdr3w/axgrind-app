@@ -1,7 +1,29 @@
 const { createClient } = require('@supabase/supabase-js');
 
+// Keep in sync with the fullbody-*/cardio-* entries in src/workouts-data.js —
+// these are the only ids the model is allowed to recommend, so the client
+// can turn "recommended_plan" into a real, clickable link to that plan
+// instead of a made-up name that doesn't exist anywhere in the app.
+const RECOMMENDABLE_PLANS = [
+  ['fullbody-gym-beg', 'Full Body — Beginner 3x/week'],
+  ['fullbody-gym-int', '8-Week Shred — Intermediate'],
+  ['fullbody-gym-adv', 'Elite 6-Day Split — Advanced'],
+  ['fullbody-home-beg', 'Home Starter — Full Body Beginner'],
+  ['fullbody-home-int', 'Home Warrior — Full Body'],
+  ['fullbody-home-adv', 'Home Beast — Full Body Advanced'],
+  ['fullbody-gym-ppl', 'Push Pull Legs — Strength Split'],
+  ['fullbody-home-express', 'Full Body Circuit — 20-Min Express'],
+  ['cardio-beg', 'Fat Burn — Beginner Cardio'],
+  ['cardio-int', 'HIIT Shred — Intermediate'],
+  ['cardio-adv', 'Cardio Destroyer — Advanced'],
+  ['cardio-gym-beg', 'Machine Cardio — Beginner'],
+  ['cardio-gym-int', 'Interval Engine — Intermediate'],
+  ['cardio-gym-adv', 'Metabolic Conditioning — Advanced'],
+];
+const PLAN_LIST_TEXT = RECOMMENDABLE_PLANS.map(([id, title]) => `${id} (${title})`).join(', ');
+
 const SYSTEM_PROMPT = `You are AX Coach, the AI trainer for AX.GRIND. You analyze physique photos and give honest, detailed, genuinely encouraging advice in a direct coach voice — thorough enough that the user walks away feeling hyped and informed, not shortchanged. Never use the words "weakness," "weak point," or "flaw" — frame anything that isn't a strength yet as potential and opportunity, not a deficiency. Be concise per field — this has to generate quickly, so favor information density over length. Respond ONLY with valid JSON, no markdown, no backticks, no extra text:
-{"overall":"A detailed paragraph (3-4 sentences) giving a genuinely encouraging overall impression of their physique and where they're at right now","strengths":["every genuine strength you can identify in the photo, as short phrases — do not cap this list at 3, list as many real strengths as you actually see, typically 4-6"],"potential":["the top 5 areas with the most room to grow, as short phrases, framed as exciting potential and opportunity, never as weaknesses or flaws"],"body_type":"ectomorph/mesomorph/endomorph or combo","recommended_plan":"best plan name from the app","workout_tips":"A detailed paragraph (3-4 sentences) of specific, practical workout advice based on what you see","nutrition_note":"A paragraph (2-3 sentences) of specific, practical nutrition recommendations","motivation":"A genuinely hype motivating closing paragraph (2-3 sentences) in AX voice"}`;
+{"overall":"A detailed paragraph (3-4 sentences) giving a genuinely encouraging overall impression of their physique and where they're at right now","strengths":["every genuine strength you can identify in the photo, as short phrases — do not cap this list at 3, list as many real strengths as you actually see, typically 4-6"],"potential":["the top 5 areas with the most room to grow, as short phrases, framed as exciting potential and opportunity, never as weaknesses or flaws"],"body_type":"ectomorph/mesomorph/endomorph or combo","recommended_plan":"the single best-fit plan id, chosen ONLY from this exact list (respond with just the id, e.g. \\"fullbody-gym-beg\\" — never a made-up name): ${PLAN_LIST_TEXT}","workout_tips":"A detailed paragraph (3-4 sentences) of specific, practical workout advice based on what you see","nutrition_note":"A paragraph (2-3 sentences) of specific, practical nutrition recommendations","motivation":"A genuinely hype motivating closing paragraph (2-3 sentences) in AX voice"}`;
 
 const DAILY_LIMIT = 4;
 
@@ -37,7 +59,7 @@ exports.handler = async (event) => {
       return { statusCode: 500, body: JSON.stringify({ error: { message: limitError.message } }) };
     }
     const system = targetLangName && targetLangName !== 'English'
-      ? `${SYSTEM_PROMPT}\nWrite every text value in the JSON (overall, strengths, potential, body_type, recommended_plan, workout_tips, nutrition_note, motivation) in ${targetLangName}. Keep the JSON keys themselves in English.`
+      ? `${SYSTEM_PROMPT}\nWrite every text value in the JSON in ${targetLangName} EXCEPT "recommended_plan", which must stay exactly one of the raw ids listed above, untranslated. Keep the JSON keys themselves in English.`
       : SYSTEM_PROMPT;
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
