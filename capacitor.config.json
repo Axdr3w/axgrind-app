@@ -1,0 +1,9 @@
+{
+  "appId": "com.axgrind.app",
+  "appName": "AX.GRIND",
+  "webDir": "dist",
+  "server": {
+    "url": "https://axgrind.fit",
+    "cleartext": false
+  }
+}
