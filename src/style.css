@@ -386,6 +386,21 @@ body.locked .page { display:none !important; }
 body.locked #page-account { display:block !important; }
 body.locked #account-page-title { display:none; }
 
+/* Guest preview: scrolling past the login card reveals a read-only look at
+   Plans and About, stacked in that order via flex — nothing here can save
+   (workout completion already no-ops without a signed-in user; see
+   finishWorkout in plans.js), it's just a look at what's inside. */
+body.locked .container { display:flex; flex-direction:column; }
+body.locked #page-account { order:1; }
+body.locked #page-plans { display:block !important; order:2; }
+body.locked #page-about { display:block !important; order:3; }
+body.locked #page-plans::before {
+  content:'PREVIEW — LOG IN TO TRACK YOUR PROGRESS';
+  display:block; text-align:center; font-size:10px; letter-spacing:.08em; font-weight:600;
+  color:var(--accent); background:rgba(232,255,0,.08); border:1px solid rgba(232,255,0,.25);
+  border-radius:8px; padding:8px; margin-bottom:16px;
+}
+
 /* ===== RESPONSIVE / MOBILE =====
    Same page for phone and desktop — these breakpoints are what make it
    "switch" automatically, purely based on screen width, no device detection. */
