@@ -193,9 +193,9 @@
 
     <div class="category-tabs">
       <button class="category-tab active" onclick="filterCategory('strength', this)">💪 <span data-i18n="plans.strengthTab">Strength Training</span></button>
-      <button class="category-tab" onclick="filterCategory('sport', this)">🏅 <span data-i18n="plans.sportTab">Sport-Specific</span></button>
-      <button class="category-tab" onclick="filterCategory('programs', this)">📋 <span data-i18n="plans.programsTab">Programs</span></button>
-      <button class="category-tab" onclick="filterCategory('brain', this)">🧠 <span data-i18n="plans.brainTab">Brain</span></button>
+      <button class="category-tab" data-preview-locked onclick="filterCategory('sport', this)">🏅 <span data-i18n="plans.sportTab">Sport-Specific</span></button>
+      <button class="category-tab" data-preview-locked onclick="filterCategory('programs', this)">📋 <span data-i18n="plans.programsTab">Programs</span></button>
+      <button class="category-tab" data-preview-locked onclick="filterCategory('brain', this)">🧠 <span data-i18n="plans.brainTab">Brain</span></button>
     </div>
 
     <div id="strength-filters">
@@ -539,7 +539,7 @@
           <div><div class="stat-num">100%</div><div class="stat-label" data-i18n="home.statFree">Free</div></div>
         </div>
       </div>
-      <div class="about-card">
+      <div class="about-card" id="guest-auth-card">
         <div class="auth-tabs">
           <button class="muscle-tab active" id="auth-tab-login" type="button" data-i18n="account.loginTab">Log In</button>
           <button class="muscle-tab" id="auth-tab-signup" type="button" data-i18n="account.signupTab">Sign Up</button>

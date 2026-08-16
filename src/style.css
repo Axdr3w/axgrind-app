@@ -400,6 +400,17 @@ body.locked #page-plans::before {
   color:var(--accent); background:rgba(232,255,0,.08); border:1px solid rgba(232,255,0,.25);
   border-radius:8px; padding:8px; margin-bottom:16px;
 }
+/* Everything's still visibly there in the preview — just dimmed like a
+   shadow of itself — rather than hidden outright, since clicking any of it
+   sends the visitor back to sign up (redirectToSignup in plans.js). */
+body.locked [data-preview-locked],
+body.locked .workout-card.preview-locked {
+  opacity:.4; filter:grayscale(.6);
+}
+body.locked [data-preview-locked]::after,
+body.locked .workout-card.preview-locked::after {
+  content:'🔒'; font-size:11px; margin-inline-start:6px;
+}
 
 /* ===== RESPONSIVE / MOBILE =====
    Same page for phone and desktop — these breakpoints are what make it

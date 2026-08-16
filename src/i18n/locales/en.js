@@ -277,7 +277,6 @@ export default {
   'plans.finishWorkout': 'Finish Workout',
   'plans.completedToday': 'Completed today',
   'plans.confirmFinishIncomplete': 'You haven\'t checked off every exercise yet. Finish anyway?',
-  'plans.previewSignupPrompt': 'Sign up for free to unlock this.',
   'brain.articleCount': '{count} articles',
   'brain.category.brainpower': 'Brain Power',
   'brain.category.motivation': 'Motivation',

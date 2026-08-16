@@ -71,9 +71,14 @@ function isPreviewLocked() {
   return document.body.classList.contains('locked');
 }
 
+function redirectToSignup() {
+  document.getElementById('auth-tab-signup')?.click();
+  document.getElementById('guest-auth-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 export function filterCategory(category, btn) {
   if (isPreviewLocked() && category !== 'strength') {
-    alert(t('plans.previewSignupPrompt'));
+    redirectToSignup();
     return;
   }
   activeCategory = category;
@@ -122,8 +127,9 @@ function renderCard(w, tr) {
   const title = tr?.get(w.title) ?? w.title;
   const meta = tr?.get(w.meta) ?? w.meta;
   const envBadge = w.env ? `<span class="badge badge-env">${w.env === 'gym' ? '🏋️' : '🏠'}</span>` : '';
+  const locked = isPreviewLocked() && w.level !== 'beginner' ? 'preview-locked' : '';
   return `
-    <div class="workout-card ${w.featured ? 'featured' : ''}" onclick="openWorkout('${w.id}')">
+    <div class="workout-card ${w.featured ? 'featured' : ''} ${locked}" onclick="openWorkout('${w.id}')">
       <div class="wc-top">
         <div>
           <div class="wc-title">${w.icon} ${escapeHtml(title)}</div>
@@ -498,7 +504,7 @@ export function openWorkout(id) {
   const plan = WORKOUTS.find(w => w.id === id) || ALL_SPORT_AND_PROGRAM_WORKOUTS.find(w => w.id === id);
   if (!plan) return;
   if (isPreviewLocked() && plan.level !== 'beginner') {
-    alert(t('plans.previewSignupPrompt'));
+    redirectToSignup();
     return;
   }
   currentPlan = plan;
