@@ -64,7 +64,18 @@ export function teardownPlans() {
   sessions.clear();
 }
 
+// Guest preview (see the auth-gate CSS in style.css) only lets a signed-out
+// visitor browse Strength Training → Beginner — everything else in Plans
+// prompts them to sign up instead of actually opening.
+function isPreviewLocked() {
+  return document.body.classList.contains('locked');
+}
+
 export function filterCategory(category, btn) {
+  if (isPreviewLocked() && category !== 'strength') {
+    alert(t('plans.previewSignupPrompt'));
+    return;
+  }
   activeCategory = category;
   document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
   btn.classList.add('active');
@@ -486,6 +497,10 @@ let modalGen = 0;
 export function openWorkout(id) {
   const plan = WORKOUTS.find(w => w.id === id) || ALL_SPORT_AND_PROGRAM_WORKOUTS.find(w => w.id === id);
   if (!plan) return;
+  if (isPreviewLocked() && plan.level !== 'beginner') {
+    alert(t('plans.previewSignupPrompt'));
+    return;
+  }
   currentPlan = plan;
   currentTrMap = null;
 
