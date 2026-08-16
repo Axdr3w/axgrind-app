@@ -373,6 +373,11 @@ nav { max-width:860px; margin:0 auto; padding:12px 16px; display:flex; flex-dire
 #dm-thread-view .close-btn { transform:none; }
 .msg-time .forum-mod-btn { margin-inline-start:6px; }
 
+/* ===== ADS (off by default, see src/ads.js) ===== */
+.ad-slot { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:20px; }
+.ad-slot-label { font-size:9px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px; }
+.ad-slot-placeholder { min-height:90px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:12px; background:var(--surface2); border-radius:8px; border:1px dashed var(--border); }
+
 /* ===== AUTH GATE: everything but Account is hidden until logged in ===== */
 body.locked .nav-tab.gated { display:none; }
 body.locked .nav-sep { display:none; }

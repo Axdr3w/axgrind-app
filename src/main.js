@@ -17,6 +17,7 @@ import { maybeStartTour, tourNext, tourBack, finishTour } from './onboarding.js'
 import { initDMs, teardownDMs } from './dm.js';
 import { initLeaderboard, teardownLeaderboard } from './leaderboard.js';
 import { getRankMap } from './rank-cache.js';
+import { initAds } from './ads.js';
 import {
   signUpWithPassword,
   signInWithPassword,
@@ -109,6 +110,7 @@ if (!hasChosenLanguage()) {
 initThemeFromStorage();
 renderAccentUI();
 renderBgThemeUI();
+initAds();
 
 renderQuote();
 renderWorkouts();

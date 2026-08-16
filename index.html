@@ -98,6 +98,13 @@
         <div style="font-size:11px;color:var(--muted);" data-i18n="home.aiCoachDesc">Ask anything about training & nutrition</div>
       </div>
     </div>
+
+    <!-- Off by default — see src/ads.js. Stays in the DOM (display:none) so
+         turning ads on later is a one-line flag flip, not a layout change. -->
+    <div class="ad-slot" id="home-ad-slot" style="display:none;">
+      <div class="ad-slot-label">Advertisement</div>
+      <div class="ad-slot-placeholder">Ad space</div>
+    </div>
   </div>
 
   <!-- QUESTS -->
