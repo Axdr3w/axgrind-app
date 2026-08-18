@@ -14,6 +14,7 @@ import { fetchDisplayName, updateDisplayName, fetchHandle, fetchLanguage, update
 import { initThemeFromStorage, applyAccentColor, renderAccentUI, getAccentColor, applyBgTheme, renderBgThemeUI, getBgThemeId } from './theme.js';
 import { getLanguageMeta, isSupported } from './i18n/languages.js';
 import { maybeStartTour, tourNext, tourBack, finishTour } from './onboarding.js';
+import { openBreathIntro, closeBreathSession } from './breathwork.js';
 import { initDMs, teardownDMs } from './dm.js';
 import { initLeaderboard, teardownLeaderboard } from './leaderboard.js';
 import { getRankMap } from './rank-cache.js';
@@ -97,6 +98,8 @@ Object.assign(window, {
   selectAccentColor,
   selectBgTheme,
   toggleWorkoutHistory,
+  openBreathIntro,
+  closeBreathSession,
 });
 
 // Applies the detected/stored language immediately (first paint is already
