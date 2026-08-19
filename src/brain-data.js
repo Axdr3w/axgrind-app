@@ -17,7 +17,6 @@ export const BRAIN_CATEGORIES = [
   { id: 'timemanagement', icon: '⏰', name: 'Time Management' },
   { id: 'selftalk', icon: '🗣️', name: 'Self-Talk' },
   { id: 'angermanagement', icon: '🌋', name: 'Anger Management' },
-  { id: 'grindbreath', icon: '🌬️', name: 'Grind Breath', isBreathTool: true },
 ];
 
 export const BRAIN_ARTICLES = [

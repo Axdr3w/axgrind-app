@@ -66,18 +66,6 @@ function refreshRankDisplay() {
 }
 
 function categoryListRow(cat, articles) {
-  if (cat.isBreathTool) {
-    return `
-      <div class="sport-list-row" onclick="openBreathIntro()">
-        <div class="sport-list-icon">${cat.icon}</div>
-        <div class="sport-list-info">
-          <div class="sport-list-name">${escapeHtml(t('brain.category.' + cat.id))}</div>
-          <div class="sport-list-desc">${escapeHtml(t('breath.rowDesc'))}</div>
-        </div>
-        <div class="sport-list-arrow">→</div>
-      </div>
-    `;
-  }
   const count = articles.filter(a => a.category === cat.id).length;
   return `
     <div class="sport-list-row" onclick="selectBrainCategory('${cat.id}')">

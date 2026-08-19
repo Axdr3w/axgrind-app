@@ -318,7 +318,6 @@ export default {
   'brain.category.timemanagement': 'Time Management',
   'brain.category.selftalk': 'Self-Talk',
   'brain.category.angermanagement': 'Anger Management',
-  'brain.category.grindbreath': 'Grind Breath',
   'brain.minRead': 'min read',
   'brain.readBadge': 'Read',
   'brain.markAsRead': 'Mark as Read (+25 XP)',
