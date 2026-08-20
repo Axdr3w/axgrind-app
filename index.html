@@ -79,6 +79,23 @@
       </div>
       <button class="btn-accent" onclick="showPage('plans')" data-i18n="home.ctaButton">Get Free Program →</button>
     </div>
+
+    <div class="focus-box">
+      <div class="section-header" style="margin-bottom:10px;"><div class="section-title" data-i18n="focus.title">LOCK IN</div></div>
+      <p class="focus-intro" data-i18n="focus.intro">Set a timer and stay in the app the whole time — switch away even for a second and the session fails. No XP for cheating yourself.</p>
+      <div class="calc-label" style="margin-bottom:8px;" data-i18n="focus.durationLabel">Duration</div>
+      <div class="muscle-tabs" id="focus-duration-tabs" style="margin-bottom:16px;">
+        <button class="muscle-tab" data-min="5">5m</button>
+        <button class="muscle-tab" data-min="10">10m</button>
+        <button class="muscle-tab" data-min="15">15m</button>
+        <button class="muscle-tab active" data-min="25">25m</button>
+        <button class="muscle-tab" data-min="45">45m</button>
+        <button class="muscle-tab" data-min="60">60m</button>
+      </div>
+      <div class="focus-xp-preview"><span data-i18n="focus.earnPrefix">+</span><span id="focus-xp-preview">250</span> <span data-i18n="focus.earnSuffix">XP if you finish</span></div>
+      <button class="btn-accent btn-full" id="focus-start-btn" data-i18n="focus.startBtn">Start Session</button>
+    </div>
+
     <div class="section-header"><div class="section-title" data-i18n="videos.title">EXERCISE LIBRARY</div><button class="section-link" onclick="showPage('videos')" data-i18n="home.browseAll">Browse all →</button></div>
     <div onclick="showPage('videos')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;margin-bottom:20px;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
       <div style="font-size:26px;margin-bottom:7px;">🎥</div>
@@ -291,6 +308,14 @@
       <div class="workout-sheet-body">
         <div id="language-list" class="language-list"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- LOCK IN (focus session) -->
+  <div class="workout-modal" id="focus-modal">
+    <div class="workout-sheet" style="max-width:420px;">
+      <div class="workout-sheet-header"><h2 data-i18n="focus.title">LOCK IN</h2></div>
+      <div class="workout-sheet-body" id="focus-modal-body"></div>
     </div>
   </div>
 

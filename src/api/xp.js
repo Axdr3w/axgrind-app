@@ -23,6 +23,10 @@ export function completeArticle(userId, articleId) {
   return callXpFunction('complete-article', { userId, articleId });
 }
 
+export function completeFocusSession(userId, minutes) {
+  return callXpFunction('complete-focus-session', { userId, minutes });
+}
+
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
 export async function fetchCompletedWorkoutKeysToday(userId) {

@@ -31,6 +31,18 @@ nav { max-width:860px; margin:0 auto; padding:12px 16px; display:flex; flex-dire
 .btn-accent:hover { opacity:.85; }
 .btn-full { width:100%; }
 
+/* ===== LOCK IN (focus session) ===== */
+.focus-box { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; margin-bottom:20px; }
+.focus-intro { font-size:12px; color:var(--muted); line-height:1.65; margin-bottom:16px; }
+.focus-xp-preview { text-align:center; font-size:13px; color:var(--accent); font-weight:600; margin-bottom:14px; }
+.focus-timer-wrap { position:relative; width:200px; height:200px; margin:0 auto 20px; }
+.focus-ring { --deg:0deg; width:200px; height:200px; border-radius:50%; background:conic-gradient(var(--accent) var(--deg), var(--surface2) var(--deg)); position:relative; transition:background .3s linear; }
+.focus-ring-inner { position:absolute; top:14px; left:14px; width:172px; height:172px; border-radius:50%; background:var(--bg); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.focus-ember { font-size:40px; transition:transform .4s ease-out; display:inline-block; }
+.focus-time { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:.05em; margin-top:6px; font-variant-numeric:tabular-nums; }
+.focus-xp-live { text-align:center; font-size:13px; color:var(--muted); margin-bottom:14px; font-variant-numeric:tabular-nums; }
+.focus-warning { text-align:center; font-size:11px; color:#ff6040; background:rgba(255,80,50,.08); border:1px solid rgba(255,80,50,.25); border-radius:8px; padding:10px; }
+
 /* QUOTE */
 .motivation-banner { background:linear-gradient(135deg,#111 0%,#1a1a00 100%); border:1px solid rgba(232,255,0,.15); border-radius:12px; padding:12px 16px; margin-bottom:18px; display:flex; align-items:center; gap:10px; }
 .quote-text { font-size:12px; font-style:italic; color:var(--text); line-height:1.5; flex:1; }

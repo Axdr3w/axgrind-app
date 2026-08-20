@@ -15,6 +15,7 @@ import { initThemeFromStorage, applyAccentColor, renderAccentUI, getAccentColor,
 import { getLanguageMeta, isSupported } from './i18n/languages.js';
 import { maybeStartTour, tourNext, tourBack, finishTour } from './onboarding.js';
 import { openBreathIntro, closeBreathSession } from './breathwork.js';
+import { initFocus, teardownFocus } from './focus.js';
 import { initDMs, teardownDMs } from './dm.js';
 import { initLeaderboard, teardownLeaderboard } from './leaderboard.js';
 import { getRankMap } from './rank-cache.js';
@@ -157,6 +158,7 @@ function updateAccountUI(session) {
     document.getElementById('account-avatar').textContent = email[0]?.toUpperCase() || 'A';
     if (session.user.id !== lastUserId) {
       lastUserId = session.user.id;
+      initFocus(session.user.id);
       initQuests(session.user.id);
       initForum(session.user.id);
       initDMs(session.user.id);
@@ -209,6 +211,7 @@ function updateAccountUI(session) {
     deleteAccountMessage.textContent = '';
     if (lastUserId !== null) {
       lastUserId = null;
+      teardownFocus();
       teardownQuests();
       teardownForum();
       teardownDMs();
