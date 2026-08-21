@@ -16,6 +16,7 @@ import { getLanguageMeta, isSupported } from './i18n/languages.js';
 import { maybeStartTour, tourNext, tourBack, finishTour } from './onboarding.js';
 import { openBreathIntro, closeBreathSession } from './breathwork.js';
 import { initFocus, teardownFocus } from './focus.js';
+import { initProgress, teardownProgress } from './progress.js';
 import { initDMs, teardownDMs } from './dm.js';
 import { initLeaderboard, teardownLeaderboard } from './leaderboard.js';
 import { getRankMap } from './rank-cache.js';
@@ -159,6 +160,7 @@ function updateAccountUI(session) {
     if (session.user.id !== lastUserId) {
       lastUserId = session.user.id;
       initFocus(session.user.id);
+      initProgress(session.user.id);
       initQuests(session.user.id);
       initForum(session.user.id);
       initDMs(session.user.id);
@@ -212,6 +214,7 @@ function updateAccountUI(session) {
     if (lastUserId !== null) {
       lastUserId = null;
       teardownFocus();
+      teardownProgress();
       teardownQuests();
       teardownForum();
       teardownDMs();

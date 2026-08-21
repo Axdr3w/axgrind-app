@@ -190,6 +190,18 @@ export default {
   'nutrition.customTitle': 'Need a custom nutrition plan?', 'nutrition.customDesc': 'DM me on Instagram',
   'nutrition.fillAllFields': 'Please fill in all fields',
 
+  // Progress
+  'progress.title': 'PROGRESS', 'progress.intro': 'Log your weight once a day and watch the trend, not the noise.',
+  'progress.goalLabel': 'Goal',
+  'progress.weightLabel': "Today's weight (lbs)", 'progress.logBtn': 'Log Weight',
+  'progress.xpHint': '+15 XP for your first log of the day',
+  'progress.invalidWeight': 'Enter a weight between 40 and 700 lbs.',
+  'progress.logSuccessXp': 'Logged! +{xp} XP',
+  'progress.logSuccessUpdated': "Updated today's entry.",
+  'progress.statStart': 'Start', 'progress.statCurrent': 'Current', 'progress.statChange': 'Change',
+  'progress.chartEmptyNone': 'No weigh-ins yet — log today\'s weight to start your chart.',
+  'progress.chartEmptyOne': "Nice, one logged. Come back tomorrow and you'll start seeing a trend line.",
+
   // Analyze
   'analyze.titlePrefix': 'AI Body', 'analyze.titleHighlight': 'Analyzer',
   'analyze.intro': 'Upload a photo and the AI will give you a detailed assessment of your physique, your strengths, your potential, and a personalized plan recommendation.',

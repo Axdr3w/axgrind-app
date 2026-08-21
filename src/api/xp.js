@@ -27,6 +27,10 @@ export function completeFocusSession(userId, minutes) {
   return callXpFunction('complete-focus-session', { userId, minutes });
 }
 
+export function logWeight(userId, weight, loggedAt) {
+  return callXpFunction('log-weight', { userId, weight, loggedAt });
+}
+
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
 export async function fetchCompletedWorkoutKeysToday(userId) {
@@ -65,4 +69,16 @@ export async function fetchWorkoutCompletionCount(userId) {
     .eq('user_id', userId);
   if (error) throw error;
   return count ?? 0;
+}
+
+export async function fetchWeightLogs(userId, limit = 90) {
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from('weight_logs')
+    .select('weight, logged_at')
+    .eq('user_id', userId)
+    .order('logged_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []).reverse();
 }

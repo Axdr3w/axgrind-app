@@ -451,6 +451,31 @@
 
   <!-- BODY ANALYZER -->
   <div class="page" id="page-analyze">
+    <div class="progress-box">
+      <div class="section-header" style="margin-bottom:10px;"><div class="section-title" data-i18n="progress.title">PROGRESS</div></div>
+      <p class="focus-intro" data-i18n="progress.intro">Log your weight once a day and watch the trend, not the noise.</p>
+
+      <div class="calc-label" style="margin-bottom:8px;" data-i18n="progress.goalLabel">Goal</div>
+      <div class="muscle-tabs" id="progress-goal-tabs">
+        <button class="muscle-tab" data-goal="cut" data-i18n="nutrition.goalCut">Cut (lose fat)</button>
+        <button class="muscle-tab active" data-goal="maintain" data-i18n="nutrition.goalMaintain">Maintain</button>
+        <button class="muscle-tab" data-goal="bulk" data-i18n="nutrition.goalBulk">Bulk (gain muscle)</button>
+      </div>
+
+      <div class="progress-log-row">
+        <div class="calc-field">
+          <div class="calc-label" data-i18n="progress.weightLabel">Today's weight (lbs)</div>
+          <input class="calc-input" type="number" id="progress-weight-input" placeholder="185" inputmode="decimal">
+        </div>
+        <button class="btn-accent" id="progress-log-btn" data-i18n="progress.logBtn">Log Weight</button>
+      </div>
+      <div class="progress-log-xp" data-i18n="progress.xpHint">+15 XP for your first log of the day</div>
+      <div class="progress-log-msg" id="progress-log-msg"></div>
+
+      <div id="progress-stats-row" class="progress-stats-row"></div>
+      <div id="progress-chart-wrap" class="progress-chart-wrap"></div>
+    </div>
+
     <div class="analyzer-intro">
       <div class="big-icon">📸</div>
       <h2><span data-i18n="analyze.titlePrefix">AI Body</span> <span data-i18n="analyze.titleHighlight">Analyzer</span></h2>
