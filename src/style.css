@@ -72,6 +72,19 @@ nav { max-width:860px; margin:0 auto; padding:12px 16px; display:flex; flex-dire
 .photo-compare-col img { width:100%; aspect-ratio:3/4; object-fit:cover; display:block; }
 .photo-compare-date { text-align:center; font-size:10px; color:var(--muted); padding:6px 0; }
 .photo-compare-stats { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+.measure-box { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px; margin-bottom:20px; }
+.measure-grid-inputs { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.measure-snapshot { margin-top:14px; display:flex; flex-direction:column; gap:6px; }
+.measure-row { display:flex; align-items:center; gap:8px; background:var(--surface2); border-radius:8px; padding:8px 12px; font-size:12px; }
+.measure-row-label { flex:1; color:var(--muted); }
+.measure-row-value { font-weight:600; font-variant-numeric:tabular-nums; }
+.measure-delta { font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; }
+.achievement-toast-container { position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:500; display:flex; flex-direction:column; gap:8px; pointer-events:none; width:calc(100% - 32px); max-width:380px; }
+.achievement-toast { background:var(--surface); border:1px solid var(--accent); border-radius:12px; padding:12px 16px; display:flex; align-items:center; gap:12px; box-shadow:0 8px 24px rgba(0,0,0,.5); opacity:0; transform:translateY(-16px); transition:opacity .3s,transform .3s; }
+.achievement-toast.show { opacity:1; transform:translateY(0); }
+.achievement-toast-icon { font-size:28px; flex-shrink:0; }
+.achievement-toast-label { font-size:9px; color:var(--accent); text-transform:uppercase; letter-spacing:.06em; font-weight:700; }
+.achievement-toast-title { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:.03em; }
 
 .achievements-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 .achievement-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 8px; text-align:center; transition:opacity .2s,filter .2s; }

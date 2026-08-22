@@ -7,6 +7,7 @@ import { translateBatch } from './i18n/content-translate.js';
 import { completeWorkout, fetchCompletedWorkoutKeysToday } from './api/xp.js';
 import { getRankMap, invalidateRankCache } from './rank-cache.js';
 import { renderBrainArticles } from './brain.js';
+import { checkForNewAchievements } from './achievements.js';
 
 const ALL_SPORT_AND_PROGRAM_WORKOUTS = [...SPORTS_WORKOUTS, ...PROGRAM_WORKOUTS];
 
@@ -421,6 +422,7 @@ export async function finishWorkout(workoutId, dayKey) {
     sessions.delete(dayKey);
     completedTodayKeys.add(`${workoutId}::${dayKey}`);
     refreshRankDisplay();
+    checkForNewAchievements();
   } catch (err) {
     session.message = err.message;
     session.messageError = true;

@@ -1,6 +1,7 @@
 import { t } from './i18n/index.js';
 import { logWeight, fetchWeightLogs } from './api/xp.js';
 import { uploadProgressPhoto, fetchProgressPhotos, deleteProgressPhoto } from './api/progressPhotos.js';
+import { checkForNewAchievements } from './achievements.js';
 import { todayStr } from './date-utils.js';
 
 const GOAL_STORAGE_KEY = 'ax-weight-goal';
@@ -170,6 +171,7 @@ async function submitLog() {
     msg.className = 'progress-log-msg success';
     renderStats();
     renderChart();
+    checkForNewAchievements();
   } catch (err) {
     msg.textContent = err.message;
     msg.className = 'progress-log-msg error';
@@ -340,6 +342,7 @@ async function handlePhotoAdd(e) {
     renderCompare();
     msg.textContent = t('progress.photoSuccess');
     msg.className = 'photo-msg success';
+    checkForNewAchievements();
   } catch (err) {
     msg.textContent = err.message;
     msg.className = 'photo-msg error';

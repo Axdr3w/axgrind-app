@@ -340,6 +340,8 @@
     </div>
   </div>
 
+  <div class="achievement-toast-container" id="achievement-toast-container"></div>
+
   <!-- GRIND BREATH -->
   <div class="workout-modal" id="breath-modal">
     <div class="workout-sheet" style="max-width:440px;">
@@ -515,6 +517,25 @@
         <div class="photo-compare-grid" id="photo-compare-grid"></div>
         <div class="photo-compare-stats" id="photo-compare-stats"></div>
       </div>
+    </div>
+
+    <div class="measure-box">
+      <div class="section-header" style="margin-bottom:10px;"><div class="section-title" data-i18n="measure.title">BODY MEASUREMENTS</div></div>
+      <p class="focus-intro" data-i18n="measure.intro">Track the parts the scale can't tell you about. Fill in whichever you're measuring today — the rest are optional.</p>
+      <div class="measure-grid-inputs">
+        <div class="calc-field"><div class="calc-label" data-i18n="measure.neck">Neck (in)</div><input class="calc-input" type="number" step="0.1" id="measure-neck"></div>
+        <div class="calc-field"><div class="calc-label" data-i18n="measure.shoulders">Shoulders (in)</div><input class="calc-input" type="number" step="0.1" id="measure-shoulders"></div>
+        <div class="calc-field"><div class="calc-label" data-i18n="measure.chest">Chest (in)</div><input class="calc-input" type="number" step="0.1" id="measure-chest"></div>
+        <div class="calc-field"><div class="calc-label" data-i18n="measure.arms">Arms (in)</div><input class="calc-input" type="number" step="0.1" id="measure-arms"></div>
+        <div class="calc-field"><div class="calc-label" data-i18n="measure.waist">Waist (in)</div><input class="calc-input" type="number" step="0.1" id="measure-waist"></div>
+        <div class="calc-field"><div class="calc-label" data-i18n="measure.hips">Hips (in)</div><input class="calc-input" type="number" step="0.1" id="measure-hips"></div>
+        <div class="calc-field"><div class="calc-label" data-i18n="measure.thighs">Thighs (in)</div><input class="calc-input" type="number" step="0.1" id="measure-thighs"></div>
+        <div class="calc-field"><div class="calc-label" data-i18n="measure.calves">Calves (in)</div><input class="calc-input" type="number" step="0.1" id="measure-calves"></div>
+      </div>
+      <button class="btn-accent btn-full" id="measure-log-btn" data-i18n="measure.logBtn">Log Measurements</button>
+      <div class="progress-log-xp" data-i18n="progress.xpHint">+15 XP for your first log of the day</div>
+      <div class="progress-log-msg" id="measure-log-msg"></div>
+      <div id="measure-snapshot" class="measure-snapshot"></div>
     </div>
 
     <div class="analyzer-intro">

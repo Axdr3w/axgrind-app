@@ -11,6 +11,7 @@ import { findWorkoutById } from './workout-lookup.js';
 import { levelFromXp, xpIntoLevel, computeStreak } from './gamification.js';
 import { toDateStr, todayStr } from './date-utils.js';
 import { isPushSupported, getExistingSubscription, enablePushReminders } from './push.js';
+import { checkForNewAchievements } from './achievements.js';
 import { t, getLanguage } from './i18n/index.js';
 
 let currentUserId = null;
@@ -77,9 +78,11 @@ async function renderQuestList() {
 
   container.querySelectorAll('.quest-check').forEach(btn => {
     btn.addEventListener('click', async () => {
-      await toggleQuestComplete(btn.dataset.id, btn.dataset.completed === 'true');
+      const wasCompleted = btn.dataset.completed === 'true';
+      await toggleQuestComplete(btn.dataset.id, wasCompleted);
       await renderQuestList();
       await renderHeader();
+      if (!wasCompleted) checkForNewAchievements();
     });
   });
   container.querySelectorAll('.quest-delete').forEach(btn => {

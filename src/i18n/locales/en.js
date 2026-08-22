@@ -52,6 +52,7 @@ export default {
   'quests.historyLabel': 'Workout History',
   'quests.historyCompletedTotal': 'workouts completed all-time',
   'achievements.toggleLabel': 'Achievements', 'achievements.unlockedSuffix': 'unlocked',
+  'achievements.unlockedLabel': 'Achievement Unlocked',
   'quests.historyEmpty': "No completed workouts yet — finish one from Plans and it'll show up here.",
   'quests.historyErrorLoad': "Couldn't load history: {reason}",
   'quests.leaderboardBtn': 'Leaderboard',
@@ -210,6 +211,15 @@ export default {
   'progress.photoDeleteConfirm': 'Delete this photo? This can\'t be undone.',
   'progress.compareTitle': 'BEFORE / AFTER',
   'progress.compareDays': 'Days Apart', 'progress.compareWeightChange': 'Weight Change',
+
+  // Body Measurements
+  'measure.title': 'BODY MEASUREMENTS',
+  'measure.intro': "Track the parts the scale can't tell you about. Fill in whichever you're measuring today — the rest are optional.",
+  'measure.neck': 'Neck (in)', 'measure.shoulders': 'Shoulders (in)', 'measure.chest': 'Chest (in)', 'measure.arms': 'Arms (in)',
+  'measure.waist': 'Waist (in)', 'measure.hips': 'Hips (in)', 'measure.thighs': 'Thighs (in)', 'measure.calves': 'Calves (in)',
+  'measure.logBtn': 'Log Measurements',
+  'measure.empty': 'No measurements yet — log any you\'re tracking to start your snapshot.',
+  'measure.invalidEmpty': 'Enter at least one measurement.',
 
   // Analyze
   'analyze.titlePrefix': 'AI Body', 'analyze.titleHighlight': 'Analyzer',
