@@ -219,7 +219,7 @@ function handleImageSelect(e) {
   reader.readAsDataURL(file);
 }
 
-function removeForumImage() {
+export function removeForumImage() {
   pendingImageFile = null;
   document.getElementById('forum-image-input').value = '';
   document.getElementById('forum-image-preview').style.display = 'none';

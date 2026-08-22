@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/check-onclick-handlers.cjs",
     "build": "vite build",
+    "check:handlers": "node scripts/check-onclick-handlers.cjs",
     "preview": "vite preview"
   },
   "devDependencies": {

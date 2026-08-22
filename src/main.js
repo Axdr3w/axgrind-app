@@ -9,7 +9,7 @@ import { handlePhotoUpload, removePhoto, analyzeBody, initAnalyzer, teardownAnal
 import { sendChip, chatKeydown, autoGrow, sendChatMessage, saveChatMessage, toggleSavedView, deleteSavedChatItem, initCoach, teardownCoach } from './coach.js';
 import { renderVideoLibrary, filterVideoLibrary, openExerciseInfo, closeExerciseInfo } from './videos.js';
 import { initQuests, teardownQuests, toggleWorkoutHistory } from './quests.js';
-import { initForum, teardownForum } from './forum.js';
+import { initForum, teardownForum, removeForumImage } from './forum.js';
 import { fetchDisplayName, updateDisplayName, fetchHandle, fetchLanguage, updateLanguage, fetchAccentColor, updateAccentColor, fetchBgTheme, updateBgTheme } from './api/profile.js';
 import { initThemeFromStorage, applyAccentColor, renderAccentUI, getAccentColor, applyBgTheme, renderBgThemeUI, getBgThemeId } from './theme.js';
 import { getLanguageMeta, isSupported } from './i18n/languages.js';
@@ -140,6 +140,7 @@ Object.assign(window, {
   closePhotoLightbox,
   toggleAchievements,
   selectAnalyzeSubtab,
+  removeForumImage,
 });
 
 // Applies the detected/stored language immediately (first paint is already
@@ -158,7 +159,12 @@ initAds();
 renderQuote();
 renderWorkouts();
 renderVideoLibrary();
-renderBrainArticles();
+// Brain articles are NOT pre-rendered here like the others above — the
+// 1.5MB article dataset is already lazy-imported inside brain.js, but
+// calling renderBrainArticles() unconditionally at boot defeated that by
+// fetching it for every visitor immediately, logged in or not. It's not
+// part of the guest preview, so there's nothing to show before login
+// anyway — initBrain()'s own renderBrainArticles() call (below) covers it.
 
 document.getElementById('video-search').addEventListener('input', (e) => {
   filterVideoLibrary(e.target.value);
