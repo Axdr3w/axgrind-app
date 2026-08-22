@@ -1,12 +1,16 @@
 import { t } from './i18n/index.js';
 import { logWeight, fetchWeightLogs } from './api/xp.js';
+import { uploadProgressPhoto, fetchProgressPhotos, deleteProgressPhoto } from './api/progressPhotos.js';
 import { todayStr } from './date-utils.js';
 
 const GOAL_STORAGE_KEY = 'ax-weight-goal';
 const CHART_MAX_POINTS = 30;
+const PHOTO_MAX_DIM = 1080;
+const PHOTO_QUALITY = 0.82;
 
 let currentUserId = null;
 let logs = []; // ascending by logged_at: [{ weight, logged_at }]
+let photos = []; // ascending by loggedAt: [{ loggedAt, url }]
 let goal = localStorage.getItem(GOAL_STORAGE_KEY) || 'maintain';
 
 function el(id) { return document.getElementById(id); }
@@ -19,12 +23,19 @@ export async function initProgress(userId) {
   } catch {
     logs = [];
   }
+  try {
+    photos = await fetchProgressPhotos(userId);
+  } catch {
+    photos = [];
+  }
   renderAll();
+  renderFilmstrip();
 }
 
 export function teardownProgress() {
   currentUserId = null;
   logs = [];
+  photos = [];
 }
 
 function renderGoalTabs() {
@@ -166,7 +177,127 @@ async function submitLog() {
   }
 }
 
+// iPhones shoot HEIC by default — same detection the AI Analyzer uses,
+// since neither Chrome/Firefox/Edge can decode it in <img>/canvas either.
+function isHeic(file) {
+  const type = (file.type || '').toLowerCase();
+  const name = (file.name || '').toLowerCase();
+  return type === 'image/heic' || type === 'image/heif' || name.endsWith('.heic') || name.endsWith('.heif');
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+// Progress photos accumulate forever (unlike the AI Analyzer's photo, which
+// is never stored) — resizing/re-encoding client-side before upload keeps
+// storage and function-payload size sane over months of daily use.
+async function fileToJpegBase64(file) {
+  let workingFile = file;
+  if (isHeic(file)) {
+    const heic2any = (await import('heic2any')).default;
+    const converted = await heic2any({ blob: file, toType: 'image/jpeg', quality: 0.9 });
+    workingFile = Array.isArray(converted) ? converted[0] : converted;
+  }
+  const bitmap = await createImageBitmap(workingFile);
+  let { width, height } = bitmap;
+  if (width > PHOTO_MAX_DIM || height > PHOTO_MAX_DIM) {
+    const scale = PHOTO_MAX_DIM / Math.max(width, height);
+    width = Math.round(width * scale);
+    height = Math.round(height * scale);
+  }
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height);
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', PHOTO_QUALITY));
+  return blobToBase64(blob);
+}
+
+function renderFilmstrip() {
+  const wrap = el('progress-photo-filmstrip');
+  if (!wrap) return;
+  if (photos.length === 0) {
+    wrap.innerHTML = `<div class="photo-filmstrip-empty">${t('progress.photoEmpty')}</div>`;
+    return;
+  }
+  wrap.innerHTML = photos.map((p) => `
+    <div class="photo-thumb" data-date="${p.loggedAt}">
+      <img src="${p.url}" alt="${p.loggedAt}" loading="lazy">
+      <div class="photo-thumb-date">${formatShortDate(p.loggedAt)}</div>
+    </div>
+  `).join('');
+  wrap.querySelectorAll('.photo-thumb').forEach((thumb) => {
+    thumb.addEventListener('click', () => openLightbox(thumb.dataset.date));
+  });
+}
+
+function openLightbox(loggedAt) {
+  const photo = photos.find((p) => p.loggedAt === loggedAt);
+  if (!photo) return;
+  el('photo-lightbox-img').src = photo.url;
+  el('photo-lightbox-date').textContent = formatShortDate(loggedAt);
+  el('photo-lightbox-delete').dataset.date = loggedAt;
+  el('photo-lightbox-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+export function closePhotoLightbox() {
+  el('photo-lightbox-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function handleDeletePhoto() {
+  const loggedAt = el('photo-lightbox-delete').dataset.date;
+  if (!loggedAt || !confirm(t('progress.photoDeleteConfirm'))) return;
+  try {
+    await deleteProgressPhoto(currentUserId, loggedAt);
+    photos = photos.filter((p) => p.loggedAt !== loggedAt);
+    renderFilmstrip();
+    closePhotoLightbox();
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function handlePhotoAdd(e) {
+  const file = e.target.files[0];
+  const input = e.target;
+  if (!file || !currentUserId) return;
+  const btn = el('progress-photo-add-btn');
+  const msg = el('progress-photo-msg');
+  btn.disabled = true;
+  msg.textContent = '';
+  msg.className = 'photo-msg';
+  try {
+    const base64 = await fileToJpegBase64(file);
+    const result = await uploadProgressPhoto(currentUserId, base64, todayStr());
+    const existingIdx = photos.findIndex((p) => p.loggedAt === result.loggedAt);
+    if (existingIdx >= 0) photos[existingIdx] = result;
+    else photos.push(result);
+    photos.sort((a, b) => a.loggedAt.localeCompare(b.loggedAt));
+    renderFilmstrip();
+    msg.textContent = t('progress.photoSuccess');
+    msg.className = 'photo-msg success';
+  } catch (err) {
+    msg.textContent = err.message;
+    msg.className = 'photo-msg error';
+  } finally {
+    btn.disabled = false;
+    input.value = '';
+  }
+}
+
 document.getElementById('progress-goal-tabs')?.querySelectorAll('button').forEach((btn) => {
   btn.addEventListener('click', () => selectGoal(btn.dataset.goal));
 });
 document.getElementById('progress-log-btn')?.addEventListener('click', submitLog);
+document.getElementById('progress-photo-add-btn')?.addEventListener('click', () => el('progress-photo-input').click());
+document.getElementById('progress-photo-input')?.addEventListener('change', handlePhotoAdd);
+document.getElementById('photo-lightbox-close')?.addEventListener('click', closePhotoLightbox);
+document.getElementById('photo-lightbox-delete')?.addEventListener('click', handleDeletePhoto);

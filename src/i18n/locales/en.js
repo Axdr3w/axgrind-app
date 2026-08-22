@@ -201,6 +201,12 @@ export default {
   'progress.statStart': 'Start', 'progress.statCurrent': 'Current', 'progress.statChange': 'Change',
   'progress.chartEmptyNone': 'No weigh-ins yet — log today\'s weight to start your chart.',
   'progress.chartEmptyOne': "Nice, one logged. Come back tomorrow and you'll start seeing a trend line.",
+  'progress.photoTitle': 'PROGRESS PHOTOS', 'progress.photoIntro': "One photo a day, next to your weigh-ins — the clearest way to see real change.",
+  'progress.photoAddBtn': "Add Today's Photo",
+  'progress.photoEmpty': 'No photos yet — add one to start your timeline.',
+  'progress.photoSuccess': 'Photo saved.',
+  'progress.photoDeleteBtn': 'Delete this photo', 'progress.photoCloseBtn': 'Close',
+  'progress.photoDeleteConfirm': 'Delete this photo? This can\'t be undone.',
 
   // Analyze
   'analyze.titlePrefix': 'AI Body', 'analyze.titleHighlight': 'Analyzer',

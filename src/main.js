@@ -16,7 +16,7 @@ import { getLanguageMeta, isSupported } from './i18n/languages.js';
 import { maybeStartTour, tourNext, tourBack, finishTour } from './onboarding.js';
 import { openBreathIntro, closeBreathSession } from './breathwork.js';
 import { initFocus, teardownFocus } from './focus.js';
-import { initProgress, teardownProgress } from './progress.js';
+import { initProgress, teardownProgress, closePhotoLightbox } from './progress.js';
 import { initDMs, teardownDMs } from './dm.js';
 import { initLeaderboard, teardownLeaderboard } from './leaderboard.js';
 import { getRankMap } from './rank-cache.js';
@@ -102,6 +102,7 @@ Object.assign(window, {
   toggleWorkoutHistory,
   openBreathIntro,
   closeBreathSession,
+  closePhotoLightbox,
 });
 
 // Applies the detected/stored language immediately (first paint is already

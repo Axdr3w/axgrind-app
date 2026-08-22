@@ -319,6 +319,18 @@
     </div>
   </div>
 
+  <!-- PROGRESS PHOTO LIGHTBOX -->
+  <div class="workout-modal" id="photo-lightbox-modal" onclick="if(event.target===this)closePhotoLightbox()">
+    <div class="photo-lightbox-content">
+      <img id="photo-lightbox-img" src="" alt="">
+      <div class="photo-lightbox-date" id="photo-lightbox-date"></div>
+      <div class="photo-lightbox-actions">
+        <button class="section-link" id="photo-lightbox-delete" data-i18n="progress.photoDeleteBtn">Delete this photo</button>
+        <button class="section-link" id="photo-lightbox-close" data-i18n="progress.photoCloseBtn">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- GRIND BREATH -->
   <div class="workout-modal" id="breath-modal">
     <div class="workout-sheet" style="max-width:440px;">
@@ -474,6 +486,15 @@
 
       <div id="progress-stats-row" class="progress-stats-row"></div>
       <div id="progress-chart-wrap" class="progress-chart-wrap"></div>
+    </div>
+
+    <div class="photo-box">
+      <div class="section-header" style="margin-bottom:10px;"><div class="section-title" data-i18n="progress.photoTitle">PROGRESS PHOTOS</div></div>
+      <p class="focus-intro" data-i18n="progress.photoIntro">One photo a day, next to your weigh-ins — the clearest way to see real change.</p>
+      <input type="file" id="progress-photo-input" accept="image/*,.heic,.heif" style="display:none;">
+      <button class="btn-accent btn-full" id="progress-photo-add-btn" data-i18n="progress.photoAddBtn">Add Today's Photo</button>
+      <div class="photo-msg" id="progress-photo-msg"></div>
+      <div class="photo-filmstrip" id="progress-photo-filmstrip"></div>
     </div>
 
     <div class="analyzer-intro">
