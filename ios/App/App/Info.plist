@@ -22,6 +22,12 @@
 	<string>$(MARKETING_VERSION)</string>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>NSCameraUsageDescription</key>
+	<string>AX.GRIND uses your camera to take progress photos and to snap a photo for the AI Body Analyzer.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>AX.GRIND needs access to your photo library so you can pick a progress photo or a photo for the AI Body Analyzer.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
