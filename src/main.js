@@ -66,6 +66,21 @@ function showPage(id) {
   window.scrollTo(0, 0);
 }
 
+// The Analyze tab grew into five distinct tools (weigh-ins, photos,
+// measurements, AI scan) stacked on one long scroll — this splits them into
+// sub-tabs instead. Every panel's data is already fetched at login
+// regardless of which is visible, so switching is a pure display toggle,
+// nothing to re-fetch.
+function selectAnalyzeSubtab(name) {
+  document.querySelectorAll('#analyze-subtabs .muscle-tab').forEach((t) => {
+    t.classList.toggle('active', t.dataset.subtab === name);
+  });
+  document.querySelectorAll('.analyze-subpage').forEach((p) => {
+    p.style.display = p.id === `analyze-subpage-${name}` ? 'block' : 'none';
+  });
+  window.scrollTo(0, 0);
+}
+
 // Legacy inline onclick/onchange handlers in index.html call these on window.
 Object.assign(window, {
   showPage,
@@ -106,6 +121,7 @@ Object.assign(window, {
   closeBreathSession,
   closePhotoLightbox,
   toggleAchievements,
+  selectAnalyzeSubtab,
 });
 
 // Applies the detected/stored language immediately (first paint is already

@@ -474,6 +474,14 @@
 
   <!-- BODY ANALYZER -->
   <div class="page" id="page-analyze">
+    <div class="muscle-tabs" id="analyze-subtabs" style="margin-bottom:16px;">
+      <button class="muscle-tab active" onclick="selectAnalyzeSubtab('progress')" data-subtab="progress" data-i18n="analyze.tabProgress">Progress</button>
+      <button class="muscle-tab" onclick="selectAnalyzeSubtab('photos')" data-subtab="photos" data-i18n="analyze.tabPhotos">Photos</button>
+      <button class="muscle-tab" onclick="selectAnalyzeSubtab('measurements')" data-subtab="measurements" data-i18n="analyze.tabMeasurements">Measurements</button>
+      <button class="muscle-tab" onclick="selectAnalyzeSubtab('scan')" data-subtab="scan" data-i18n="analyze.tabScan">AI Scan</button>
+    </div>
+
+    <div class="analyze-subpage" id="analyze-subpage-progress">
     <div class="progress-box">
       <div class="section-header" style="margin-bottom:10px;"><div class="section-title" data-i18n="progress.title">PROGRESS</div></div>
       <p class="focus-intro" data-i18n="progress.intro">Log your weight once a day and watch the trend, not the noise.</p>
@@ -498,7 +506,9 @@
       <div id="progress-stats-row" class="progress-stats-row"></div>
       <div id="progress-chart-wrap" class="progress-chart-wrap"></div>
     </div>
+    </div>
 
+    <div class="analyze-subpage" id="analyze-subpage-photos" style="display:none;">
     <div class="photo-box">
       <div class="section-header" style="margin-bottom:10px;"><div class="section-title" data-i18n="progress.photoTitle">PROGRESS PHOTOS</div></div>
       <p class="focus-intro" data-i18n="progress.photoIntro">One photo a day, next to your weigh-ins — the clearest way to see real change.</p>
@@ -518,7 +528,9 @@
         <div class="photo-compare-stats" id="photo-compare-stats"></div>
       </div>
     </div>
+    </div>
 
+    <div class="analyze-subpage" id="analyze-subpage-measurements" style="display:none;">
     <div class="measure-box">
       <div class="section-header" style="margin-bottom:10px;"><div class="section-title" data-i18n="measure.title">BODY MEASUREMENTS</div></div>
       <p class="focus-intro" data-i18n="measure.intro">Track the parts the scale can't tell you about. Fill in whichever you're measuring today — the rest are optional.</p>
@@ -537,7 +549,9 @@
       <div class="progress-log-msg" id="measure-log-msg"></div>
       <div id="measure-snapshot" class="measure-snapshot"></div>
     </div>
+    </div>
 
+    <div class="analyze-subpage" id="analyze-subpage-scan" style="display:none;">
     <div class="analyzer-intro">
       <div class="big-icon">📸</div>
       <h2><span data-i18n="analyze.titlePrefix">AI Body</span> <span data-i18n="analyze.titleHighlight">Analyzer</span></h2>
@@ -564,6 +578,7 @@
       <h3 data-i18n="analyze.resultTitle">YOUR ANALYSIS</h3>
       <div id="analysis-content"></div>
       <div style="margin-top:16px;"><button class="btn-accent btn-full" onclick="removePhoto();document.getElementById('analyze-result').style.display='none';" data-i18n="analyze.analyzeAnother">Analyze Another Photo</button></div>
+    </div>
     </div>
   </div>
 

@@ -222,6 +222,7 @@ export default {
   'measure.invalidEmpty': 'Enter at least one measurement.',
 
   // Analyze
+  'analyze.tabProgress': 'Progress', 'analyze.tabPhotos': 'Photos', 'analyze.tabMeasurements': 'Measurements', 'analyze.tabScan': 'AI Scan',
   'analyze.titlePrefix': 'AI Body', 'analyze.titleHighlight': 'Analyzer',
   'analyze.intro': 'Upload a photo and the AI will give you a detailed assessment of your physique, your strengths, your potential, and a personalized plan recommendation.',
   'analyze.uploadPrompt': 'Tap to upload a photo',
