@@ -13,6 +13,9 @@ nav { max-width:860px; margin:0 auto; padding:12px 16px; display:flex; flex-dire
 .nav-tab.active { background:#1a1a1a; color:var(--accent); }
 .nav-sep { color:var(--muted); opacity:.4; font-size:11px; }
 .nav-tab:hover:not(.active) { color:var(--text); }
+.nav-more-item { display:block; width:100%; text-align:left; background:none; border:none; border-bottom:1px solid var(--border); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; padding:14px 4px; cursor:pointer; }
+.nav-more-item:last-child { border-bottom:none; }
+.nav-more-item.active { color:var(--accent); }
 .container { max-width:860px; margin:0 auto; padding:20px 16px; }
 .page { display:none; }
 .page.active { display:block; }
@@ -477,6 +480,7 @@ nav { max-width:860px; margin:0 auto; padding:12px 16px; display:flex; flex-dire
 
 /* ===== AUTH GATE: everything but Account is hidden until logged in ===== */
 body.locked .nav-tab.gated { display:none; }
+body.locked .nav-more-item.gated { display:none; }
 body.locked .nav-sep { display:none; }
 body.locked .motivation-banner { display:none; }
 body.locked .page { display:none !important; }
@@ -521,7 +525,7 @@ body { padding-bottom:env(safe-area-inset-bottom); }
   .nav-tabs { flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; margin:0 -16px; padding:2px 16px 6px; -ms-overflow-style:none; }
   .nav-tabs::-webkit-scrollbar { display:none; }
   .nav-tab, .nav-sep { flex-shrink:0; }
-  .nav-tab { padding:7px 11px; font-size:12.5px; }
+  .nav-tab { padding:7px 8px; font-size:12.5px; }
 
   .container { padding:16px 14px; }
   .hero { padding:22px 20px; }

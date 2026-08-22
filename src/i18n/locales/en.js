@@ -15,6 +15,7 @@ export default {
   'nav.home': 'Home', 'nav.quests': 'Quests', 'nav.videos': 'Videos', 'nav.plans': 'Plans',
   'nav.nutrition': 'Nutrition', 'nav.analyze': 'Analyze', 'nav.coach': 'Coach', 'nav.about': 'About',
   'nav.forum': 'Forum', 'nav.messages': 'Messages', 'nav.account': 'Account',
+  'nav.more': 'More ⋯', 'nav.moreTitle': 'More',
 
   // Home
   'home.heroTag': 'Free Training — No Excuses',

@@ -36,7 +36,6 @@ import {
 } from './auth.js';
 
 // ===================== NAV =====================
-const pageOrder = ['home', 'about', 'quests', 'plans', 'nutrition', 'analyze', 'chat', 'videos', 'forum', 'messages', 'account'];
 
 // Applies immediately regardless of login state (works for guests too, via
 // localStorage) and syncs to the profile in the background when logged in
@@ -53,17 +52,34 @@ function selectBgTheme(id) {
 
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('[data-page]').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
-  const idx = pageOrder.indexOf(id);
-  if (idx > -1) {
-    const tab = document.querySelectorAll('.nav-tab')[idx];
+  const tab = document.querySelector(`.nav-tab[data-page="${id}"]`);
+  if (tab) {
     tab.classList.add('active');
     // On mobile the nav scrolls horizontally instead of wrapping, so keep
     // the active tab in view instead of leaving it scrolled off-screen.
     tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }
+  // A page reached through the "More" menu has no button in the primary
+  // row — highlight the More button itself so it's still clear which
+  // section is active, and mark the matching row inside the menu too.
+  const moreItem = document.querySelector(`.nav-more-item[data-page="${id}"]`);
+  if (moreItem) {
+    moreItem.classList.add('active');
+    document.getElementById('nav-more-btn').classList.add('active');
+  }
   window.scrollTo(0, 0);
+}
+
+function openNavMore() {
+  document.getElementById('nav-more-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeNavMore() {
+  document.getElementById('nav-more-modal').classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 // The Analyze tab grew into five distinct tools (weigh-ins, photos,
@@ -84,6 +100,8 @@ function selectAnalyzeSubtab(name) {
 // Legacy inline onclick/onchange handlers in index.html call these on window.
 Object.assign(window, {
   showPage,
+  openNavMore,
+  closeNavMore,
   newQuote,
   filterCategory,
   filterMuscle,

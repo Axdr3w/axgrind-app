@@ -33,29 +33,33 @@
       <button class="globe-btn" id="globe-lang-btn" type="button" title="Language" data-i18n-title="account.languageLabel">🌐</button>
     </div>
     <div class="nav-tabs">
-      <button class="nav-tab gated active" onclick="showPage('home')" data-i18n="nav.home">Home</button>
+      <button class="nav-tab gated active" data-page="home" onclick="showPage('home')" data-i18n="nav.home">Home</button>
       <span class="nav-sep">|</span>
-      <button class="nav-tab gated" onclick="showPage('about')" data-i18n="nav.about">About</button>
+      <button class="nav-tab gated" data-page="plans" onclick="showPage('plans')" data-i18n="nav.plans">Plans</button>
       <span class="nav-sep">|</span>
-      <button class="nav-tab gated" onclick="showPage('quests')" data-i18n="nav.quests">Quests</button>
+      <button class="nav-tab gated" data-page="quests" onclick="showPage('quests')" data-i18n="nav.quests">Quests</button>
       <span class="nav-sep">|</span>
-      <button class="nav-tab gated" onclick="showPage('plans')" data-i18n="nav.plans">Plans</button>
+      <button class="nav-tab gated" data-page="analyze" onclick="showPage('analyze')" data-i18n="nav.analyze">Analyze</button>
       <span class="nav-sep">|</span>
-      <button class="nav-tab gated" onclick="showPage('nutrition')" data-i18n="nav.nutrition">Nutrition</button>
+      <button class="nav-tab" data-page="account" onclick="showPage('account')" data-i18n="nav.account">Account</button>
       <span class="nav-sep">|</span>
-      <button class="nav-tab gated" onclick="showPage('analyze')" data-i18n="nav.analyze">Analyze</button>
-      <span class="nav-sep">|</span>
-      <button class="nav-tab gated" onclick="showPage('chat')" data-i18n="nav.coach">Coach</button>
-      <span class="nav-sep">|</span>
-      <button class="nav-tab gated" onclick="showPage('videos')" data-i18n="nav.videos">Videos</button>
-      <span class="nav-sep">|</span>
-      <button class="nav-tab gated" onclick="showPage('forum')" data-i18n="nav.forum">Forum</button>
-      <span class="nav-sep">|</span>
-      <button class="nav-tab gated" onclick="showPage('messages')" data-i18n="nav.messages">Messages</button>
-      <span class="nav-sep">|</span>
-      <button class="nav-tab" onclick="showPage('account')" data-i18n="nav.account">Account</button>
+      <button class="nav-tab gated" id="nav-more-btn" onclick="openNavMore()" data-i18n="nav.more">More ⋯</button>
     </div>
   </nav>
+</div>
+
+<div class="workout-modal" id="nav-more-modal" onclick="if(event.target===this)closeNavMore()">
+  <div class="workout-sheet" style="max-width:340px;">
+    <div class="workout-sheet-header"><h2 data-i18n="nav.moreTitle">More</h2></div>
+    <div class="workout-sheet-body" id="nav-more-menu">
+      <button class="nav-more-item gated" data-page="about" onclick="showPage('about');closeNavMore()" data-i18n="nav.about">About</button>
+      <button class="nav-more-item gated" data-page="nutrition" onclick="showPage('nutrition');closeNavMore()" data-i18n="nav.nutrition">Nutrition</button>
+      <button class="nav-more-item gated" data-page="chat" onclick="showPage('chat');closeNavMore()" data-i18n="nav.coach">Coach</button>
+      <button class="nav-more-item gated" data-page="videos" onclick="showPage('videos');closeNavMore()" data-i18n="nav.videos">Videos</button>
+      <button class="nav-more-item gated" data-page="forum" onclick="showPage('forum');closeNavMore()" data-i18n="nav.forum">Forum</button>
+      <button class="nav-more-item gated" data-page="messages" onclick="showPage('messages');closeNavMore()" data-i18n="nav.messages">Messages</button>
+    </div>
+  </div>
 </div>
 
 <div class="container">
