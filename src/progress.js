@@ -30,6 +30,7 @@ export async function initProgress(userId) {
   }
   renderAll();
   renderFilmstrip();
+  renderCompare();
 }
 
 export function teardownProgress() {
@@ -237,6 +238,59 @@ function renderFilmstrip() {
   });
 }
 
+function renderCompare() {
+  const wrap = el('photo-compare-wrap');
+  if (!wrap) return;
+  if (photos.length < 2) {
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = 'block';
+
+  const fromSel = el('photo-compare-from');
+  const toSel = el('photo-compare-to');
+  const prevFrom = fromSel.value, prevTo = toSel.value;
+  const optsHtml = photos.map((p) => `<option value="${p.loggedAt}">${formatShortDate(p.loggedAt)}</option>`).join('');
+  fromSel.innerHTML = optsHtml;
+  toSel.innerHTML = optsHtml;
+  fromSel.value = photos.some((p) => p.loggedAt === prevFrom) ? prevFrom : photos[0].loggedAt;
+  toSel.value = photos.some((p) => p.loggedAt === prevTo) ? prevTo : photos[photos.length - 1].loggedAt;
+
+  renderCompareView();
+}
+
+function renderCompareView() {
+  const fromDate = el('photo-compare-from').value;
+  const toDate = el('photo-compare-to').value;
+  const fromPhoto = photos.find((p) => p.loggedAt === fromDate);
+  const toPhoto = photos.find((p) => p.loggedAt === toDate);
+  const grid = el('photo-compare-grid');
+  const stats = el('photo-compare-stats');
+  if (!fromPhoto || !toPhoto) {
+    grid.innerHTML = '';
+    stats.innerHTML = '';
+    return;
+  }
+  grid.innerHTML = `
+    <div class="photo-compare-col"><img src="${fromPhoto.url}" alt=""><div class="photo-compare-date">${formatShortDate(fromDate)}</div></div>
+    <div class="photo-compare-col"><img src="${toPhoto.url}" alt=""><div class="photo-compare-date">${formatShortDate(toDate)}</div></div>
+  `;
+
+  const days = Math.round((new Date(`${toDate}T00:00:00`) - new Date(`${fromDate}T00:00:00`)) / 86400000);
+  let statsHtml = `<div class="progress-stat"><div class="progress-stat-num">${Math.abs(days)}</div><div class="progress-stat-label">${t('progress.compareDays')}</div></div>`;
+
+  const fromWeight = logs.find((l) => l.logged_at === fromDate)?.weight;
+  const toWeight = logs.find((l) => l.logged_at === toDate)?.weight;
+  if (fromWeight != null && toWeight != null) {
+    const delta = toWeight - fromWeight;
+    const sign = delta > 0 ? '+' : '';
+    statsHtml += `<div class="progress-stat"><div class="progress-stat-num">${sign}${fmt(delta)}</div><div class="progress-stat-label">${t('progress.compareWeightChange')}</div></div>`;
+  } else {
+    statsHtml += `<div class="progress-stat"><div class="progress-stat-num">—</div><div class="progress-stat-label">${t('progress.compareWeightChange')}</div></div>`;
+  }
+  stats.innerHTML = statsHtml;
+}
+
 function openLightbox(loggedAt) {
   const photo = photos.find((p) => p.loggedAt === loggedAt);
   if (!photo) return;
@@ -259,6 +313,7 @@ async function handleDeletePhoto() {
     await deleteProgressPhoto(currentUserId, loggedAt);
     photos = photos.filter((p) => p.loggedAt !== loggedAt);
     renderFilmstrip();
+    renderCompare();
     closePhotoLightbox();
   } catch (err) {
     alert(err.message);
@@ -282,6 +337,7 @@ async function handlePhotoAdd(e) {
     else photos.push(result);
     photos.sort((a, b) => a.loggedAt.localeCompare(b.loggedAt));
     renderFilmstrip();
+    renderCompare();
     msg.textContent = t('progress.photoSuccess');
     msg.className = 'photo-msg success';
   } catch (err) {
@@ -301,3 +357,5 @@ document.getElementById('progress-photo-add-btn')?.addEventListener('click', () 
 document.getElementById('progress-photo-input')?.addEventListener('change', handlePhotoAdd);
 document.getElementById('photo-lightbox-close')?.addEventListener('click', closePhotoLightbox);
 document.getElementById('photo-lightbox-delete')?.addEventListener('click', handleDeletePhoto);
+document.getElementById('photo-compare-from')?.addEventListener('change', renderCompareView);
+document.getElementById('photo-compare-to')?.addEventListener('change', renderCompareView);

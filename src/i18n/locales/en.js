@@ -51,6 +51,7 @@ export default {
   'quests.dayStreak': 'day streak',
   'quests.historyLabel': 'Workout History',
   'quests.historyCompletedTotal': 'workouts completed all-time',
+  'achievements.toggleLabel': 'Achievements', 'achievements.unlockedSuffix': 'unlocked',
   'quests.historyEmpty': "No completed workouts yet — finish one from Plans and it'll show up here.",
   'quests.historyErrorLoad': "Couldn't load history: {reason}",
   'quests.leaderboardBtn': 'Leaderboard',
@@ -207,6 +208,8 @@ export default {
   'progress.photoSuccess': 'Photo saved.',
   'progress.photoDeleteBtn': 'Delete this photo', 'progress.photoCloseBtn': 'Close',
   'progress.photoDeleteConfirm': 'Delete this photo? This can\'t be undone.',
+  'progress.compareTitle': 'BEFORE / AFTER',
+  'progress.compareDays': 'Days Apart', 'progress.compareWeightChange': 'Weight Change',
 
   // Analyze
   'analyze.titlePrefix': 'AI Body', 'analyze.titleHighlight': 'Analyzer',

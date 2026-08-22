@@ -17,6 +17,7 @@ import { maybeStartTour, tourNext, tourBack, finishTour } from './onboarding.js'
 import { openBreathIntro, closeBreathSession } from './breathwork.js';
 import { initFocus, teardownFocus } from './focus.js';
 import { initProgress, teardownProgress, closePhotoLightbox } from './progress.js';
+import { initAchievements, teardownAchievements, toggleAchievements } from './achievements.js';
 import { initDMs, teardownDMs } from './dm.js';
 import { initLeaderboard, teardownLeaderboard } from './leaderboard.js';
 import { getRankMap } from './rank-cache.js';
@@ -103,6 +104,7 @@ Object.assign(window, {
   openBreathIntro,
   closeBreathSession,
   closePhotoLightbox,
+  toggleAchievements,
 });
 
 // Applies the detected/stored language immediately (first paint is already
@@ -162,6 +164,7 @@ function updateAccountUI(session) {
       lastUserId = session.user.id;
       initFocus(session.user.id);
       initProgress(session.user.id);
+      initAchievements(session.user.id);
       initQuests(session.user.id);
       initForum(session.user.id);
       initDMs(session.user.id);
@@ -216,6 +219,7 @@ function updateAccountUI(session) {
       lastUserId = null;
       teardownFocus();
       teardownProgress();
+      teardownAchievements();
       teardownQuests();
       teardownForum();
       teardownDMs();
