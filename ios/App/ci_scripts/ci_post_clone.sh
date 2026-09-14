@@ -13,4 +13,12 @@ fi
 
 npm install
 npm run build
+
+echo "--- debug: pwd and ios dir state before cap sync ---"
+pwd
+ls -la
+ls -la ios || echo "no ios dir here"
+cat capacitor.config.json || echo "no capacitor.config.json here"
+echo "--- end debug ---"
+
 npx cap sync ios
