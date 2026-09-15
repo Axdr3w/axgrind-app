@@ -33,6 +33,7 @@ import {
   resolveLoginIdentifier,
   setUsername,
   deleteAccount,
+  completeSessionFromUrl,
 } from './auth.js';
 
 // ===================== NAV =====================
@@ -421,6 +422,14 @@ document.getElementById('tour-skip-btn').addEventListener('click', finishTour);
 
 onAuthStateChange(updateAccountUI);
 getSession().then(updateAccountUI);
+
+// A tapped magic-link email opens as a Universal Link into this native
+// app (see App.entitlements and AppDelegate.swift) rather than a normal
+// page load, so the tokens have to be pulled out of the link manually.
+// AppDelegate.swift calls this directly when it catches the link.
+window.__handleUniversalLink = (url) => {
+  completeSessionFromUrl(url);
+};
 
 // Keeps the Account page's language readout in sync, and persists the new
 // choice to the signed-in user's profile so it follows them across devices.

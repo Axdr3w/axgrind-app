@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "SU9GHMBNXX.com.axgrind.app",
+        "paths": ["*"]
+      }
+    ]
+  }
+}

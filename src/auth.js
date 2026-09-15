@@ -20,6 +20,22 @@ export async function signInWithMagicLink(email) {
   });
 }
 
+// In the native app, a tapped magic link arrives as a Universal Link
+// (via Capacitor's appUrlOpen) instead of a normal page load, so
+// supabase-js never gets a chance to auto-detect the tokens in the URL.
+// Pull them out of the link's hash fragment and set the session directly.
+export async function completeSessionFromUrl(url) {
+  if (!supabase) return;
+  const hashIndex = url.indexOf('#');
+  if (hashIndex === -1) return;
+  const params = new URLSearchParams(url.slice(hashIndex + 1));
+  const access_token = params.get('access_token');
+  const refresh_token = params.get('refresh_token');
+  if (access_token && refresh_token) {
+    await supabase.auth.setSession({ access_token, refresh_token });
+  }
+}
+
 export async function signOut() {
   if (!supabase) return NOT_CONFIGURED;
   return supabase.auth.signOut();
