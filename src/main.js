@@ -34,6 +34,8 @@ import {
   setUsername,
   deleteAccount,
   completeSessionFromUrl,
+  requestPasswordReset,
+  updatePassword,
 } from './auth.js';
 
 // ===================== NAV =====================
@@ -277,11 +279,16 @@ function updateAccountUI(session) {
   }
 }
 
+const forgotPasswordForm = document.getElementById('forgot-password-form');
+const forgotPasswordLink = document.getElementById('forgot-password-link');
+const backToLoginLink = document.getElementById('back-to-login-link');
+
 authTabLogin.addEventListener('click', () => {
   authTabLogin.classList.add('active');
   authTabSignup.classList.remove('active');
   loginForm.style.display = 'flex';
   signupForm.style.display = 'none';
+  forgotPasswordForm.style.display = 'none';
   setAuthMessage('', false);
 });
 
@@ -290,7 +297,28 @@ authTabSignup.addEventListener('click', () => {
   authTabLogin.classList.remove('active');
   signupForm.style.display = 'flex';
   loginForm.style.display = 'none';
+  forgotPasswordForm.style.display = 'none';
   setAuthMessage('', false);
+});
+
+forgotPasswordLink.addEventListener('click', () => {
+  loginForm.style.display = 'none';
+  forgotPasswordForm.style.display = 'flex';
+  document.getElementById('forgot-password-email').value = document.getElementById('login-email').value.trim();
+  setAuthMessage('', false);
+});
+
+backToLoginLink.addEventListener('click', () => {
+  forgotPasswordForm.style.display = 'none';
+  loginForm.style.display = 'flex';
+  setAuthMessage('', false);
+});
+
+forgotPasswordForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('forgot-password-email').value.trim();
+  const { error } = await requestPasswordReset(email);
+  setAuthMessage(error ? error.message : t('account.resetLinkSent'), !!error);
 });
 
 loginForm.addEventListener('submit', async (e) => {
@@ -423,13 +451,51 @@ document.getElementById('tour-skip-btn').addEventListener('click', finishTour);
 onAuthStateChange(updateAccountUI);
 getSession().then(updateAccountUI);
 
-// A tapped magic-link email opens as a Universal Link into this native
-// app (see App.entitlements and AppDelegate.swift) rather than a normal
-// page load, so the tokens have to be pulled out of the link manually.
-// AppDelegate.swift calls this directly when it catches the link.
-window.__handleUniversalLink = (url) => {
-  completeSessionFromUrl(url);
-};
+const resetPasswordModal = document.getElementById('reset-password-modal');
+const resetPasswordForm = document.getElementById('reset-password-form');
+const resetPasswordMessage = document.getElementById('reset-password-message');
+
+function openResetPasswordModal() {
+  resetPasswordForm.reset();
+  resetPasswordMessage.textContent = '';
+  resetPasswordModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+resetPasswordForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const newPassword = document.getElementById('reset-password-new').value;
+  const confirmPassword = document.getElementById('reset-password-confirm').value;
+  if (newPassword !== confirmPassword) {
+    resetPasswordMessage.textContent = t('account.passwordsDontMatch');
+    resetPasswordMessage.style.color = '#ff6040';
+    return;
+  }
+  const { error } = await updatePassword(newPassword);
+  if (error) {
+    resetPasswordMessage.textContent = error.message;
+    resetPasswordMessage.style.color = '#ff6040';
+    return;
+  }
+  resetPasswordModal.classList.remove('open');
+  document.body.style.overflow = '';
+  setAuthMessage(t('account.passwordUpdated'), false);
+});
+
+// A tapped magic-link or password-reset email opens as a Universal Link
+// into the native app (see App.entitlements and SceneDelegate.swift)
+// rather than a normal page load — and even on the plain website,
+// Supabase's own auto-detection is off (see supabaseClient.js) — so both
+// paths funnel through this same manual handler. A `type=recovery` link
+// opens the "set new password" modal instead of just signing in.
+function handleAuthUrl(url) {
+  completeSessionFromUrl(url).then((type) => {
+    if (type === 'recovery') openResetPasswordModal();
+  });
+}
+
+handleAuthUrl(window.location.href);
+window.__handleUniversalLink = handleAuthUrl;
 
 // Keeps the Account page's language readout in sync, and persists the new
 // choice to the signed-in user's profile so it follows them across devices.

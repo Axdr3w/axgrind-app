@@ -20,20 +20,38 @@ export async function signInWithMagicLink(email) {
   });
 }
 
-// In the native app, a tapped magic link arrives as a Universal Link
-// (via Capacitor's appUrlOpen) instead of a normal page load, so
-// supabase-js never gets a chance to auto-detect the tokens in the URL.
-// Pull them out of the link's hash fragment and set the session directly.
+// Handles both a tapped magic-link email and a tapped password-reset
+// email. In the web build this runs against the current page's own URL
+// on load; in the native app it also runs against whatever URL arrives
+// via a Universal Link (see SceneDelegate.swift / window.__handleUniversalLink
+// in main.js), since that never causes a normal page navigation for
+// supabase-js to auto-detect on its own (detectSessionInUrl is off — see
+// supabaseClient.js). Returns the link's `type` ('recovery', 'magiclink',
+// ...) so the caller can react, e.g. opening the "set new password" modal.
 export async function completeSessionFromUrl(url) {
-  if (!supabase) return;
+  if (!supabase) return null;
   const hashIndex = url.indexOf('#');
-  if (hashIndex === -1) return;
+  if (hashIndex === -1) return null;
   const params = new URLSearchParams(url.slice(hashIndex + 1));
   const access_token = params.get('access_token');
   const refresh_token = params.get('refresh_token');
+  const type = params.get('type');
   if (access_token && refresh_token) {
     await supabase.auth.setSession({ access_token, refresh_token });
   }
+  return type;
+}
+
+export async function requestPasswordReset(email) {
+  if (!supabase) return NOT_CONFIGURED;
+  return supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin,
+  });
+}
+
+export async function updatePassword(newPassword) {
+  if (!supabase) return NOT_CONFIGURED;
+  return supabase.auth.updateUser({ password: newPassword });
 }
 
 export async function signOut() {

@@ -390,6 +390,27 @@
     </div>
   </div>
 
+  <div class="workout-modal" id="reset-password-modal">
+    <div class="workout-sheet" style="max-width:420px;">
+      <div class="workout-sheet-header"><h2 data-i18n="account.resetPasswordTitle">Set a new password</h2></div>
+      <div class="workout-sheet-body">
+        <p style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;" data-i18n="account.resetPasswordDesc">Enter a new password for your account.</p>
+        <form id="reset-password-form">
+          <div class="calc-field" style="margin-bottom:10px;">
+            <div class="calc-label" data-i18n="account.newPassword">New Password</div>
+            <input class="calc-input" type="password" id="reset-password-new" minlength="6" required autofocus>
+          </div>
+          <div class="calc-field" style="margin-bottom:14px;">
+            <div class="calc-label" data-i18n="account.confirmNewPassword">Confirm New Password</div>
+            <input class="calc-input" type="password" id="reset-password-confirm" minlength="6" required>
+          </div>
+          <button class="btn-accent btn-full" type="submit" data-i18n="account.updatePassword">Update Password</button>
+        </form>
+        <div id="reset-password-message" style="margin-top:10px;font-size:13px;"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- NUTRITION -->
   <div class="page" id="page-nutrition">
     <div class="section-header" style="margin-bottom:16px;"><div class="section-title" data-i18n="nutrition.title">NUTRITION</div><span style="font-size:12px;color:var(--muted);" data-i18n="nutrition.subtitle">Fuel the grind</span></div>
@@ -732,8 +753,16 @@
 
         <form id="login-form" class="auth-form">
           <div class="calc-field" style="margin-bottom:10px;"><div class="calc-label" data-i18n="account.emailOrUsername">Email or Username</div><input class="calc-input" type="text" id="login-email" required></div>
-          <div class="calc-field" style="margin-bottom:14px;"><div class="calc-label" data-i18n="account.password">Password</div><input class="calc-input" type="password" id="login-password" required></div>
+          <div class="calc-field" style="margin-bottom:6px;"><div class="calc-label" data-i18n="account.password">Password</div><input class="calc-input" type="password" id="login-password" required></div>
+          <div style="text-align:right;margin-bottom:14px;"><button type="button" id="forgot-password-link" style="background:none;border:none;padding:0;font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;" data-i18n="account.forgotPassword">Forgot password?</button></div>
           <button class="btn-accent btn-full" type="submit" data-i18n="account.loginTab">Log In</button>
+        </form>
+
+        <form id="forgot-password-form" class="auth-form" style="display:none;">
+          <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px;" data-i18n="account.forgotPasswordDesc">Enter your email and we'll send you a link to reset your password.</p>
+          <div class="calc-field" style="margin-bottom:14px;"><div class="calc-label" data-i18n="account.email">Email</div><input class="calc-input" type="email" id="forgot-password-email" required></div>
+          <button class="btn-accent btn-full" type="submit" data-i18n="account.sendResetLink">Send Reset Link</button>
+          <button type="button" id="back-to-login-link" style="background:none;border:none;padding:0;margin-top:12px;font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;" data-i18n="account.backToLogin">Back to login</button>
         </form>
 
         <form id="signup-form" class="auth-form" style="display:none;">
