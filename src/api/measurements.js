@@ -1,9 +1,9 @@
-import { supabase } from './supabaseClient.js';
+import { supabase, getAuthHeader } from './supabaseClient.js';
 
 async function callFn(path, body) {
   const resp = await fetch(`/.netlify/functions/${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await getAuthHeader()) },
     body: JSON.stringify(body),
   });
   const data = await resp.json();

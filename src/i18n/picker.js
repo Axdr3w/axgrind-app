@@ -10,10 +10,12 @@ function renderList(highlightCode) {
   `).join('');
 }
 
-// On a true first visit there's no language chosen yet, so the picker is a
-// forced step (no way to dismiss without picking). Once a language exists —
-// reopened later via the globe icon or Account's "Change" — it's just a
-// normal dismissible dialog, since the user might have opened it by mistake.
+// On a true first visit, index.js's initLanguageFromStorage() already tries
+// to silently adopt the browser's detected language and marks it "chosen" —
+// so this forced, undismissable state only happens when detection genuinely
+// couldn't find a supported language. Once a language exists — reopened
+// later via the globe icon or Account's "Change" — it's just a normal
+// dismissible dialog, since the user might have opened it by mistake.
 export function openLanguagePicker() {
   renderList(getLanguage() || detectLanguage());
   document.getElementById('language-modal').classList.add('open');

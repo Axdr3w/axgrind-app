@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const { verifyUser } = require('./lib/verify-user.cjs');
 
 // Keep in sync with the fullbody-*/cardio-* entries in src/workouts-data.js —
 // these are the only ids the model is allowed to recommend, so the client
@@ -37,13 +38,13 @@ exports.handler = async (event) => {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: { message: 'Server is missing SUPABASE_SERVICE_ROLE_KEY.' } }) };
   }
+  const auth = await verifyUser(event);
+  if (auth.error) return auth.error;
+  const userId = auth.userId;
   try {
-    const { imageBase64, mediaType, targetLangName, userId } = JSON.parse(event.body || '{}');
+    const { imageBase64, mediaType, targetLangName } = JSON.parse(event.body || '{}');
     if (!imageBase64) {
       return { statusCode: 400, body: JSON.stringify({ error: { message: 'imageBase64 is required.' } }) };
-    }
-    if (!userId) {
-      return { statusCode: 400, body: JSON.stringify({ error: { message: 'userId is required.' } }) };
     }
 
     const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);

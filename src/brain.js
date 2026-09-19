@@ -2,6 +2,7 @@ import { t, getLanguage } from './i18n/index.js';
 import { translateBatch } from './i18n/content-translate.js';
 import { completeArticle, fetchReadArticleIds } from './api/xp.js';
 import { getRankMap, invalidateRankCache } from './rank-cache.js';
+import { escapeHtml } from './html-utils.js';
 
 // brain-data.js is a large long-form article library (1.5MB+ of source) —
 // split into its own chunk and fetched in the background instead of being
@@ -11,15 +12,6 @@ let dataPromise = null;
 function loadData() {
   if (!dataPromise) dataPromise = import('./brain-data.js');
   return dataPromise;
-}
-
-function escapeHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
 
 let currentUserId = null;
@@ -112,6 +104,8 @@ function articleCard(article, tr, categories) {
 // The entry point called on init/login/logout/language-change/tab-select —
 // refreshes whichever of category-list/article-list is currently showing.
 export async function renderBrainArticles() {
+  const loadingContainer = document.getElementById(selectedCategory ? ARTICLE_LIST_ID : LIST_ID);
+  if (loadingContainer) loadingContainer.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">${t('common.loading')}</div>`;
   const { BRAIN_CATEGORIES, BRAIN_ARTICLES } = await loadData();
   if (!selectedCategory) {
     renderBrainCategoryList(BRAIN_CATEGORIES, BRAIN_ARTICLES);

@@ -8,7 +8,8 @@ export async function fetchAllRanked() {
     .from('profiles')
     .select('id, handle, display_name, xp')
     .order('xp', { ascending: false })
-    .order('id', { ascending: true });
+    .order('id', { ascending: true })
+    .limit(100);
   if (error) throw error;
   return data ?? [];
 }

@@ -59,6 +59,19 @@ export async function updateBgTheme(userId, themeId) {
   if (error) throw error;
 }
 
+export async function fetchHasSeenTour(userId) {
+  if (!supabase) return true; // not configured — don't force a tour that can't track itself
+  const { data, error } = await supabase.from('profiles').select('has_seen_tour').eq('id', userId).single();
+  if (error) throw error;
+  return data?.has_seen_tour ?? false;
+}
+
+export async function markTourSeen(userId) {
+  if (!supabase) return;
+  const { error } = await supabase.from('profiles').update({ has_seen_tour: true }).eq('id', userId);
+  if (error) throw error;
+}
+
 // Best-effort pre-check only — the real enforcement is the DB's unique index
 // plus the set-username server function, since this is inherently racy.
 export async function checkHandleAvailable(handle) {

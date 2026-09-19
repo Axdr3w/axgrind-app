@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const { verifyUser } = require('./lib/verify-user.cjs');
 
 const BUCKET = 'progress-photos';
 
@@ -9,12 +10,10 @@ exports.handler = async (event) => {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: { message: 'Server is missing SUPABASE_SERVICE_ROLE_KEY.' } }) };
   }
+  const auth = await verifyUser(event);
+  if (auth.error) return auth.error;
+  const userId = auth.userId;
   try {
-    const { userId } = JSON.parse(event.body || '{}');
-    if (!userId) {
-      return { statusCode: 400, body: JSON.stringify({ error: { message: 'userId is required.' } }) };
-    }
-
     const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
     const { data: files, error: listError } = await supabase.storage.from(BUCKET).list(userId, {
       limit: 100,

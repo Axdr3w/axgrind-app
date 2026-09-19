@@ -1,15 +1,42 @@
-import { WORKOUTS } from './workouts-data.js';
-import { SPORTS_WORKOUTS, SPORTS, PROGRAMS } from './sports-data.js';
-import { PROGRAM_WORKOUTS } from './programs-data.js';
-import { isRealExercise } from './exercise-info.js';
 import { t, getLanguage } from './i18n/index.js';
 import { translateBatch } from './i18n/content-translate.js';
 import { completeWorkout, fetchCompletedWorkoutKeysToday } from './api/xp.js';
+import { fetchLastExerciseLog, logExerciseWeight } from './api/exerciseLogs.js';
 import { getRankMap, invalidateRankCache } from './rank-cache.js';
 import { renderBrainArticles } from './brain.js';
 import { checkForNewAchievements } from './achievements.js';
+import { escapeHtml } from './html-utils.js';
+import { todayStr } from './date-utils.js';
 
-const ALL_SPORT_AND_PROGRAM_WORKOUTS = [...SPORTS_WORKOUTS, ...PROGRAM_WORKOUTS];
+// workouts-data.js / sports-data.js / programs-data.js are large content
+// libraries — split into their own chunks and fetched in the background
+// instead of being part of the initial bundle every visitor downloads,
+// matching the same lazy-chunk pattern brain.js uses for brain-data.js.
+let workoutDataPromise = null;
+function loadWorkoutData() {
+  if (!workoutDataPromise) {
+    workoutDataPromise = Promise.all([
+      import('./workouts-data.js'),
+      import('./sports-data.js'),
+      import('./programs-data.js'),
+    ]).then(([w, s, p]) => ({
+      WORKOUTS: w.WORKOUTS,
+      SPORTS_WORKOUTS: s.SPORTS_WORKOUTS,
+      SPORTS: s.SPORTS,
+      PROGRAMS: s.PROGRAMS,
+      PROGRAM_WORKOUTS: p.PROGRAM_WORKOUTS,
+    }));
+  }
+  return workoutDataPromise;
+}
+
+// exercise-info.js is a large per-exercise caption/video-link library, also
+// split into its own chunk.
+let exerciseInfoPromise = null;
+function loadExerciseInfo() {
+  if (!exerciseInfoPromise) exerciseInfoPromise = import('./exercise-info.js');
+  return exerciseInfoPromise;
+}
 
 const LEVEL_RANK = { beginner: 0, intermediate: 1, advanced: 2 };
 function sortByLevel(list) {
@@ -19,14 +46,6 @@ function sortByLevel(list) {
 // Translated strings are runtime network values (not developer-authored
 // literals), so — same as forum.js/dm.js — they must be escaped before
 // going into innerHTML.
-function escapeHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 function levelLabel(level) {
   if (level === 'beginner') return t('plans.levelBeginner');
@@ -146,9 +165,42 @@ function renderCard(w, tr) {
   `;
 }
 
+// One-time nudge for a first-time visitor to the Plans page, pointing them
+// at Strength Training since the 4 category tabs otherwise look equally
+// weighted with no indication of where to start. Tracked purely client-side
+// (low-stakes UI nicety, not account data) so it never reappears once
+// dismissed — or once seen, since the tabs themselves don't need repeating.
+const PLANS_HINT_SEEN_KEY = 'ax-plans-hint-seen';
+const PLANS_HINT_ID = 'plans-first-visit-hint';
+
+function maybeShowFirstVisitHint() {
+  if (document.getElementById(PLANS_HINT_ID)) return; // already inserted
+  let seen = true;
+  try { seen = !!localStorage.getItem(PLANS_HINT_SEEN_KEY); } catch { /* localStorage unavailable — don't nag */ }
+  if (seen) return;
+  const tabs = document.querySelector('#page-plans .category-tabs');
+  if (!tabs) return;
+
+  const hint = document.createElement('div');
+  hint.id = PLANS_HINT_ID;
+  hint.className = 'calc-box';
+  hint.style.cssText = 'display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:12px;font-size:12px;color:var(--muted);line-height:1.5;';
+  hint.innerHTML = `
+    <span>${escapeHtml(t('plans.newHereHint'))}</span>
+    <button type="button" class="btn-follow btn-xs" style="flex-shrink:0;" id="${PLANS_HINT_ID}-dismiss">${escapeHtml(t('plans.newHereHintDismiss'))}</button>
+  `;
+  tabs.parentNode.insertBefore(hint, tabs);
+  document.getElementById(`${PLANS_HINT_ID}-dismiss`).addEventListener('click', () => {
+    try { localStorage.setItem(PLANS_HINT_SEEN_KEY, '1'); } catch { /* best-effort */ }
+    hint.remove();
+  });
+}
+
 let workoutsGen = 0;
 
-export function renderWorkouts() {
+export async function renderWorkouts() {
+  maybeShowFirstVisitHint();
+  const { WORKOUTS, SPORTS_WORKOUTS, PROGRAM_WORKOUTS } = await loadWorkoutData();
   const container = document.getElementById('workout-cards');
   let filtered;
   if (activeCategory === 'strength') {
@@ -158,7 +210,8 @@ export function renderWorkouts() {
       return mOk && eOk;
     });
   } else {
-    filtered = ALL_SPORT_AND_PROGRAM_WORKOUTS.filter(w => w.sport === selectedSportOrProgram || w.program === selectedSportOrProgram);
+    const allSportAndProgramWorkouts = [...SPORTS_WORKOUTS, ...PROGRAM_WORKOUTS];
+    filtered = allSportAndProgramWorkouts.filter(w => w.sport === selectedSportOrProgram || w.program === selectedSportOrProgram);
   }
   filtered = sortByLevel(filtered);
   const myGen = ++workoutsGen;
@@ -197,7 +250,8 @@ function sportListRow(id, icon, name, description) {
 
 let sportBrowseGen = 0;
 
-function renderSportBrowse() {
+async function renderSportBrowse() {
+  const { SPORTS } = await loadWorkoutData();
   document.getElementById('sport-browse-list').style.display = 'block';
 
   const q = sportListSearch.trim().toLowerCase();
@@ -240,7 +294,8 @@ export function filterSportList(query) {
 
 let programBrowseGen = 0;
 
-function renderProgramBrowse() {
+async function renderProgramBrowse() {
+  const { PROGRAMS } = await loadWorkoutData();
   document.getElementById('program-browse-list').style.display = 'block';
   const myGen = ++programBrowseGen;
 
@@ -267,7 +322,8 @@ function renderProgramBrowse() {
 // one view/one piece of state is enough; backToBrowseList() routes back to
 // whichever tab's list is currently active). =====
 
-export function selectSportOrProgram(id) {
+export async function selectSportOrProgram(id) {
+  const { SPORTS, PROGRAMS } = await loadWorkoutData();
   selectedSportOrProgram = id;
   document.getElementById('sport-browse-list').style.display = 'none';
   document.getElementById('program-browse-list').style.display = 'none';
@@ -377,20 +433,173 @@ function refreshRankDisplay() {
   });
 }
 
+// "3min"/"90s"/"45 sec"/"none"/"" -> seconds, or null when there's nothing
+// to rest for (matches every format actually used in workouts-data.js).
+function parseRestSeconds(restStr) {
+  const m = String(restStr || '').match(/^(\d+)\s*(s|sec|min)/i);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return n > 0 ? (m[2].toLowerCase().startsWith('min') ? n * 60 : n) : null;
+}
+
 function tickTimer(dayKey) {
   const session = sessions.get(dayKey);
-  if (!session || !session.running) return;
-  session.seconds++;
-  const el = document.getElementById(`timer-${dayKey}`);
-  if (el) el.textContent = formatTime(session.seconds);
+  if (!session) return;
+  if (session.running) {
+    session.seconds++;
+    const el = document.getElementById(`timer-${dayKey}`);
+    if (el) el.textContent = formatTime(session.seconds);
+  }
+  // Runs independent of the pause state above — pausing the overall workout
+  // clock (e.g. to deal with something between sets) shouldn't also freeze
+  // the rest countdown you're actively waiting on.
+  if (session.restRemaining != null) {
+    session.restRemaining--;
+    if (session.restRemaining <= 0) {
+      session.restRemaining = null;
+      rerenderModal();
+    } else {
+      const restEl = document.getElementById(`rest-${dayKey}`);
+      if (restEl) restEl.textContent = formatTime(session.restRemaining);
+    }
+  }
 }
 
 export function startWorkoutSession(workoutId, dayKey) {
   if (sessions.has(dayKey)) return;
-  const session = { checked: new Set(), seconds: 0, running: true, intervalId: null, message: null, messageError: false };
+  const session = {
+    checked: new Set(), seconds: 0, running: true, intervalId: null, message: null, messageError: false,
+    voiceEnabled: false, restRemaining: null, plateCalcOpen: false,
+    // Per-exercise weight logging: which rows have their log panel open,
+    // the last-logged value fetched for each (only fetched lazily, on open,
+    // so opening a workout never fires one query per exercise up front),
+    // and the not-yet-saved input values so re-rendering the modal (which
+    // happens on every checkbox tap) doesn't wipe out what's half-typed.
+    logOpen: new Set(), lastLogCache: new Map(), logDraft: new Map(),
+  };
   session.intervalId = setInterval(() => tickTimer(dayKey), 1000);
   sessions.set(dayKey, session);
   rerenderModal();
+}
+
+export function skipRest(dayKey) {
+  const session = sessions.get(dayKey);
+  if (!session) return;
+  session.restRemaining = null;
+  rerenderModal();
+}
+
+export function togglePlateCalc(dayKey) {
+  const session = sessions.get(dayKey);
+  if (!session) return;
+  session.plateCalcOpen = !session.plateCalcOpen;
+  rerenderModal();
+}
+
+// Greedily breaks the per-side weight into standard plate sizes — the same
+// math anyone does in their head at a rack, just done for them. Bar weight
+// is whatever they enter (45 is the Olympic-bar default), not assumed.
+const PLATE_SIZES = [45, 35, 25, 10, 5, 2.5];
+
+export function calcPlates(dayKey) {
+  const target = parseFloat(document.getElementById(`plate-target-${dayKey}`)?.value);
+  const bar = parseFloat(document.getElementById(`plate-bar-${dayKey}`)?.value) || 45;
+  const resultEl = document.getElementById(`plate-result-${dayKey}`);
+  if (!resultEl) return;
+  if (!Number.isFinite(target) || target <= bar) {
+    resultEl.textContent = '';
+    return;
+  }
+  let perSide = (target - bar) / 2;
+  const plates = [];
+  for (const size of PLATE_SIZES) {
+    while (perSide + 1e-9 >= size) {
+      plates.push(size);
+      perSide -= size;
+    }
+  }
+  resultEl.textContent = plates.length
+    ? `${t('plans.perSide')}: ${plates.map(p => (p % 1 === 0 ? p : p.toFixed(1))).join(' + ')}`
+    : t('plans.plateNone');
+}
+
+// Opening a log panel lazily fetches that one exercise's last entry — never
+// eagerly for every exercise on workout open, since most rows never get
+// logged in a given session and that would be one query each for nothing.
+export async function toggleExerciseLog(dayKey, idx, exerciseName) {
+  const session = sessions.get(dayKey);
+  if (!session) return;
+  if (session.logOpen.has(idx)) {
+    session.logOpen.delete(idx);
+    rerenderModal();
+    return;
+  }
+  session.logOpen.add(idx);
+  rerenderModal();
+  if (!session.lastLogCache.has(idx) && currentUserId) {
+    const last = await fetchLastExerciseLog(currentUserId, exerciseName);
+    session.lastLogCache.set(idx, last);
+    if (session.logOpen.has(idx)) rerenderModal();
+  }
+}
+
+// The modal body re-renders on every checkbox tap (renderModalBody rebuilds
+// the whole innerHTML) — without stashing what's typed so far, checking off
+// a different exercise while a log panel is mid-entry would silently wipe
+// it. This just keeps that draft in memory; it doesn't need to re-render
+// anything itself since the input already shows what was typed locally.
+export function updateExerciseLogDraft(dayKey, idx, field, value) {
+  const session = sessions.get(dayKey);
+  if (!session) return;
+  const draft = session.logDraft.get(idx) || {};
+  draft[field] = value;
+  session.logDraft.set(idx, draft);
+}
+
+export async function saveExerciseLog(dayKey, idx, exerciseName) {
+  const session = sessions.get(dayKey);
+  if (!session || !currentUserId) return;
+  const weightInput = document.getElementById(`exlog-weight-${dayKey}-${idx}`);
+  const repsInput = document.getElementById(`exlog-reps-${dayKey}-${idx}`);
+  const weight = parseFloat(weightInput?.value);
+  if (!Number.isFinite(weight) || weight <= 0) return;
+  const reps = repsInput?.value ? parseInt(repsInput.value, 10) : null;
+  const loggedDate = todayStr();
+  try {
+    await logExerciseWeight(currentUserId, exerciseName, weight, reps, loggedDate);
+    session.lastLogCache.set(idx, { weight, reps, logged_date: loggedDate });
+    session.logDraft.delete(idx);
+    session.logOpen.delete(idx);
+    rerenderModal();
+  } catch (err) {
+    console.error('[exercise log]', err);
+  }
+}
+
+// Mid-set is the worst time to be looking at a screen — reads out the next
+// exercise via the Web Speech API (no native plugin needed, works in the
+// WKWebView the same as the browser). Off by default per session since it
+// talks out loud unprompted otherwise; toggled from the session controls.
+export function toggleVoiceGuidance(dayKey) {
+  const session = sessions.get(dayKey);
+  if (!session) return;
+  session.voiceEnabled = !session.voiceEnabled;
+  if (!session.voiceEnabled && window.speechSynthesis) window.speechSynthesis.cancel();
+  rerenderModal();
+}
+
+function speakNextExercise(dayKey, justCheckedIdx) {
+  if (!window.speechSynthesis || !currentPlan) return;
+  const day = findDayByKey(currentPlan, dayKey);
+  if (!day) return;
+  const nextIdx = day.exercises.findIndex((_, i) => i > justCheckedIdx && !sessions.get(dayKey)?.checked.has(i));
+  if (nextIdx === -1) {
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(t('plans.voiceAllDone')));
+    return;
+  }
+  const ex = day.exercises[nextIdx];
+  window.speechSynthesis.cancel(); // don't queue up behind a previous announcement
+  window.speechSynthesis.speak(new SpeechSynthesisUtterance(`${t('plans.voiceNext')}: ${ex.name}, ${ex.sets}`));
 }
 
 export function toggleWorkoutTimer(dayKey) {
@@ -402,9 +611,16 @@ export function toggleWorkoutTimer(dayKey) {
 
 export function toggleExerciseChecked(dayKey, idx) {
   const session = sessions.get(dayKey);
-  if (!session) return;
+  if (!session || !currentPlan) return;
+  const wasUnchecked = !session.checked.has(idx);
   if (session.checked.has(idx)) session.checked.delete(idx);
   else session.checked.add(idx);
+  if (wasUnchecked) {
+    if (session.voiceEnabled) speakNextExercise(dayKey, idx);
+    const day = findDayByKey(currentPlan, dayKey);
+    const restSeconds = parseRestSeconds(day?.exercises[idx]?.rest);
+    if (restSeconds) session.restRemaining = restSeconds;
+  }
   rerenderModal();
 }
 
@@ -423,10 +639,77 @@ export async function finishWorkout(workoutId, dayKey) {
     completedTodayKeys.add(`${workoutId}::${dayKey}`);
     refreshRankDisplay();
     checkForNewAchievements();
+    celebrateWorkoutFinish();
   } catch (err) {
     session.message = err.message;
     session.messageError = true;
   }
+  rerenderModal();
+}
+
+// A real workout is real effort — a number ticking up in the corner doesn't
+// match that. A brief, un-skippable full-screen moment does. Pure CSS/JS,
+// no native dependency, so unlike haptic feedback this works everywhere the
+// site already deploys to (see the finishWorkout call site).
+function celebrateWorkoutFinish() {
+  const overlay = document.createElement('div');
+  overlay.className = 'celebration-overlay';
+  const particleCount = 28;
+  let particlesHtml = '';
+  for (let i = 0; i < particleCount; i++) {
+    const angle = (360 / particleCount) * i + (Math.random() * 20 - 10);
+    const dist = 120 + Math.random() * 100;
+    const delay = Math.random() * 0.15;
+    particlesHtml += `<span class="celebration-particle" style="--angle:${angle}deg;--dist:${dist}px;--delay:${delay}s;"></span>`;
+  }
+  overlay.innerHTML = `${particlesHtml}<div class="celebration-text">${t('plans.workoutComplete')}</div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.remove(), 1400);
+}
+
+// "Try Y" is a plain +5lbs nudge off the last logged weight, not an AI or
+// physiologically-modeled suggestion — deliberately simple and honestly
+// labeled, since the app doesn't (yet) know their rep targets or recovery.
+function renderExerciseLogPanel(dayKey, idx, exerciseName, session) {
+  const last = session.lastLogCache.get(idx);
+  const draft = session.logDraft.get(idx) || {};
+  let suggestion;
+  if (last) {
+    const repsPart = last.reps ? ` × ${last.reps}` : '';
+    const suggestedWeight = last.reps ? last.weight + 5 : last.weight;
+    suggestion = `<div class="exercise-log-suggestion">${t('plans.lastTimeLabel')}: ${last.weight} lbs${repsPart} — ${t('plans.tryLabel')} ${suggestedWeight}+</div>`;
+  } else if (session.lastLogCache.has(idx)) {
+    suggestion = `<div class="exercise-log-suggestion muted">${t('plans.noPriorLog')}</div>`;
+  } else {
+    suggestion = `<div class="exercise-log-suggestion muted">${t('common.loading')}</div>`;
+  }
+  const nameJsAttr = exerciseName.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  return `
+    <div class="exercise-log-panel">
+      ${suggestion}
+      <div class="exercise-log-inputs">
+        <input type="number" inputmode="decimal" class="calc-input" id="exlog-weight-${dayKey}-${idx}" placeholder="${t('plans.weightPlaceholder')}" value="${draft.weight ?? ''}" oninput="updateExerciseLogDraft('${dayKey}',${idx},'weight',this.value)">
+        <input type="number" inputmode="numeric" class="calc-input" id="exlog-reps-${dayKey}-${idx}" placeholder="${t('plans.repsPlaceholder')}" value="${draft.reps ?? ''}" oninput="updateExerciseLogDraft('${dayKey}',${idx},'reps',this.value)">
+        <button type="button" class="btn-follow btn-xs" onclick="saveExerciseLog('${dayKey}',${idx},'${nameJsAttr}')">${t('plans.saveLog')}</button>
+      </div>
+    </div>
+  `;
+}
+
+// One-time explainer for the session toolbar's icon-only buttons — usability
+// testing found this exact spot tripping up a beginner, an experienced lifter
+// coming from a different app, and an older user, each for a different
+// reason: nobody could tell what 🔇/🔊, 🏋️, and ⚖️ actually did without
+// tapping them first. Same dismiss-once pattern (and localStorage key style)
+// as the Plans page's first-visit hint — client-side only, low-stakes.
+const SESSION_ICONS_HINT_SEEN_KEY = 'ax-session-icons-hint-seen';
+
+function sessionIconsHintSeen() {
+  try { return !!localStorage.getItem(SESSION_ICONS_HINT_SEEN_KEY); } catch { return true; }
+}
+
+export function dismissSessionIconsHint() {
+  try { localStorage.setItem(SESSION_ICONS_HINT_SEEN_KEY, '1'); } catch { /* best-effort */ }
   rerenderModal();
 }
 
@@ -436,13 +719,39 @@ function renderDaySessionControls(dayKey, workoutId, totalExercises) {
     const msg = session.message
       ? `<div class="day-session-msg${session.messageError ? ' error' : ''}">${escapeHtml(session.message)}</div>`
       : '';
+    const iconsHint = sessionIconsHintSeen() ? '' : `
+      <div class="calc-box" style="display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:10px;font-size:12px;color:var(--muted);line-height:1.5;">
+        <span>${escapeHtml(t('plans.sessionIconsHint'))}</span>
+        <button type="button" class="btn-follow btn-xs" style="flex-shrink:0;" onclick="dismissSessionIconsHint()">${escapeHtml(t('plans.newHereHintDismiss'))}</button>
+      </div>
+    `;
+    const restBanner = session.restRemaining != null
+      ? `<div class="rest-timer-banner">
+          <span class="rest-timer-label">${t('plans.restLabel')}</span>
+          <span class="rest-timer-count" id="rest-${dayKey}">${formatTime(session.restRemaining)}</span>
+          <button type="button" class="btn-follow btn-xs" onclick="skipRest('${dayKey}')">${t('plans.skipRest')}</button>
+        </div>`
+      : '';
+    const plateCalc = session.plateCalcOpen
+      ? `<div class="plate-calc">
+          <input type="number" inputmode="decimal" class="calc-input" id="plate-target-${dayKey}" placeholder="${t('plans.targetWeight')}" oninput="calcPlates('${dayKey}')">
+          <span class="plate-calc-sep">/</span>
+          <input type="number" inputmode="decimal" class="calc-input" id="plate-bar-${dayKey}" placeholder="${t('plans.barWeight')}" value="45" oninput="calcPlates('${dayKey}')">
+          <div class="plate-calc-result" id="plate-result-${dayKey}"></div>
+        </div>`
+      : '';
     return `
+      ${iconsHint}
       <div class="day-session-bar">
         <div class="day-timer" id="timer-${dayKey}">${formatTime(session.seconds)}</div>
         <button type="button" class="btn-follow btn-xs" onclick="toggleWorkoutTimer('${dayKey}')">${session.running ? '⏸ ' + t('plans.pauseTimer') : '▶ ' + t('plans.resumeTimer')}</button>
+        <button type="button" class="btn-follow btn-xs${session.voiceEnabled ? ' active' : ''}" onclick="toggleVoiceGuidance('${dayKey}')" title="${t('plans.voiceToggle')}" aria-label="${t('plans.voiceToggle')}">${session.voiceEnabled ? '🔊' : '🔇'}</button>
+        <button type="button" class="btn-follow btn-xs${session.plateCalcOpen ? ' active' : ''}" onclick="togglePlateCalc('${dayKey}')" title="${t('plans.plateCalcToggle')}" aria-label="${t('plans.plateCalcToggle')}">🏋️</button>
         <div class="day-progress">${session.checked.size}/${totalExercises}</div>
         <button type="button" class="btn-accent btn-xs" onclick="finishWorkout('${workoutId}','${dayKey}')">${t('plans.finishWorkout')}</button>
       </div>
+      ${plateCalc}
+      ${restBanner}
       ${msg}
     `;
   }
@@ -452,7 +761,8 @@ function renderDaySessionControls(dayKey, workoutId, totalExercises) {
   return `<button type="button" class="btn-follow btn-xs" onclick="startWorkoutSession('${workoutId}','${dayKey}')">▶ ${t('plans.startWorkout')}</button>`;
 }
 
-function renderModalBody(plan, tr) {
+async function renderModalBody(plan, tr) {
+  const { isRealExercise } = await loadExerciseInfo();
   const pick = (text) => tr?.get(text) ?? text;
   document.getElementById('modal-title').textContent = plan.icon + ' ' + pick(plan.title);
   const envTag = plan.env ? `<span class="ws-tag accent">${plan.env === 'gym' ? '🏋️ ' + t('plans.envGym') : '🏠 ' + t('plans.envHome')}</span>` : '';
@@ -472,15 +782,28 @@ function renderModalBody(plan, tr) {
       // data-exercise stays the RAW English name — exercise-info.js's caption
       // lookup (normalize/CAPTIONS/keywordCaption) is English-internal, and
       // must never see a translated string or the lookup silently degrades
-      // to the generic keyword-fallback caption.
+      // to the generic keyword-fallback caption. Same reasoning applies to
+      // exercise_logs rows below — logged/matched by the raw English name,
+      // never the translated display text, so "last time" lookups keep
+      // working regardless of the active language.
       const rowAttrs = clickable
         ? ` class="exercise-row clickable" data-exercise="${ex.name.replace(/"/g, '&quot;')}"`
         : ' class="exercise-row"';
       const checked = session?.checked.has(i) ?? false;
       const checkbox = session
-        ? `<button type="button" class="ex-check${checked ? ' checked' : ''}" onclick="event.stopPropagation();toggleExerciseChecked('${dayKey}',${i})">${checked ? '✓' : ''}</button>`
+        ? `<button type="button" class="ex-check${checked ? ' checked' : ''}" onclick="event.stopPropagation();toggleExerciseChecked('${dayKey}',${i})" aria-label="${checked ? 'Completed' : 'Mark exercise complete'}">${checked ? '✓' : ''}</button>`
         : '';
-      html += `<div${rowAttrs}>${checkbox}<div class="ex-num">${i + 1}</div><div class="ex-name">${escapeHtml(pick(ex.name))}</div><div class="ex-sets">${escapeHtml(ex.sets)}</div>${ex.rest ? `<div class="ex-rest">${escapeHtml(ex.rest)}</div>` : ''}</div>`;
+      // Escaped for use inside a single-quoted JS string literal AND a
+      // double-quoted HTML attribute at once — exercise names can contain
+      // both (e.g. "Farmer's Walk").
+      const nameJsAttr = ex.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const logToggle = session
+        ? `<button type="button" class="ex-log-toggle" onclick="event.stopPropagation();toggleExerciseLog('${dayKey}',${i},'${nameJsAttr}')" aria-label="${t('plans.logWeightToggle')}">⚖️</button>`
+        : '';
+      html += `<div${rowAttrs}>${checkbox}<div class="ex-num">${i + 1}</div><div class="ex-name">${escapeHtml(pick(ex.name))}</div><div class="ex-sets">${escapeHtml(ex.sets)}</div>${ex.rest ? `<div class="ex-rest">${escapeHtml(ex.rest)}</div>` : ''}${logToggle}</div>`;
+      if (session?.logOpen.has(i)) {
+        html += renderExerciseLogPanel(dayKey, i, ex.name, session);
+      }
     });
     html += '</div>';
     return html;
@@ -502,8 +825,10 @@ function renderModalBody(plan, tr) {
 
 let modalGen = 0;
 
-export function openWorkout(id) {
-  const plan = WORKOUTS.find(w => w.id === id) || ALL_SPORT_AND_PROGRAM_WORKOUTS.find(w => w.id === id);
+export async function openWorkout(id) {
+  const { WORKOUTS, SPORTS_WORKOUTS, PROGRAM_WORKOUTS } = await loadWorkoutData();
+  const allSportAndProgramWorkouts = [...SPORTS_WORKOUTS, ...PROGRAM_WORKOUTS];
+  const plan = WORKOUTS.find(w => w.id === id) || allSportAndProgramWorkouts.find(w => w.id === id);
   if (!plan) return;
   if (isPreviewLocked() && plan.level !== 'beginner') {
     redirectToSignup();
@@ -513,7 +838,8 @@ export function openWorkout(id) {
   currentTrMap = null;
 
   const myGen = ++modalGen;
-  renderModalBody(plan, null);
+  await renderModalBody(plan, null);
+  if (myGen !== modalGen) return; // closed/switched workouts while data was loading
   document.getElementById('workout-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
 

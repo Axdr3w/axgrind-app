@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const { verifyUser } = require('./lib/verify-user.cjs');
 
 const SYSTEM_PROMPT = `You are AX Coach — the AI trainer for AX.GRIND, a free fitness platform. The real trainer posts on Instagram and TikTok @ax.grind. Talk like a real coach: direct, motivating, no BS, friendly. Give practical specific advice on training, nutrition, recovery, body comp. Keep responses 2-5 sentences max unless a list is genuinely needed. Simple language. No corporate wellness speak. End with encouragement when it fits.`;
 
@@ -14,15 +15,13 @@ exports.handler = async (event) => {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: { message: 'Server is missing SUPABASE_SERVICE_ROLE_KEY.' } }) };
   }
+  const auth = await verifyUser(event);
+  if (auth.error) return auth.error;
+  const userId = auth.userId;
   try {
-    const { messages, targetLangName, userId } = JSON.parse(event.body || '{}');
+    const { messages, targetLangName } = JSON.parse(event.body || '{}');
     if (!Array.isArray(messages) || !messages.length) {
       return { statusCode: 400, body: JSON.stringify({ error: { message: 'messages array is required.' } }) };
-    }
-    // Required (not just checked client-side) — without this, anyone could
-    // call this endpoint directly and skip the daily cap entirely.
-    if (!userId) {
-      return { statusCode: 400, body: JSON.stringify({ error: { message: 'userId is required.' } }) };
     }
 
     const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);

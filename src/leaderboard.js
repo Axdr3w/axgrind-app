@@ -1,16 +1,8 @@
 import { getRankedList } from './rank-cache.js';
 import { t } from './i18n/index.js';
+import { escapeHtml } from './html-utils.js';
 
 let currentUserId = null;
-
-function escapeHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 function medalFor(rank) {
   if (rank === 1) return '🥇';
@@ -30,7 +22,7 @@ async function renderLeaderboard() {
     return;
   }
   if (ranked.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">${t('leaderboard.empty')}</div>`;
+    container.innerHTML = `<div class="empty-fade" style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">${t('leaderboard.empty')}</div>`;
     return;
   }
   container.innerHTML = ranked.map((p, i) => {

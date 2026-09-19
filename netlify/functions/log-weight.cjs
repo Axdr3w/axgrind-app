@@ -1,4 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
+const { verifyUser } = require('./lib/verify-user.cjs');
+const { awardXp } = require('./lib/award-xp.cjs');
 
 // XP amount is hardcoded here, never read from the request body — same rule
 // as every other XP-granting function. A weigh-in is a flat reward (not
@@ -31,11 +33,14 @@ exports.handler = async (event) => {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: { message: 'Server is missing SUPABASE_SERVICE_ROLE_KEY.' } }) };
   }
+  const auth = await verifyUser(event);
+  if (auth.error) return auth.error;
+  const userId = auth.userId;
   try {
-    const { userId, weight, loggedAt } = JSON.parse(event.body || '{}');
+    const { weight, loggedAt } = JSON.parse(event.body || '{}');
     const w = Number(weight);
-    if (!userId || !Number.isFinite(w) || w < MIN_WEIGHT || w > MAX_WEIGHT || !isValidDateStr(loggedAt) || !isWithinAllowedWindow(loggedAt)) {
-      return { statusCode: 400, body: JSON.stringify({ error: { message: 'userId, a valid weight, and a valid loggedAt date are required.' } }) };
+    if (!Number.isFinite(w) || w < MIN_WEIGHT || w > MAX_WEIGHT || !isValidDateStr(loggedAt) || !isWithinAllowedWindow(loggedAt)) {
+      return { statusCode: 400, body: JSON.stringify({ error: { message: 'A valid weight and loggedAt date are required.' } }) };
     }
 
     const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -47,6 +52,7 @@ exports.handler = async (event) => {
     });
 
     let xpAwarded = 0;
+    let newXp;
     if (insertError) {
       if (insertError.code !== '23505') {
         return { statusCode: 500, body: JSON.stringify({ error: { message: insertError.message } }) };
@@ -60,19 +66,17 @@ exports.handler = async (event) => {
       if (updateLogError) {
         return { statusCode: 500, body: JSON.stringify({ error: { message: updateLogError.message } }) };
       }
+      const { data: profile, error: profileError } = await supabase.from('profiles').select('xp').eq('id', userId).single();
+      if (profileError) {
+        return { statusCode: 500, body: JSON.stringify({ error: { message: profileError.message } }) };
+      }
+      newXp = profile?.xp ?? 0;
     } else {
       xpAwarded = LOG_XP;
-    }
-
-    const { data: profile, error: profileError } = await supabase.from('profiles').select('xp').eq('id', userId).single();
-    if (profileError) {
-      return { statusCode: 500, body: JSON.stringify({ error: { message: profileError.message } }) };
-    }
-    const newXp = (profile?.xp ?? 0) + xpAwarded;
-    if (xpAwarded > 0) {
-      const { error: updateError } = await supabase.from('profiles').update({ xp: newXp }).eq('id', userId);
-      if (updateError) {
-        return { statusCode: 500, body: JSON.stringify({ error: { message: updateError.message } }) };
+      try {
+        newXp = await awardXp(supabase, userId, xpAwarded);
+      } catch (err) {
+        return { statusCode: 500, body: JSON.stringify({ error: { message: err.message } }) };
       }
     }
 

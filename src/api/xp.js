@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient.js';
+import { supabase, getAuthHeader } from './supabaseClient.js';
 
 // Both writes go through service_role-backed Netlify Functions, never a
 // direct client insert — see the plan's "XP must never be client-settable"
@@ -7,7 +7,7 @@ import { supabase } from './supabaseClient.js';
 async function callXpFunction(path, body) {
   const resp = await fetch(`/.netlify/functions/${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await getAuthHeader()) },
     body: JSON.stringify(body),
   });
   const data = await resp.json();

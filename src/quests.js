@@ -5,10 +5,12 @@ import {
   toggleQuestComplete,
   deleteQuest,
   fetchProfileXp,
+  fetchRecentStreakFreezes,
+  useStreakFreeze,
 } from './api/quests.js';
 import { fetchWorkoutHistory, fetchWorkoutCompletionCount } from './api/xp.js';
 import { findWorkoutById } from './workout-lookup.js';
-import { levelFromXp, xpIntoLevel, computeStreak } from './gamification.js';
+import { levelFromXp, xpIntoLevel, computeStreak, findFreezableGap } from './gamification.js';
 import { toDateStr, todayStr } from './date-utils.js';
 import { isPushSupported, getExistingSubscription, enablePushReminders } from './push.js';
 import { checkForNewAchievements } from './achievements.js';
@@ -58,14 +60,14 @@ async function renderQuestList() {
     return;
   }
   if (quests.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">${t('quests.emptyDay')}</div>`;
+    container.innerHTML = `<div class="empty-fade" style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">${t('quests.emptyDay')}</div>`;
     return;
   }
   container.innerHTML = quests.map(q => {
     const completed = Boolean(q.completed_at);
     return `
       <div class="quest-row${completed ? ' completed' : ''}">
-        <button class="quest-check" data-id="${q.id}" data-completed="${completed}">${completed ? '✓' : ''}</button>
+        <button class="quest-check" data-id="${q.id}" data-completed="${completed}" aria-label="${completed ? 'Completed' : 'Mark quest complete'}">${completed ? '✓' : ''}</button>
         <div class="quest-info">
           <div class="quest-title">${q.title}</div>
           ${q.due_time ? `<div class="quest-time">${q.due_time.slice(0, 5)}</div>` : ''}
@@ -95,11 +97,12 @@ async function renderQuestList() {
 }
 
 async function renderHeader() {
-  let xp, recent;
+  let xp, recent, freezes;
   try {
-    [xp, recent] = await Promise.all([
+    [xp, recent, freezes] = await Promise.all([
       fetchProfileXp(currentUserId),
       fetchRecentQuests(currentUserId),
+      fetchRecentStreakFreezes(currentUserId, 7),
     ]);
   } catch (err) {
     setAddQuestMessage(t('quests.errorLoadProfile', { reason: err.message }), true);
@@ -107,12 +110,64 @@ async function renderHeader() {
   }
   const level = levelFromXp(xp);
   const into = xpIntoLevel(xp);
-  const streak = computeStreak(recent);
+  const frozenDates = new Set(freezes.map((f) => f.used_date));
+  const streak = computeStreak(recent, frozenDates);
 
   document.getElementById('quest-level').textContent = level;
   document.getElementById('quest-streak').textContent = streak;
   document.getElementById('xp-into-level').textContent = into;
   document.getElementById('xp-bar-fill').style.width = into + '%';
+
+  renderStreakFreezeOffer(recent, frozenDates, freezes.length > 0);
+  maybeShowRestDayNudge(streak);
+}
+
+// An app that only ever pushes for a longer streak doesn't feel like it's
+// on your side — after a real run (7+ days), gently suggest a rest day
+// instead. Re-checks daily (keyed by today's date) rather than once ever,
+// since the streak keeps growing and each new week deserves the nudge
+// again — but only ever once per day, not on every quests-page visit.
+const REST_DAY_THRESHOLD = 7;
+function maybeShowRestDayNudge(streak) {
+  const el = document.getElementById('rest-day-nudge');
+  if (streak < REST_DAY_THRESHOLD) { el.style.display = 'none'; return; }
+  const key = `ax-rest-nudge-dismissed-${todayStr()}`;
+  try {
+    if (localStorage.getItem(key)) { el.style.display = 'none'; return; }
+  } catch { /* localStorage unavailable — just show it, no harm in that */ }
+  el.style.display = 'flex';
+  el.querySelector('button').onclick = () => {
+    el.style.display = 'none';
+    try { localStorage.setItem(key, '1'); } catch { /* best-effort only */ }
+  };
+}
+
+// Offers a freeze only when there's a real gap worth saving and the user
+// hasn't already used this week's one allowance (fetchRecentStreakFreezes
+// is already scoped to the last 7 days, so any row at all means "used").
+function renderStreakFreezeOffer(recent, frozenDates, usedThisWeek) {
+  const offer = document.getElementById('streak-freeze-offer');
+  const gapDate = usedThisWeek ? null : findFreezableGap(recent, frozenDates);
+  if (!gapDate) {
+    offer.style.display = 'none';
+    return;
+  }
+  offer.style.display = 'flex';
+  const btn = document.getElementById('streak-freeze-btn');
+  btn.onclick = async () => {
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = originalText + '…';
+    try {
+      await useStreakFreeze(currentUserId, gapDate);
+      offer.style.display = 'none';
+      await renderHeader();
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = originalText;
+      console.error('[streak freeze]', err);
+    }
+  };
 }
 
 async function renderHistoryCount() {
@@ -139,8 +194,16 @@ async function renderWorkoutHistoryList() {
     return;
   }
   const dateFmt = new Intl.DateTimeFormat(getLanguage(), { month: 'short', day: 'numeric', year: 'numeric' });
+  // findWorkoutById is async (it lazy-loads the workout data chunks), so
+  // resolve every row's workout up front instead of inside the .map below.
+  const workoutsById = new Map();
+  await Promise.all(rows.map(async (r) => {
+    if (!workoutsById.has(r.workout_id)) {
+      workoutsById.set(r.workout_id, await findWorkoutById(r.workout_id));
+    }
+  }));
   container.innerHTML = rows.map((r) => {
-    const workout = findWorkoutById(r.workout_id);
+    const workout = workoutsById.get(r.workout_id);
     const title = workout ? `${workout.icon ?? ''} ${workout.title}` : r.workout_id;
     const date = dateFmt.format(new Date(r.completed_date + 'T00:00:00'));
     return `
@@ -172,7 +235,9 @@ async function handleAddQuest() {
     return;
   }
 
+  const originalAddBtnText = addBtn.textContent;
   addBtn.disabled = true;
+  addBtn.textContent = originalAddBtnText + '…';
   setAddQuestMessage('', false);
   try {
     await createQuest(currentUserId, {
@@ -192,6 +257,7 @@ async function handleAddQuest() {
     setAddQuestMessage(t('quests.errorAddQuest', { reason: err.message }), true);
   } finally {
     addBtn.disabled = false;
+    addBtn.textContent = originalAddBtnText;
   }
 }
 
@@ -207,7 +273,13 @@ async function refreshPushBanner() {
 
 async function handleEnableReminders() {
   const btn = document.getElementById('enable-reminders-btn');
+  // Snapshotting innerHTML (not textContent) here — this button has a nested
+  // <span data-i18n> for its label, and swapping textContent would replace
+  // that span with a plain text node, permanently breaking re-translation
+  // of this button on a later language change.
+  const originalHtml = btn.innerHTML;
   btn.disabled = true;
+  btn.textContent = btn.textContent + '…';
   try {
     await enablePushReminders(currentUserId);
     await refreshPushBanner();
@@ -215,6 +287,7 @@ async function handleEnableReminders() {
     setAddQuestMessage(t('quests.errorEnableReminders', { reason: err.message }), true);
   } finally {
     btn.disabled = false;
+    btn.innerHTML = originalHtml;
   }
 }
 

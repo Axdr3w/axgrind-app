@@ -1,4 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
+const { verifyUser } = require('./lib/verify-user.cjs');
+const { awardXp } = require('./lib/award-xp.cjs');
 
 const ARTICLE_XP = 25;
 
@@ -9,10 +11,13 @@ exports.handler = async (event) => {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: { message: 'Server is missing SUPABASE_SERVICE_ROLE_KEY.' } }) };
   }
+  const auth = await verifyUser(event);
+  if (auth.error) return auth.error;
+  const userId = auth.userId;
   try {
-    const { userId, articleId } = JSON.parse(event.body || '{}');
-    if (!userId || !articleId) {
-      return { statusCode: 400, body: JSON.stringify({ error: { message: 'userId and articleId are required.' } }) };
+    const { articleId } = JSON.parse(event.body || '{}');
+    if (!articleId) {
+      return { statusCode: 400, body: JSON.stringify({ error: { message: 'articleId is required.' } }) };
     }
 
     const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -29,14 +34,11 @@ exports.handler = async (event) => {
       return { statusCode: 500, body: JSON.stringify({ error: { message: insertError.message } }) };
     }
 
-    const { data: profile, error: profileError } = await supabase.from('profiles').select('xp').eq('id', userId).single();
-    if (profileError) {
-      return { statusCode: 500, body: JSON.stringify({ error: { message: profileError.message } }) };
-    }
-    const newXp = (profile?.xp ?? 0) + ARTICLE_XP;
-    const { error: updateError } = await supabase.from('profiles').update({ xp: newXp }).eq('id', userId);
-    if (updateError) {
-      return { statusCode: 500, body: JSON.stringify({ error: { message: updateError.message } }) };
+    let newXp;
+    try {
+      newXp = await awardXp(supabase, userId, ARTICLE_XP);
+    } catch (err) {
+      return { statusCode: 500, body: JSON.stringify({ error: { message: err.message } }) };
     }
 
     return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ xpAwarded: ARTICLE_XP, newXp }) };

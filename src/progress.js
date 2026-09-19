@@ -19,6 +19,8 @@ function el(id) { return document.getElementById(id); }
 export async function initProgress(userId) {
   currentUserId = userId;
   renderGoalTabs();
+  const chartWrap = el('progress-chart-wrap');
+  if (chartWrap) chartWrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">${t('common.loading')}</div>`;
   try {
     logs = await fetchWeightLogs(userId);
   } catch {
@@ -32,6 +34,7 @@ export async function initProgress(userId) {
   renderAll();
   renderFilmstrip();
   renderCompare();
+  renderOnThisDay();
 }
 
 export function teardownProgress() {
@@ -147,6 +150,76 @@ function formatShortDate(dateStr) {
   return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
+// "On this day" throwback — bonus nostalgia section, not a core feature, so
+// it renders nothing when there's no reasonably close match rather than
+// showing an empty state.
+const ON_THIS_DAY_WEEKS = [4, 8, 12];
+const ON_THIS_DAY_TOLERANCE_DAYS = 2;
+
+// entries: logs ({ weight, logged_at }) or photos ({ loggedAt, url }).
+// Checks each of the 4/8/12-week targets for an entry within ±2 days, and
+// returns whichever candidate lands closest to its target date.
+function findOnThisDayMatch(entries, dateField) {
+  let best = null;
+  for (const weeksAgo of ON_THIS_DAY_WEEKS) {
+    const target = new Date();
+    target.setDate(target.getDate() - weeksAgo * 7);
+    for (const entry of entries) {
+      const [y, m, d] = entry[dateField].split('-').map(Number);
+      const entryDate = new Date(y, m - 1, d);
+      const diffDays = Math.abs((entryDate - target) / 86400000);
+      if (diffDays <= ON_THIS_DAY_TOLERANCE_DAYS && (!best || diffDays < best.diffDays)) {
+        best = { entry, weeksAgo, diffDays };
+      }
+    }
+  }
+  return best;
+}
+
+function renderOnThisDay() {
+  const wrap = el('on-this-day');
+  if (!wrap) return;
+
+  const weightMatch = findOnThisDayMatch(logs, 'logged_at');
+  const photoMatch = findOnThisDayMatch(photos, 'loggedAt');
+  if (!weightMatch && !photoMatch) {
+    wrap.innerHTML = '';
+    return;
+  }
+
+  let html = '';
+  if (weightMatch) {
+    const oldWeight = weightMatch.entry.weight;
+    const currentWeight = logs.length ? logs[logs.length - 1].weight : null;
+    let body = t('progress.onThisDayWeight', { old: fmt(oldWeight) });
+    if (currentWeight != null && logs[logs.length - 1].logged_at !== weightMatch.entry.logged_at) {
+      const delta = currentWeight - oldWeight;
+      const sign = delta > 0 ? '+' : '';
+      body = t('progress.onThisDayWeightVsNow', { old: fmt(oldWeight), current: fmt(currentWeight), sign, delta: fmt(Math.abs(delta)) });
+    }
+    html += `
+      <div class="tip-card">
+        <div class="tip-num">${weightMatch.weeksAgo}w</div>
+        <div>
+          <div class="tip-title">${t('progress.onThisDayTitle', { n: weightMatch.weeksAgo })}</div>
+          <div class="tip-body">${body}</div>
+        </div>
+      </div>`;
+  }
+  const latestPhoto = photos.length ? photos[photos.length - 1] : null;
+  if (photoMatch && latestPhoto && photoMatch.entry.loggedAt !== latestPhoto.loggedAt) {
+    html += `
+      <div class="tip-card" style="flex-direction:column;align-items:stretch;">
+        <div class="tip-title" style="margin-bottom:8px;">${t('progress.onThisDayTitle', { n: photoMatch.weeksAgo })}</div>
+        <div class="photo-compare-grid">
+          <div class="photo-compare-col"><img src="${photoMatch.entry.url}" alt=""><div class="photo-compare-date">${formatShortDate(photoMatch.entry.loggedAt)}</div></div>
+          <div class="photo-compare-col"><img src="${latestPhoto.url}" alt=""><div class="photo-compare-date">${formatShortDate(latestPhoto.loggedAt)}</div></div>
+        </div>
+      </div>`;
+  }
+  wrap.innerHTML = html;
+}
+
 async function submitLog() {
   if (!currentUserId) return;
   const input = el('progress-weight-input');
@@ -158,7 +231,9 @@ async function submitLog() {
     return;
   }
   const btn = el('progress-log-btn');
+  const originalBtnText = btn.textContent;
   btn.disabled = true;
+  btn.textContent = originalBtnText + '…';
   try {
     const result = await logWeight(currentUserId, w, todayStr());
     const today = todayStr();
@@ -171,12 +246,14 @@ async function submitLog() {
     msg.className = 'progress-log-msg success';
     renderStats();
     renderChart();
+    renderOnThisDay();
     checkForNewAchievements();
   } catch (err) {
     msg.textContent = err.message;
     msg.className = 'progress-log-msg error';
   } finally {
     btn.disabled = false;
+    btn.textContent = originalBtnText;
   }
 }
 
@@ -316,6 +393,7 @@ async function handleDeletePhoto() {
     photos = photos.filter((p) => p.loggedAt !== loggedAt);
     renderFilmstrip();
     renderCompare();
+    renderOnThisDay();
     closePhotoLightbox();
   } catch (err) {
     alert(err.message);
@@ -328,7 +406,9 @@ async function handlePhotoAdd(e) {
   if (!file || !currentUserId) return;
   const btn = el('progress-photo-add-btn');
   const msg = el('progress-photo-msg');
+  const originalBtnText = btn.textContent;
   btn.disabled = true;
+  btn.textContent = originalBtnText + '…';
   msg.textContent = '';
   msg.className = 'photo-msg';
   try {
@@ -340,6 +420,7 @@ async function handlePhotoAdd(e) {
     photos.sort((a, b) => a.loggedAt.localeCompare(b.loggedAt));
     renderFilmstrip();
     renderCompare();
+    renderOnThisDay();
     msg.textContent = t('progress.photoSuccess');
     msg.className = 'photo-msg success';
     checkForNewAchievements();
@@ -348,6 +429,7 @@ async function handlePhotoAdd(e) {
     msg.className = 'photo-msg error';
   } finally {
     btn.disabled = false;
+    btn.textContent = originalBtnText;
     input.value = '';
   }
 }

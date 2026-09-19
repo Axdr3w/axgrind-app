@@ -13,6 +13,7 @@ import {
 import { moderateContent } from './api/moderation.js';
 import { getRankMap } from './rank-cache.js';
 import { t, getLanguage } from './i18n/index.js';
+import { escapeHtml } from './html-utils.js';
 
 let currentUserId = null;
 let likedPostIds = new Set();
@@ -21,17 +22,6 @@ let pendingImageFile = null;
 let openCommentPostIds = new Set();
 let rankMap = new Map();
 
-// Escaping every piece of user-supplied text before it goes into innerHTML —
-// forum posts are the first place in this app where one user's input is
-// rendered for OTHER users, which is exactly the classic stored-XSS vector.
-function escapeHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 function relativeTime(isoString) {
   const diffMs = Date.now() - new Date(isoString).getTime();
@@ -92,7 +82,7 @@ async function renderFeed(posts, append) {
   const container = document.getElementById('forum-feed');
   const html = posts.map(renderPostCard).join('');
   if (append) container.insertAdjacentHTML('beforeend', html);
-  else container.innerHTML = html || `<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">${t('forum.emptyFeed')}</div>`;
+  else container.innerHTML = html || `<div class="empty-fade" style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">${t('forum.emptyFeed')}</div>`;
 
   for (const post of posts) {
     if (openCommentPostIds.has(post.id)) await renderComments(post.id);
@@ -233,7 +223,9 @@ async function handleCreatePost() {
     return;
   }
   const btn = document.getElementById('forum-post-btn');
+  const originalText = btn.textContent;
   btn.disabled = true;
+  btn.textContent = originalText + '…';
   setPostMessage(t('forum.checking'), false);
   try {
     const verdict = await moderateContent(body, pendingImageFile);
@@ -255,6 +247,7 @@ async function handleCreatePost() {
     setPostMessage(t('forum.errorPost', { reason: err.message }), true);
   } finally {
     btn.disabled = false;
+    btn.textContent = originalText;
   }
 }
 

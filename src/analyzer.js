@@ -1,6 +1,7 @@
 import { t, getLanguage } from './i18n/index.js';
 import { getLanguageMeta } from './i18n/languages.js';
 import { findWorkoutById } from './workout-lookup.js';
+import { getAuthHeader } from './api/supabaseClient.js';
 
 let uploadedImageBase64 = null, uploadedMediaType = 'image/jpeg';
 let currentUserId = null;
@@ -87,7 +88,7 @@ export async function analyzeBody() {
   try {
     const resp = await fetch('/.netlify/functions/analyze', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(await getAuthHeader()) },
       body: JSON.stringify({
         imageBase64: uploadedImageBase64,
         mediaType: uploadedMediaType,
@@ -116,7 +117,7 @@ export async function analyzeBody() {
     if (result.potential?.length) html += `<div class="analysis-section"><h4>${t('analyze.sectionPotential')}</h4><div class="analysis-tags">${result.potential.map(s=>`<span class="a-tag yellow">${s}</span>`).join('')}</div></div>`;
     if (result.workout_tips) html += `<div class="analysis-section"><h4>${t('analyze.sectionWorkoutTips')}</h4><p>${result.workout_tips}</p></div>`;
     if (result.nutrition_note) html += `<div class="analysis-section"><h4>${t('analyze.sectionNutritionNote')}</h4><p>${result.nutrition_note}</p></div>`;
-    const recommendedWorkout = result.recommended_plan ? findWorkoutById(result.recommended_plan) : null;
+    const recommendedWorkout = result.recommended_plan ? await findWorkoutById(result.recommended_plan) : null;
     if (recommendedWorkout) {
       html += `<div class="analysis-section"><h4>${t('analyze.sectionRecommendedPlan')}</h4><div class="workout-card featured" style="cursor:pointer;" onclick="openWorkout('${recommendedWorkout.id}')"><div class="wc-top"><span class="wc-icon">${recommendedWorkout.icon ?? ''}</span></div><div class="wc-title">${recommendedWorkout.title}</div><div class="section-link" style="margin-top:6px;">${t('analyze.viewPlan')} →</div></div></div>`;
     } else if (result.recommended_plan) {

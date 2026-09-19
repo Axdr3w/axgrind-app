@@ -1,4 +1,4 @@
-import { supabase } from './api/supabaseClient.js';
+import { supabase, getAuthHeader } from './api/supabaseClient.js';
 
 const NOT_CONFIGURED = { error: { message: 'Accounts aren\'t set up yet — Supabase credentials are missing.' } };
 
@@ -102,7 +102,7 @@ export async function deleteAccount() {
 export async function setUsername(userId, handle) {
   const resp = await fetch('/.netlify/functions/set-username', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...(await getAuthHeader()) },
     body: JSON.stringify({ userId, handle }),
   });
   const data = await resp.json();

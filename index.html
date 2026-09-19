@@ -30,7 +30,7 @@
   <nav>
     <div class="nav-top-row">
       <div class="logo">AX<span>.</span>GRIND</div>
-      <button class="globe-btn" id="globe-lang-btn" type="button" title="Language" data-i18n-title="account.languageLabel">🌐</button>
+      <button class="globe-btn" id="globe-lang-btn" type="button" title="Language" data-i18n-title="account.languageLabel" aria-label="Change language"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 4 6 4 9s-1.5 6.3-4 9c-2.5-2.7-4-6-4-9s1.5-6.3 4-9Z"/></svg></button>
     </div>
     <div class="nav-tabs">
       <button class="nav-tab gated active" data-page="home" onclick="showPage('home')" data-i18n="nav.home">Home</button>
@@ -41,18 +41,17 @@
       <span class="nav-sep">|</span>
       <button class="nav-tab gated" data-page="analyze" onclick="showPage('analyze')" data-i18n="nav.analyze">Analyze</button>
       <span class="nav-sep">|</span>
-      <button class="nav-tab" data-page="account" onclick="showPage('account')" data-i18n="nav.account">Account</button>
-      <span class="nav-sep">|</span>
       <button class="nav-tab gated" id="nav-more-btn" onclick="openNavMore()" data-i18n="nav.more">More ⋯</button>
     </div>
   </nav>
 </div>
 
 <div class="workout-modal" id="nav-more-modal" onclick="if(event.target===this)closeNavMore()">
-  <div class="workout-sheet" style="max-width:340px;">
+  <div class="workout-sheet nav-sheet">
     <div class="workout-sheet-header"><h2 data-i18n="nav.moreTitle">More</h2></div>
     <div class="workout-sheet-body" id="nav-more-menu">
       <button class="nav-more-item gated" data-page="about" onclick="showPage('about');closeNavMore()" data-i18n="nav.about">About</button>
+      <button class="nav-more-item" data-page="account" onclick="showPage('account');closeNavMore()" data-i18n="nav.account">Account</button>
       <button class="nav-more-item gated" data-page="nutrition" onclick="showPage('nutrition');closeNavMore()" data-i18n="nav.nutrition">Nutrition</button>
       <button class="nav-more-item gated" data-page="chat" onclick="showPage('chat');closeNavMore()" data-i18n="nav.coach">Coach</button>
       <button class="nav-more-item gated" data-page="videos" onclick="showPage('videos');closeNavMore()" data-i18n="nav.videos">Videos</button>
@@ -66,7 +65,7 @@
   <div class="motivation-banner">
     <div style="font-size:18px;flex-shrink:0;">⚡</div>
     <div class="quote-text" id="quote-text" data-i18n="common.loading">Loading...</div>
-    <button class="quote-refresh" onclick="newQuote()" title="New quote" data-i18n-title="common.newQuoteTitle">↻</button>
+    <button class="quote-refresh" onclick="newQuote()" title="New quote" data-i18n-title="common.newQuoteTitle" aria-label="New quote">↻</button>
   </div>
 
   <!-- HOME -->
@@ -101,23 +100,23 @@
     </div>
 
     <div class="section-header"><div class="section-title" data-i18n="videos.title">EXERCISE LIBRARY</div><button class="section-link" onclick="showPage('videos')" data-i18n="home.browseAll">Browse all →</button></div>
-    <div onclick="showPage('videos')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;margin-bottom:20px;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div style="font-size:26px;margin-bottom:7px;">🎥</div>
+    <button type="button" class="card-reset feature-card" onclick="showPage('videos')" style="margin-bottom:20px;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div class="feature-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg></div>
       <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.dontRecognize">Don't recognize a move?</div>
       <div style="font-size:11px;color:var(--muted);" data-i18n="home.dontRecognizeDesc">Every exercise in the app has a form cue and a video tutorial link — search the full library</div>
-    </div>
+    </button>
     <div class="section-header"><div class="section-title" data-i18n="home.aiFeaturesTitle">AI FEATURES</div></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-      <div onclick="showPage('analyze')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div style="font-size:26px;margin-bottom:7px;">📸</div>
+      <button type="button" class="card-reset feature-card" onclick="showPage('analyze')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div class="feature-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.bodyAnalyzerTitle">Body Analyzer</div>
         <div style="font-size:11px;color:var(--muted);" data-i18n="home.bodyAnalyzerDesc">AI reads your physique & recommends a plan</div>
-      </div>
-      <div onclick="showPage('chat')" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div style="font-size:26px;margin-bottom:7px;">🤖</div>
+      </button>
+      <button type="button" class="card-reset feature-card" onclick="showPage('chat')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div class="feature-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="14" height="11" rx="2"/><path d="M9 7V5a3 3 0 0 1 6 0v2M9 12h.01M15 12h.01"/></svg></div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.aiCoachTitle">AI Coach</div>
         <div style="font-size:11px;color:var(--muted);" data-i18n="home.aiCoachDesc">Ask anything about training & nutrition</div>
-      </div>
+      </button>
     </div>
 
     <!-- Off by default — see src/ads.js. Stays in the DOM (display:none) so
@@ -142,22 +141,32 @@
       <div class="xp-bar-label"><span id="xp-into-level">0</span>/100 <span data-i18n="quests.xpToNextLevel">XP to next level</span></div>
     </div>
 
-    <div class="calc-box" id="history-toggle-box" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleWorkoutHistory()">
+    <div class="inline-banner" id="streak-freeze-offer" style="display:none;">
+      <span data-i18n="quests.streakFreezeOffer">Missed a day? Use a Streak Freeze to keep your streak going.</span>
+      <button type="button" id="streak-freeze-btn" data-i18n="quests.streakFreezeBtn">Use Freeze</button>
+    </div>
+
+    <div class="inline-banner" id="rest-day-nudge" style="display:none;">
+      <span data-i18n="quests.restDayNudge">Big streak going — a rest day is still progress. Consider taking one today.</span>
+      <button type="button" data-i18n="plans.newHereHintDismiss">Got it</button>
+    </div>
+
+    <button type="button" class="calc-box" id="history-toggle-box" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;margin-inline:0;" onclick="toggleWorkoutHistory()">
       <div>
         <div class="calc-label" style="margin-bottom:2px;" data-i18n="quests.historyLabel">Workout History</div>
         <div style="font-size:12px;color:var(--muted);"><span id="history-total-count">0</span> <span data-i18n="quests.historyCompletedTotal">workouts completed all-time</span></div>
       </div>
       <span class="section-link" id="history-toggle-arrow">▾</span>
-    </div>
+    </button>
     <div id="workout-history-list" style="display:none;margin-bottom:16px;"></div>
 
-    <div class="calc-box" id="achievements-toggle-box" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="toggleAchievements()">
+    <button type="button" class="calc-box" id="achievements-toggle-box" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;margin-inline:0;" onclick="toggleAchievements()">
       <div>
         <div class="calc-label" style="margin-bottom:2px;" data-i18n="achievements.toggleLabel">Achievements</div>
         <div style="font-size:12px;color:var(--muted);"><span id="achievements-unlocked-count">0</span>/<span id="achievements-total-count">0</span> <span data-i18n="achievements.unlockedSuffix">unlocked</span></div>
       </div>
       <span class="section-link" id="achievements-toggle-arrow">▾</span>
-    </div>
+    </button>
     <div id="achievements-grid" class="achievements-grid" style="display:none;margin-bottom:16px;"></div>
 
     <div id="quest-day-view">
@@ -166,12 +175,12 @@
       <div class="calc-box" style="margin-bottom:16px;">
         <h3 data-i18n="quests.addQuestTitle">ADD A QUEST</h3>
         <div class="calc-row">
-          <div class="calc-field" style="flex:2;"><div class="calc-label" data-i18n="quests.fieldTitle">Title</div><input class="calc-input" type="text" id="quest-title" placeholder="e.g. Leg day workout" data-i18n-placeholder="quests.titlePlaceholder"></div>
-          <div class="calc-field"><div class="calc-label" data-i18n="quests.timeLabel">Time (optional)</div><input class="calc-input" type="time" id="quest-time"></div>
+          <div class="calc-field" style="flex:2;"><label class="calc-label" for="quest-title" data-i18n="quests.fieldTitle">Title</label><input class="calc-input" type="text" id="quest-title" placeholder="e.g. Leg day workout" data-i18n-placeholder="quests.titlePlaceholder"></div>
+          <div class="calc-field"><label class="calc-label" for="quest-time" data-i18n="quests.timeLabel">Time (optional)</label><input class="calc-input" type="time" id="quest-time"></div>
         </div>
         <div class="calc-row">
           <div class="calc-field">
-            <div class="calc-label" data-i18n="quests.remindMeLabel">Remind me</div>
+            <label class="calc-label" for="quest-reminder" data-i18n="quests.remindMeLabel">Remind me</label>
             <select class="calc-select" id="quest-reminder">
               <option value="" data-i18n="quests.reminderNone">No reminder</option>
               <option value="0" data-i18n="quests.reminderAtTime">At the time</option>
@@ -184,7 +193,7 @@
           </div>
         </div>
         <button class="btn-accent btn-full" id="add-quest-btn" data-i18n="quests.addQuestBtn">Add Quest</button>
-        <div id="quest-add-message" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+        <div id="quest-add-message" class="status-msg" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
       </div>
 
       <div id="push-enable-banner" class="quest-push-banner" style="display:none;">
@@ -216,17 +225,17 @@
 
   <!-- PLANS -->
   <div class="page" id="page-plans">
-    <div class="quest-push-banner" style="cursor:pointer;" onclick="openBreathIntro()">
+    <button type="button" class="quest-push-banner" style="cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;" onclick="openBreathIntro()">
       <div style="font-size:22px;">🌬️</div>
       <div style="flex:1;min-width:0;">
         <div style="font-weight:600;font-size:13px;" data-i18n="breath.title">GRIND BREATH</div>
         <div style="font-size:11px;color:var(--muted);" data-i18n="breath.rowDesc">Guided breathing exercise — 1 to 5 rounds</div>
       </div>
       <div style="color:var(--muted);font-size:16px;flex-shrink:0;">→</div>
-    </div>
+    </button>
     <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="plans.title">WORKOUT LIBRARY</div><span style="font-size:11px;color:var(--muted);" data-i18n="plans.tapHint">Tap any workout to see full exercises</span></div>
     <div class="plan-intro-card" style="margin-bottom:14px;">
-      <div style="font-size:12px;color:var(--muted);line-height:1.6;"><span data-i18n="plans.introPrefix">Every workout is ordered</span> <strong style="color:var(--accent);" data-i18n="plans.orderedBold">Beginner → Intermediate → Advanced</strong><span data-i18n="plans.introSuffix">. Choose Strength Training, a specific sport, a structured program, or Brain training below.</span></div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;"><span data-i18n="plans.introPrefix">Every workout is ordered</span> <strong style="color:var(--accent-soft);" data-i18n="plans.orderedBold">Beginner → Intermediate → Advanced</strong><span data-i18n="plans.introSuffix">. Choose Strength Training, a specific sport, a structured program, or Brain training below.</span></div>
     </div>
 
     <div class="category-tabs">
@@ -286,7 +295,7 @@
   <!-- ARTICLE MODAL -->
   <div class="workout-modal" id="article-modal" onclick="if(event.target===this)closeArticle()">
     <div class="workout-sheet">
-      <div class="workout-sheet-header"><h2 id="article-modal-title" data-i18n="modal.articleDefaultTitle">ARTICLE</h2><button class="close-btn" onclick="closeArticle()">✕</button></div>
+      <div class="workout-sheet-header"><h2 id="article-modal-title" data-i18n="modal.articleDefaultTitle">ARTICLE</h2><button class="close-btn" onclick="closeArticle()" aria-label="Close">✕</button></div>
       <div class="workout-sheet-body">
         <div class="brain-article-meta" id="article-modal-meta"></div>
         <div id="article-modal-text"></div>
@@ -298,15 +307,15 @@
   <!-- WORKOUT MODAL -->
   <div class="workout-modal" id="workout-modal" onclick="if(event.target===this)closeWorkout()">
     <div class="workout-sheet">
-      <div class="workout-sheet-header"><h2 id="modal-title" data-i18n="modal.workoutDefaultTitle">WORKOUT</h2><button class="close-btn" onclick="closeWorkout()">✕</button></div>
+      <div class="workout-sheet-header"><h2 id="modal-title" data-i18n="modal.workoutDefaultTitle">WORKOUT</h2><button class="close-btn" onclick="closeWorkout()" aria-label="Close">✕</button></div>
       <div class="workout-sheet-body" id="modal-body"></div>
     </div>
   </div>
 
   <!-- EXERCISE INFO MODAL -->
   <div class="workout-modal" id="exercise-modal" onclick="if(event.target===this)closeExerciseInfo()">
-    <div class="workout-sheet" style="max-width:420px;">
-      <div class="workout-sheet-header"><h2 id="exercise-modal-title" data-i18n="modal.exerciseDefaultTitle">EXERCISE</h2><button class="close-btn" onclick="closeExerciseInfo()">✕</button></div>
+    <div class="workout-sheet">
+      <div class="workout-sheet-header"><h2 id="exercise-modal-title" data-i18n="modal.exerciseDefaultTitle">EXERCISE</h2><button class="close-btn" onclick="closeExerciseInfo()" aria-label="Close">✕</button></div>
       <div class="workout-sheet-body">
         <p id="exercise-modal-caption" style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;"></p>
         <a id="exercise-modal-video-link" class="btn-accent btn-full" style="text-decoration:none;display:block;text-align:center;box-sizing:border-box;" target="_blank" rel="noopener" data-i18n="modal.watchVideo">Watch Video Tutorial →</a>
@@ -316,8 +325,8 @@
 
   <!-- LANGUAGE PICKER (first thing shown on any first visit, before login) -->
   <div class="workout-modal" id="language-modal">
-    <div class="workout-sheet" style="max-width:420px;">
-      <div class="workout-sheet-header"><h2 data-i18n="language.pickerTitle">Choose your language</h2><button class="close-btn" id="language-close-btn" style="display:none;">✕</button></div>
+    <div class="workout-sheet">
+      <div class="workout-sheet-header"><h2 data-i18n="language.pickerTitle">Choose your language</h2><button class="close-btn" id="language-close-btn" style="display:none;" aria-label="Close">✕</button></div>
       <div class="workout-sheet-body">
         <div id="language-list" class="language-list"></div>
       </div>
@@ -326,7 +335,7 @@
 
   <!-- LOCK IN (focus session) -->
   <div class="workout-modal" id="focus-modal">
-    <div class="workout-sheet" style="max-width:420px;">
+    <div class="workout-sheet">
       <div class="workout-sheet-header"><h2 data-i18n="focus.title">LOCK IN</h2></div>
       <div class="workout-sheet-body" id="focus-modal-body"></div>
     </div>
@@ -335,7 +344,7 @@
   <!-- PROGRESS PHOTO LIGHTBOX -->
   <div class="workout-modal" id="photo-lightbox-modal" onclick="if(event.target===this)closePhotoLightbox()">
     <div class="photo-lightbox-content">
-      <img id="photo-lightbox-img" src="" alt="">
+      <img id="photo-lightbox-img" src="" alt="Progress photo">
       <div class="photo-lightbox-date" id="photo-lightbox-date"></div>
       <div class="photo-lightbox-actions">
         <button class="section-link" id="photo-lightbox-delete" data-i18n="progress.photoDeleteBtn">Delete this photo</button>
@@ -348,15 +357,15 @@
 
   <!-- GRIND BREATH -->
   <div class="workout-modal" id="breath-modal">
-    <div class="workout-sheet" style="max-width:440px;">
-      <div class="workout-sheet-header"><h2 data-i18n="breath.title">GRIND BREATH</h2><button class="close-btn" onclick="closeBreathSession()">✕</button></div>
+    <div class="workout-sheet">
+      <div class="workout-sheet-header"><h2 data-i18n="breath.title">GRIND BREATH</h2><button class="close-btn" onclick="closeBreathSession()" aria-label="Close">✕</button></div>
       <div class="workout-sheet-body" id="breath-modal-body"></div>
     </div>
   </div>
 
   <!-- ONBOARDING TOUR -->
   <div class="workout-modal" id="onboarding-modal">
-    <div class="workout-sheet" style="max-width:420px;">
+    <div class="workout-sheet">
       <div class="tour-body-wrap">
         <div class="tour-progress" id="tour-progress"></div>
         <div class="tour-icon" id="tour-icon"></div>
@@ -364,8 +373,8 @@
         <div class="tour-desc" id="tour-body"></div>
         <div class="tour-dots" id="tour-dots"></div>
         <div class="tour-nav">
+          <button class="section-link" id="tour-skip-btn" type="button" style="margin-right:auto;" data-i18n="tour.skip">Skip Tour</button>
           <button class="btn-follow" id="tour-back-btn" type="button" style="width:auto;margin-top:0;" data-i18n="tour.back">Back</button>
-          <button class="section-link" id="tour-skip-btn" type="button" data-i18n="tour.skip">Skip Tour</button>
           <button class="btn-accent" id="tour-next-btn" type="button" style="width:auto;" data-i18n="tour.next">Next</button>
         </div>
       </div>
@@ -374,14 +383,14 @@
 
   <!-- USERNAME GATE (mandatory the moment a signed-in user has no handle yet, e.g. after a magic-link sign-up) -->
   <div class="workout-modal" id="username-modal">
-    <div class="workout-sheet" style="max-width:420px;">
-      <div class="workout-sheet-header"><h2 data-i18n="account.pickUsernameTitle">Pick a username</h2></div>
+    <div class="workout-sheet">
+      <div class="workout-sheet-header"><h2 data-i18n="account.pickUsernameTitle">Pick a username</h2><button class="close-btn" onclick="closeUsernameModal()" aria-label="Close">✕</button></div>
       <div class="workout-sheet-body">
-        <p style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;" data-i18n="account.pickUsernameDesc">One more step — pick a username so people see you as you, not "AX.GRIND member," in the Forum and Messages.</p>
+        <p style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;" data-i18n="account.pickUsernameDesc">Pick a username so people see you as you, not "AX.GRIND member," in the Forum and Messages.</p>
         <form id="pick-username-form">
           <div class="calc-field" style="margin-bottom:14px;">
-            <div class="calc-label" data-i18n="account.usernameLabel">Username</div>
-            <input class="calc-input" type="text" id="pick-username-input" placeholder="e.g. andrew" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 characters: letters, numbers, underscores only" data-i18n-title="account.usernameHint" required autofocus>
+            <label class="calc-label" for="pick-username-input" data-i18n="account.usernameLabel">Username</label>
+            <input class="calc-input" type="text" id="pick-username-input" placeholder="e.g. andrew" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 characters: letters, numbers, underscores only" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" data-i18n-title="account.usernameHint" required autofocus>
           </div>
           <button class="btn-accent btn-full" type="submit" data-i18n="account.pickUsernameSave">Continue</button>
         </form>
@@ -391,22 +400,22 @@
   </div>
 
   <div class="workout-modal" id="reset-password-modal">
-    <div class="workout-sheet" style="max-width:420px;">
+    <div class="workout-sheet">
       <div class="workout-sheet-header"><h2 data-i18n="account.resetPasswordTitle">Set a new password</h2></div>
       <div class="workout-sheet-body">
         <p style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;" data-i18n="account.resetPasswordDesc">Enter a new password for your account.</p>
         <form id="reset-password-form">
           <div class="calc-field" style="margin-bottom:10px;">
-            <div class="calc-label" data-i18n="account.newPassword">New Password</div>
-            <input class="calc-input" type="password" id="reset-password-new" minlength="6" required autofocus>
+            <label class="calc-label" for="reset-password-new" data-i18n="account.newPassword">New Password</label>
+            <input class="calc-input" type="password" id="reset-password-new" autocomplete="new-password" minlength="6" required autofocus>
           </div>
           <div class="calc-field" style="margin-bottom:14px;">
-            <div class="calc-label" data-i18n="account.confirmNewPassword">Confirm New Password</div>
-            <input class="calc-input" type="password" id="reset-password-confirm" minlength="6" required>
+            <label class="calc-label" for="reset-password-confirm" data-i18n="account.confirmNewPassword">Confirm New Password</label>
+            <input class="calc-input" type="password" id="reset-password-confirm" autocomplete="new-password" minlength="6" required>
           </div>
           <button class="btn-accent btn-full" type="submit" data-i18n="account.updatePassword">Update Password</button>
         </form>
-        <div id="reset-password-message" style="margin-top:10px;font-size:13px;"></div>
+        <div id="reset-password-message" class="status-msg" style="margin-top:10px;font-size:13px;"></div>
       </div>
     </div>
   </div>
@@ -417,13 +426,13 @@
     <div class="calc-box">
       <h3 data-i18n="nutrition.calcTitle">CALORIE CALCULATOR</h3>
       <div class="calc-row">
-        <div class="calc-field"><div class="calc-label" data-i18n="nutrition.weightLabel">Weight (lbs)</div><input class="calc-input" type="number" id="c-weight" placeholder="185"></div>
-        <div class="calc-field"><div class="calc-label" data-i18n="nutrition.heightLabel">Height (in)</div><input class="calc-input" type="number" id="c-height" placeholder="70"></div>
-        <div class="calc-field"><div class="calc-label" data-i18n="nutrition.ageLabel">Age</div><input class="calc-input" type="number" id="c-age" placeholder="25"></div>
+        <div class="calc-field"><label class="calc-label" for="c-weight" data-i18n="nutrition.weightLabel">Weight (lbs)</label><input class="calc-input" type="number" id="c-weight" placeholder="185"></div>
+        <div class="calc-field"><label class="calc-label" for="c-height" data-i18n="nutrition.heightLabel">Height (in)</label><input class="calc-input" type="number" id="c-height" placeholder="70"></div>
+        <div class="calc-field"><label class="calc-label" for="c-age" data-i18n="nutrition.ageLabel">Age</label><input class="calc-input" type="number" id="c-age" placeholder="25"></div>
       </div>
       <div class="calc-row">
-        <div class="calc-field"><div class="calc-label" data-i18n="nutrition.goalLabel">Goal</div><select class="calc-select" id="c-goal"><option value="cut" data-i18n="nutrition.goalCut">Cut (lose fat)</option><option value="maintain" data-i18n="nutrition.goalMaintain">Maintain</option><option value="bulk" data-i18n="nutrition.goalBulk">Bulk (gain muscle)</option></select></div>
-        <div class="calc-field"><div class="calc-label" data-i18n="nutrition.activityLabel">Activity</div><select class="calc-select" id="c-activity"><option value="1.2" data-i18n="nutrition.activitySedentary">Sedentary</option><option value="1.375" data-i18n="nutrition.activityLight">Light</option><option value="1.55" selected data-i18n="nutrition.activityModerate">Moderate</option><option value="1.725" data-i18n="nutrition.activityActive">Active</option><option value="1.9" data-i18n="nutrition.activityVeryActive">Very active</option></select></div>
+        <div class="calc-field"><label class="calc-label" for="c-goal" data-i18n="nutrition.goalLabel">Goal</label><select class="calc-select" id="c-goal"><option value="cut" data-i18n="nutrition.goalCut">Cut (lose fat)</option><option value="maintain" data-i18n="nutrition.goalMaintain">Maintain</option><option value="bulk" data-i18n="nutrition.goalBulk">Bulk (gain muscle)</option></select></div>
+        <div class="calc-field"><label class="calc-label" for="c-activity" data-i18n="nutrition.activityLabel">Activity</label><select class="calc-select" id="c-activity"><option value="1.2" data-i18n="nutrition.activitySedentary">Sedentary</option><option value="1.375" data-i18n="nutrition.activityLight">Light</option><option value="1.55" selected data-i18n="nutrition.activityModerate">Moderate</option><option value="1.725" data-i18n="nutrition.activityActive">Active</option><option value="1.9" data-i18n="nutrition.activityVeryActive">Very active</option></select></div>
       </div>
       <button class="btn-accent btn-full" onclick="calcCalories()" data-i18n="nutrition.calculateBtn">Calculate My Calories</button>
       <div class="calc-result" id="calc-result">
@@ -520,7 +529,7 @@
 
       <div class="progress-log-row">
         <div class="calc-field">
-          <div class="calc-label" data-i18n="progress.weightLabel">Today's weight (lbs)</div>
+          <label class="calc-label" for="progress-weight-input" data-i18n="progress.weightLabel">Today's weight (lbs)</label>
           <input class="calc-input" type="number" id="progress-weight-input" placeholder="185" inputmode="decimal">
         </div>
         <button class="btn-accent" id="progress-log-btn" data-i18n="progress.logBtn">Log Weight</button>
@@ -530,6 +539,7 @@
 
       <div id="progress-stats-row" class="progress-stats-row"></div>
       <div id="progress-chart-wrap" class="progress-chart-wrap"></div>
+      <div id="on-this-day"></div>
     </div>
     </div>
 
@@ -560,14 +570,14 @@
       <div class="section-header" style="margin-bottom:10px;"><div class="section-title" data-i18n="measure.title">BODY MEASUREMENTS</div></div>
       <p class="focus-intro" data-i18n="measure.intro">Track the parts the scale can't tell you about. Fill in whichever you're measuring today — the rest are optional.</p>
       <div class="measure-grid-inputs">
-        <div class="calc-field"><div class="calc-label" data-i18n="measure.neck">Neck (in)</div><input class="calc-input" type="number" step="0.1" id="measure-neck"></div>
-        <div class="calc-field"><div class="calc-label" data-i18n="measure.shoulders">Shoulders (in)</div><input class="calc-input" type="number" step="0.1" id="measure-shoulders"></div>
-        <div class="calc-field"><div class="calc-label" data-i18n="measure.chest">Chest (in)</div><input class="calc-input" type="number" step="0.1" id="measure-chest"></div>
-        <div class="calc-field"><div class="calc-label" data-i18n="measure.arms">Arms (in)</div><input class="calc-input" type="number" step="0.1" id="measure-arms"></div>
-        <div class="calc-field"><div class="calc-label" data-i18n="measure.waist">Waist (in)</div><input class="calc-input" type="number" step="0.1" id="measure-waist"></div>
-        <div class="calc-field"><div class="calc-label" data-i18n="measure.hips">Hips (in)</div><input class="calc-input" type="number" step="0.1" id="measure-hips"></div>
-        <div class="calc-field"><div class="calc-label" data-i18n="measure.thighs">Thighs (in)</div><input class="calc-input" type="number" step="0.1" id="measure-thighs"></div>
-        <div class="calc-field"><div class="calc-label" data-i18n="measure.calves">Calves (in)</div><input class="calc-input" type="number" step="0.1" id="measure-calves"></div>
+        <div class="calc-field"><label class="calc-label" for="measure-neck" data-i18n="measure.neck">Neck (in)</label><input class="calc-input" type="number" step="0.1" inputmode="decimal" id="measure-neck"></div>
+        <div class="calc-field"><label class="calc-label" for="measure-shoulders" data-i18n="measure.shoulders">Shoulders (in)</label><input class="calc-input" type="number" step="0.1" inputmode="decimal" id="measure-shoulders"></div>
+        <div class="calc-field"><label class="calc-label" for="measure-chest" data-i18n="measure.chest">Chest (in)</label><input class="calc-input" type="number" step="0.1" inputmode="decimal" id="measure-chest"></div>
+        <div class="calc-field"><label class="calc-label" for="measure-arms" data-i18n="measure.arms">Arms (in)</label><input class="calc-input" type="number" step="0.1" inputmode="decimal" id="measure-arms"></div>
+        <div class="calc-field"><label class="calc-label" for="measure-waist" data-i18n="measure.waist">Waist (in)</label><input class="calc-input" type="number" step="0.1" inputmode="decimal" id="measure-waist"></div>
+        <div class="calc-field"><label class="calc-label" for="measure-hips" data-i18n="measure.hips">Hips (in)</label><input class="calc-input" type="number" step="0.1" inputmode="decimal" id="measure-hips"></div>
+        <div class="calc-field"><label class="calc-label" for="measure-thighs" data-i18n="measure.thighs">Thighs (in)</label><input class="calc-input" type="number" step="0.1" inputmode="decimal" id="measure-thighs"></div>
+        <div class="calc-field"><label class="calc-label" for="measure-calves" data-i18n="measure.calves">Calves (in)</label><input class="calc-input" type="number" step="0.1" inputmode="decimal" id="measure-calves"></div>
       </div>
       <button class="btn-accent btn-full" id="measure-log-btn" data-i18n="measure.logBtn">Log Measurements</button>
       <div class="progress-log-xp" data-i18n="progress.xpHint">+15 XP for your first log of the day</div>
@@ -583,11 +593,11 @@
       <p data-i18n="analyze.intro">Upload a photo and the AI will give you a detailed assessment of your physique, your strengths, your potential, and a personalized plan recommendation.</p>
     </div>
     <div id="upload-section">
-      <div class="upload-zone" onclick="document.getElementById('body-file-input').click()">
+      <button type="button" class="upload-zone" style="display:block;width:100%;margin:0 0 14px;font:inherit;color:inherit;" onclick="document.getElementById('body-file-input').click()">
         <i class="ti ti-camera"></i>
         <p><strong data-i18n="analyze.uploadPrompt">Tap to upload a photo</strong></p>
         <p style="margin-top:5px;font-size:11px;" data-i18n="analyze.uploadHint">Front or side pose works best · JPG, PNG, or HEIC</p>
-      </div>
+      </button>
       <input type="file" id="body-file-input" accept="image/*,.heic,.heif" onchange="handlePhotoUpload(event)">
       <p class="privacy-note" data-i18n="analyze.privacyNote">🔒 Your photo is only used for this analysis and never stored</p>
       <p class="privacy-note" data-i18n="analyze.disclaimer">⚠️ AI-generated estimate, not a medical or fitness assessment — results can be inaccurate</p>
@@ -655,12 +665,12 @@
     </div>
     <div class="section-header"><div class="section-title" data-i18n="about.findMe">FIND ME ON</div></div>
     <div class="social-grid">
-      <div class="social-card" onclick="window.open('https://www.instagram.com/ax.grind','_blank')">
+      <div class="social-card" role="button" tabindex="0" onclick="window.open('https://www.instagram.com/ax.grind','_blank')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
         <div class="social-icon-row"><i class="ti ti-brand-instagram" style="font-size:20px;color:#E1306C;"></i><div class="social-name" data-i18n="about.instagram">Instagram</div></div>
         <div class="social-handle">@ax.grind</div><div class="social-followers" data-i18n="about.instagramDesc">Daily clips & tips</div>
         <button class="btn-follow" data-i18n="about.follow">Follow →</button>
       </div>
-      <div class="social-card" onclick="window.open('https://www.tiktok.com/@ax.grind','_blank')">
+      <div class="social-card" role="button" tabindex="0" onclick="window.open('https://www.tiktok.com/@ax.grind','_blank')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}">
         <div class="social-icon-row"><i class="ti ti-brand-tiktok" style="font-size:20px;color:#f0f0f0;"></i><div class="social-name" data-i18n="about.tiktok">TikTok</div></div>
         <div class="social-handle">@ax.grind</div><div class="social-followers" data-i18n="about.tiktokDesc">Workout videos & reels</div>
         <button class="btn-follow" data-i18n="about.follow">Follow →</button>
@@ -673,6 +683,16 @@
     </div>
   </div>
 
+  <!-- WRAPPED -->
+  <div class="page" id="page-wrapped">
+    <button type="button" class="section-link" onclick="showPage('account')" style="margin-bottom:10px;" data-i18n="wrapped.backToAccount">← Back to Account</button>
+    <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="wrapped.title">GRIND WRAPPED</div></div>
+    <div class="plan-intro-card" style="margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;" data-i18n="wrapped.intro">Your training, added up. Every workout, every streak, every point of XP — this is the grind so far.</div>
+    </div>
+    <div id="wrapped-stats"></div>
+  </div>
+
   <!-- FORUM -->
   <div class="page" id="page-forum">
     <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="forum.title">FORUM</div></div>
@@ -683,7 +703,7 @@
     <div class="calc-box" style="margin-bottom:16px;">
       <textarea class="chat-input" id="forum-post-body" placeholder="Share your progress..." rows="3" style="width:100%;height:auto;resize:vertical;margin-bottom:10px;box-sizing:border-box;" data-i18n-placeholder="forum.postPlaceholder"></textarea>
       <div id="forum-image-preview" style="display:none;margin-bottom:10px;position:relative;">
-        <img id="forum-image-preview-img" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px;" alt="">
+        <img id="forum-image-preview-img" style="width:100%;max-height:240px;object-fit:cover;border-radius:8px;" alt="Attached photo">
         <button class="remove-btn" onclick="removeForumImage()" style="position:absolute;top:8px;right:8px;">✕ <span data-i18n="analyze.removeBtn">Remove</span></button>
       </div>
       <div style="display:flex;gap:8px;">
@@ -691,7 +711,7 @@
         <input type="file" id="forum-image-input" accept="image/*" style="display:none;">
         <button class="btn-accent" id="forum-post-btn" type="button" style="flex:1;" data-i18n="forum.postBtn">Post</button>
       </div>
-      <div id="forum-post-message" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+      <div id="forum-post-message" class="status-msg" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
     </div>
 
     <div id="forum-feed"></div>
@@ -705,10 +725,10 @@
       <div class="calc-box" style="margin-bottom:16px;">
         <div class="calc-label" style="margin-bottom:8px;" data-i18n="messages.newMessageLabel">New message — enter a username</div>
         <div style="display:flex;gap:8px;">
-          <input class="calc-input" type="text" id="dm-new-handle" placeholder="e.g. andrew" style="flex:1;" data-i18n-placeholder="messages.usernamePlaceholder">
+          <input class="calc-input" type="text" id="dm-new-handle" placeholder="e.g. andrew" style="flex:1;" autocapitalize="none" autocorrect="off" spellcheck="false" data-i18n-placeholder="messages.usernamePlaceholder">
           <button class="btn-follow" id="dm-new-message-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;" data-i18n="messages.messageBtn">Message</button>
         </div>
-        <div id="dm-list-message" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+        <div id="dm-list-message" class="status-msg" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
       </div>
       <div id="dm-conversation-list"></div>
       <button class="section-link" id="dm-manage-blocked-btn" type="button" style="margin-top:10px;" data-i18n="messages.manageBlocked">Blocked users</button>
@@ -717,7 +737,7 @@
 
     <div id="dm-thread-view" style="display:none;flex-direction:column;height:calc(100vh - 140px);min-height:480px;">
       <div class="chat-header" style="border-radius:14px 14px 0 0;">
-        <button class="close-btn" id="dm-back-btn">←</button>
+        <button class="close-btn" id="dm-back-btn" aria-label="Back">←</button>
         <div class="chat-header-info"><h3 id="dm-thread-name">—</h3><span id="dm-thread-rank"></span></div>
         <button class="forum-mod-btn" id="dm-block-btn" type="button" style="flex-shrink:0;" data-i18n="messages.blockUser">Block</button>
       </div>
@@ -746,54 +766,68 @@
         </div>
       </div>
       <div class="about-card" id="guest-auth-card">
-        <div class="auth-tabs">
-          <button class="muscle-tab active" id="auth-tab-login" type="button" data-i18n="account.loginTab">Log In</button>
-          <button class="muscle-tab" id="auth-tab-signup" type="button" data-i18n="account.signupTab">Sign Up</button>
-        </div>
-
-        <form id="login-form" class="auth-form">
-          <div class="calc-field" style="margin-bottom:10px;"><div class="calc-label" data-i18n="account.emailOrUsername">Email or Username</div><input class="calc-input" type="text" id="login-email" required></div>
-          <div class="calc-field" style="margin-bottom:6px;"><div class="calc-label" data-i18n="account.password">Password</div><input class="calc-input" type="password" id="login-password" required></div>
-          <div style="text-align:right;margin-bottom:14px;"><button type="button" id="forgot-password-link" style="background:none;border:none;padding:0;font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;" data-i18n="account.forgotPassword">Forgot password?</button></div>
-          <button class="btn-accent btn-full" type="submit" data-i18n="account.loginTab">Log In</button>
-        </form>
-
-        <form id="forgot-password-form" class="auth-form" style="display:none;">
-          <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px;" data-i18n="account.forgotPasswordDesc">Enter your email and we'll send you a link to reset your password.</p>
-          <div class="calc-field" style="margin-bottom:14px;"><div class="calc-label" data-i18n="account.email">Email</div><input class="calc-input" type="email" id="forgot-password-email" required></div>
-          <button class="btn-accent btn-full" type="submit" data-i18n="account.sendResetLink">Send Reset Link</button>
-          <button type="button" id="back-to-login-link" style="background:none;border:none;padding:0;margin-top:12px;font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;" data-i18n="account.backToLogin">Back to login</button>
-        </form>
-
-        <form id="signup-form" class="auth-form" style="display:none;">
-          <div class="calc-field" style="margin-bottom:10px;"><div class="calc-label" data-i18n="account.usernameLabel">Username</div><input class="calc-input" type="text" id="signup-username" placeholder="e.g. andrew" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 characters: letters, numbers, underscores only" required data-i18n-title="account.usernameHint"></div>
-          <div class="calc-field" style="margin-bottom:10px;"><div class="calc-label" data-i18n="account.email">Email</div><input class="calc-input" type="email" id="signup-email" required></div>
-          <div class="calc-field" style="margin-bottom:14px;"><div class="calc-label" data-i18n="account.password">Password</div><input class="calc-input" type="password" id="signup-password" required minlength="6"></div>
-          <label style="display:flex;gap:8px;align-items:flex-start;font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:14px;cursor:pointer;">
-            <input type="checkbox" id="signup-agree" required style="margin-top:2px;flex-shrink:0;">
-            <span>I'm 13 or older and agree to the <a href="/terms.html" target="_blank" rel="noopener" style="color:var(--accent);">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--accent);">Privacy Policy</a>. I understand AX.GRIND isn't medical advice and I should consult a doctor before starting any exercise or nutrition program.</span>
-          </label>
-          <button class="btn-accent btn-full" type="submit" data-i18n="account.signupTab">Sign Up</button>
-        </form>
-
-        <div class="auth-divider">
+        <div id="magic-link-form">
           <div class="calc-label" style="margin-bottom:8px;" data-i18n="account.skipPassword">Or skip the password</div>
           <div style="display:flex;gap:8px;">
-            <input class="calc-input" type="email" id="magic-email" placeholder="you@email.com" style="flex:1;" data-i18n-placeholder="account.emailPlaceholder">
+            <input class="calc-input" type="email" id="magic-email" placeholder="you@email.com" style="flex:1;" autocomplete="email" data-i18n-placeholder="account.emailPlaceholder">
             <button class="btn-follow" id="magic-link-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;" data-i18n="account.sendLink">Send Link</button>
           </div>
-          <div style="font-size:10px;color:var(--muted);line-height:1.5;margin-top:8px;">By continuing you confirm you're 13 or older and agree to our <a href="/terms.html" target="_blank" rel="noopener" style="color:var(--accent);">Terms</a> & <a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--accent);">Privacy Policy</a>. Not medical advice.</div>
         </div>
+
+        <div id="magic-link-sent-state" style="display:none;text-align:center;padding:8px 0;">
+          <div style="font-size:32px;margin-bottom:8px;">📬</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:var(--text-lg);letter-spacing:.03em;margin-bottom:6px;" data-i18n="account.checkYourEmail">Check your email</div>
+          <div style="font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:14px;" id="magic-link-sent-desc"></div>
+          <button type="button" id="magic-link-use-different" style="background:none;border:none;padding:0;font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;" data-i18n="account.useDifferentEmail">Use a different email</button>
+        </div>
+
+        <div style="text-align:center;margin-top:14px;">
+          <button type="button" id="show-password-login-link" style="background:none;border:none;padding:0;font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;">Prefer a password? Log in or sign up</button>
+        </div>
+
+        <div id="password-auth-section" style="display:none;margin-top:16px;">
+          <div class="auth-tabs">
+            <button class="muscle-tab active" id="auth-tab-login" type="button" data-i18n="account.loginTab">Log In</button>
+            <button class="muscle-tab" id="auth-tab-signup" type="button" data-i18n="account.signupTab">Sign Up</button>
+          </div>
+
+          <form id="login-form" class="auth-form">
+            <div class="calc-field" style="margin-bottom:10px;"><label class="calc-label" for="login-email" data-i18n="account.emailOrUsername">Email or Username</label><input class="calc-input" type="text" id="login-email" autocomplete="username" autocapitalize="none" autocorrect="off" required></div>
+            <div class="calc-field" style="margin-bottom:6px;"><label class="calc-label" for="login-password" data-i18n="account.password">Password</label><input class="calc-input" type="password" id="login-password" autocomplete="current-password" required></div>
+            <div style="text-align:right;margin-bottom:14px;"><button type="button" id="forgot-password-link" style="background:none;border:none;padding:0;font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;" data-i18n="account.forgotPassword">Forgot password?</button></div>
+            <button class="btn-accent btn-full" type="submit" data-i18n="account.loginTab">Log In</button>
+          </form>
+
+          <form id="forgot-password-form" class="auth-form" style="display:none;">
+            <p style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:14px;" data-i18n="account.forgotPasswordDesc">Enter your email and we'll send you a link to reset your password.</p>
+            <div class="calc-field" style="margin-bottom:14px;"><label class="calc-label" for="forgot-password-email" data-i18n="account.email">Email</label><input class="calc-input" type="email" id="forgot-password-email" autocomplete="email" required></div>
+            <button class="btn-accent btn-full" type="submit" data-i18n="account.sendResetLink">Send Reset Link</button>
+            <button type="button" id="back-to-login-link" style="background:none;border:none;padding:0;margin-top:12px;font-size:11px;color:var(--muted);text-decoration:underline;cursor:pointer;" data-i18n="account.backToLogin">Back to login</button>
+          </form>
+
+          <form id="signup-form" class="auth-form" style="display:none;">
+            <div class="calc-field" style="margin-bottom:10px;"><label class="calc-label" for="signup-username" data-i18n="account.usernameLabel">Username</label><input class="calc-input" type="text" id="signup-username" placeholder="e.g. andrew" pattern="[a-zA-Z0-9_]{3,20}" title="3-20 characters: letters, numbers, underscores only" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required data-i18n-title="account.usernameHint"></div>
+            <div class="calc-field" style="margin-bottom:10px;"><label class="calc-label" for="signup-email" data-i18n="account.email">Email</label><input class="calc-input" type="email" id="signup-email" autocomplete="email" required></div>
+            <div class="calc-field" style="margin-bottom:14px;"><label class="calc-label" for="signup-password" data-i18n="account.password">Password</label><input class="calc-input" type="password" id="signup-password" autocomplete="new-password" required minlength="6"></div>
+            <label style="display:flex;gap:8px;align-items:flex-start;font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:14px;cursor:pointer;">
+              <input type="checkbox" id="signup-agree" required style="margin-top:2px;flex-shrink:0;">
+              <span>I'm 13 or older and agree to the <a href="/terms.html" target="_blank" rel="noopener" style="color:var(--accent);">Terms of Service</a> and <a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--accent);">Privacy Policy</a>. I understand AX.GRIND isn't medical advice and I should consult a doctor before starting any exercise or nutrition program.</span>
+            </label>
+            <button class="btn-accent btn-full" type="submit" data-i18n="account.signupTab">Sign Up</button>
+          </form>
+        </div>
+
+        <div style="font-size:10px;color:var(--muted);line-height:1.5;margin-top:14px;">By continuing you confirm you're 13 or older and agree to our <a href="/terms.html" target="_blank" rel="noopener" style="color:var(--accent);">Terms</a> & <a href="/privacy.html" target="_blank" rel="noopener" style="color:var(--accent);">Privacy Policy</a>. Not medical advice.</div>
 
         <div id="auth-message"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;">
+        <div class="feature-card">
           <div style="font-size:26px;margin-bottom:7px;">📸</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.bodyAnalyzerTitle">Body Analyzer</div>
           <div style="font-size:11px;color:var(--muted);" data-i18n="home.bodyAnalyzerDesc">AI reads your physique & recommends a plan</div>
         </div>
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;">
+        <div class="feature-card">
           <div style="font-size:26px;margin-bottom:7px;">🤖</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.aiCoachTitle">AI Coach</div>
           <div style="font-size:11px;color:var(--muted);" data-i18n="home.aiCoachDesc">Ask anything about training & nutrition</div>
@@ -804,13 +838,14 @@
     <div id="account-logged-in-view" style="display:none;">
       <div class="about-card">
         <div class="about-header"><div class="avatar" id="account-avatar">A</div><div><div class="about-name" id="account-email-display">—</div><div class="about-tagline"><span data-i18n="account.loggedInPrefix">Logged in</span> · <span id="account-handle-display">—</span> · <span data-i18n="account.rankLabel">Rank</span> <span id="account-rank-display">—</span></div></div></div>
+        <button class="section-link" type="button" style="margin-bottom:14px;" onclick="showPage('wrapped')" data-i18n="wrapped.viewLink">View My Grind Wrapped →</button>
         <div class="calc-field" style="margin-bottom:14px;">
-          <div class="calc-label" data-i18n="account.displayNameLabel">Display name (shown on Forum posts &amp; Messages)</div>
+          <label class="calc-label" for="display-name-input" data-i18n="account.displayNameLabel">Display name (shown on Forum posts &amp; Messages)</label>
           <div style="display:flex;gap:8px;">
             <input class="calc-input" type="text" id="display-name-input" placeholder="e.g. GrindMode22" style="flex:1;" maxlength="30" data-i18n-placeholder="account.displayNamePlaceholder">
             <button class="btn-follow" id="save-display-name-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;" data-i18n="account.save">Save</button>
           </div>
-          <div id="display-name-message" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+          <div id="display-name-message" class="status-msg" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
         </div>
         <div class="calc-field" style="margin-bottom:14px;">
           <div class="calc-label" data-i18n="account.languageLabel">Language</div>
@@ -820,7 +855,7 @@
           </div>
         </div>
         <div class="calc-field" style="margin-bottom:14px;">
-          <div class="calc-label" data-i18n="account.accentColorLabel">App Color</div>
+          <label class="calc-label" for="accent-color-picker" data-i18n="account.accentColorLabel">App Color</label>
           <div id="accent-swatches" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;"></div>
           <input type="color" id="accent-color-picker" value="#e8ff00">
         </div>
@@ -839,7 +874,7 @@
             <button class="btn-follow" id="delete-account-cancel-btn" type="button" style="flex:1;" data-i18n="account.cancel">Cancel</button>
             <button class="btn-follow" id="delete-account-confirm-btn" type="button" style="flex:1;border-color:#ff6040;color:#ff6040;" data-i18n="account.deleteConfirm">Yes, delete everything</button>
           </div>
-          <div id="delete-account-message" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
+          <div id="delete-account-message" class="status-msg" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
         </div>
       </div>
     </div>

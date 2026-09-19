@@ -1,6 +1,11 @@
 import { t } from './i18n/index.js';
+import { fetchHasSeenTour, markTourSeen } from './api/profile.js';
 
-const ICONS = ['⚡', '🏠', 'ℹ️', '🎯', '📋', '🍗', '📸', '🤖', '🎥', '💬', '✉️', '👤'];
+// Trimmed from 12 slides (one per nav tab) down to the handful of things
+// that are genuinely non-obvious from looking at the app itself — the rest
+// is discoverable by tapping around now that the tour isn't standing in
+// front of it. See the "First 90 Seconds" review for the full reasoning.
+const ICONS = ['⚡', '🎯', '🤖', '📸'];
 
 function getSteps() {
   return ICONS.map((icon, i) => ({
@@ -11,9 +16,10 @@ function getSteps() {
 }
 
 let currentStep = 0;
+let currentUserIdForTour = null;
 
-function tourSeenKey(userId) {
-  return `ax-tour-seen-${userId}`;
+function tourLastStepKey(userId) {
+  return `ax-tour-last-step-${userId}`;
 }
 
 function render() {
@@ -35,6 +41,12 @@ export function startTour() {
   render();
   document.getElementById('onboarding-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
+  // Mark the tour as seen as soon as it starts, not only when it's finished.
+  // If the app gets backgrounded/killed mid-tour, we don't want it to
+  // restart from step 1 on next launch — better to not re-show it at all.
+  if (currentUserIdForTour) {
+    markTourSeen(currentUserIdForTour).catch((err) => console.error('[tour seen sync]', err));
+  }
 }
 
 export function tourNext() {
@@ -44,6 +56,11 @@ export function tourNext() {
   }
   currentStep += 1;
   render();
+  // Persist progress so it isn't lost if the app is interrupted mid-tour.
+  // Not used to resume yet — just captured for potential future use.
+  if (currentUserIdForTour) {
+    localStorage.setItem(tourLastStepKey(currentUserIdForTour), String(currentStep));
+  }
 }
 
 export function tourBack() {
@@ -56,15 +73,21 @@ export function finishTour() {
   document.getElementById('onboarding-modal').classList.remove('open');
   document.body.style.overflow = '';
   if (currentUserIdForTour) {
-    localStorage.setItem(tourSeenKey(currentUserIdForTour), '1');
+    markTourSeen(currentUserIdForTour).catch((err) => console.error('[tour seen sync]', err));
   }
 }
 
-let currentUserIdForTour = null;
-
-export function maybeStartTour(userId) {
+// The "seen" flag lives on the account (profiles.has_seen_tour), not the
+// browser — a returning user switching devices or clearing localStorage
+// should never be shown a first-timer's tour again. Falls back to treating
+// the tour as seen if the fetch fails, so a transient error can't turn into
+// a stuck "always re-show the tour" state.
+export async function maybeStartTour(userId) {
   currentUserIdForTour = userId;
-  if (!localStorage.getItem(tourSeenKey(userId))) {
-    startTour();
+  try {
+    const seen = await fetchHasSeenTour(userId);
+    if (!seen) startTour();
+  } catch (err) {
+    console.error('[tour seen fetch]', err);
   }
 }

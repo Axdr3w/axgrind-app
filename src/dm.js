@@ -13,19 +13,22 @@ import {
 import { findUserByHandle } from './api/profile.js';
 import { getRankMap } from './rank-cache.js';
 import { t, getLanguage } from './i18n/index.js';
+import { escapeHtml } from './html-utils.js';
 
 let currentUserId = null;
 let activeConversation = null;
 let activeOtherUserId = null;
 let rankMap = new Map();
-let blockedIds = new Set();
+let blockedIds;
 
 async function refreshBlockedIds() {
   try {
     const rows = await fetchBlockedUsers(currentUserId);
     blockedIds = new Set(rows.map((r) => r.blocked_id));
-  } catch {
-    blockedIds = new Set();
+  } catch (err) {
+    if (!blockedIds) blockedIds = new Set();
+    console.error('refreshBlockedIds failed, keeping last-known blocked list', err);
+    return;
   }
 }
 
@@ -34,14 +37,6 @@ function rankBadge(userId) {
   return rank ? `<span class="rank-badge">#${rank}</span>` : '';
 }
 
-function escapeHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 function timeNow() { return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
 function relativeTime(iso) {
@@ -72,7 +67,7 @@ async function renderConversationList() {
   }
   conversations = conversations.filter((c) => !blockedIds.has(c.otherUser?.id));
   if (conversations.length === 0) {
-    container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">${t('messages.emptyConversations')}</div>`;
+    container.innerHTML = `<div class="empty-fade" style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">${t('messages.emptyConversations')}</div>`;
     return;
   }
   container.innerHTML = conversations.map((c) => {

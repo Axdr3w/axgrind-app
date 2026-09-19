@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const { verifyUser } = require('./lib/verify-user.cjs');
 
 const BUCKET = 'progress-photos';
 // Client resizes/re-encodes to JPEG before sending (see progress.js), so this
@@ -26,10 +27,13 @@ exports.handler = async (event) => {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: { message: 'Server is missing SUPABASE_SERVICE_ROLE_KEY.' } }) };
   }
+  const auth = await verifyUser(event);
+  if (auth.error) return auth.error;
+  const userId = auth.userId;
   try {
-    const { userId, imageBase64, loggedAt } = JSON.parse(event.body || '{}');
-    if (!userId || !imageBase64 || !isValidDateStr(loggedAt) || !isWithinAllowedWindow(loggedAt)) {
-      return { statusCode: 400, body: JSON.stringify({ error: { message: 'userId, imageBase64, and a valid loggedAt date are required.' } }) };
+    const { imageBase64, loggedAt } = JSON.parse(event.body || '{}');
+    if (!imageBase64 || !isValidDateStr(loggedAt) || !isWithinAllowedWindow(loggedAt)) {
+      return { statusCode: 400, body: JSON.stringify({ error: { message: 'imageBase64 and a valid loggedAt date are required.' } }) };
     }
     if (imageBase64.length > MAX_BASE64_CHARS) {
       return { statusCode: 400, body: JSON.stringify({ error: { message: 'Photo is too large.' } }) };

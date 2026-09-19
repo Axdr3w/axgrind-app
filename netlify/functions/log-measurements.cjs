@@ -1,4 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
+const { verifyUser } = require('./lib/verify-user.cjs');
+const { awardXp } = require('./lib/award-xp.cjs');
 
 // Same flat-per-day XP rule as log-weight.cjs: the first log for a given
 // date pays out, correcting/adding to that same date's entry later doesn't.
@@ -25,11 +27,14 @@ exports.handler = async (event) => {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: { message: 'Server is missing SUPABASE_SERVICE_ROLE_KEY.' } }) };
   }
+  const auth = await verifyUser(event);
+  if (auth.error) return auth.error;
+  const userId = auth.userId;
   try {
     const body = JSON.parse(event.body || '{}');
-    const { userId, loggedAt } = body;
-    if (!userId || !isValidDateStr(loggedAt) || !isWithinAllowedWindow(loggedAt)) {
-      return { statusCode: 400, body: JSON.stringify({ error: { message: 'userId and a valid loggedAt date are required.' } }) };
+    const { loggedAt } = body;
+    if (!isValidDateStr(loggedAt) || !isWithinAllowedWindow(loggedAt)) {
+      return { statusCode: 400, body: JSON.stringify({ error: { message: 'A valid loggedAt date is required.' } }) };
     }
 
     const fields = {};
@@ -54,6 +59,7 @@ exports.handler = async (event) => {
     });
 
     let xpAwarded = 0;
+    let newXp;
     if (insertError) {
       if (insertError.code !== '23505') {
         return { statusCode: 500, body: JSON.stringify({ error: { message: insertError.message } }) };
@@ -68,19 +74,17 @@ exports.handler = async (event) => {
       if (updateError) {
         return { statusCode: 500, body: JSON.stringify({ error: { message: updateError.message } }) };
       }
+      const { data: profile, error: profileError } = await supabase.from('profiles').select('xp').eq('id', userId).single();
+      if (profileError) {
+        return { statusCode: 500, body: JSON.stringify({ error: { message: profileError.message } }) };
+      }
+      newXp = profile?.xp ?? 0;
     } else {
       xpAwarded = LOG_XP;
-    }
-
-    const { data: profile, error: profileError } = await supabase.from('profiles').select('xp').eq('id', userId).single();
-    if (profileError) {
-      return { statusCode: 500, body: JSON.stringify({ error: { message: profileError.message } }) };
-    }
-    const newXp = (profile?.xp ?? 0) + xpAwarded;
-    if (xpAwarded > 0) {
-      const { error: updateXpError } = await supabase.from('profiles').update({ xp: newXp }).eq('id', userId);
-      if (updateXpError) {
-        return { statusCode: 500, body: JSON.stringify({ error: { message: updateXpError.message } }) };
+      try {
+        newXp = await awardXp(supabase, userId, xpAwarded);
+      } catch (err) {
+        return { statusCode: 500, body: JSON.stringify({ error: { message: err.message } }) };
       }
     }
 

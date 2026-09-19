@@ -20,3 +20,15 @@ if (!isSupabaseConfigured) {
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, { auth: { detectSessionInUrl: false } })
   : null;
+
+// Every Netlify function that writes data, awards XP, or spends paid API
+// quota verifies the caller via this token (see netlify/functions/lib/
+// verify-user.cjs) rather than trusting a client-supplied userId — so any
+// fetch to one of those functions needs this header attached.
+export async function getAuthHeader() {
+  if (!supabase) throw new Error('Not configured');
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (!token) throw new Error('Not signed in.');
+  return { Authorization: `Bearer ${token}` };
+}

@@ -1,18 +1,30 @@
-import { getExerciseInfo, getAllExerciseNames } from './exercise-info.js';
-import { WORKOUTS } from './workouts-data.js';
-import { SPORTS_WORKOUTS } from './sports-data.js';
-import { PROGRAM_WORKOUTS } from './programs-data.js';
 import { t, getLanguage } from './i18n/index.js';
 import { translateBatch } from './i18n/content-translate.js';
+import { escapeHtml } from './html-utils.js';
 
-function escapeHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+// exercise-info.js (per-exercise captions/video links) and the
+// workouts/sports/programs data libraries are large content files — split
+// into their own chunks and fetched in the background instead of being part
+// of the initial bundle every visitor downloads, matching the same
+// lazy-chunk pattern brain.js uses for brain-data.js.
+let exerciseInfoPromise = null;
+function loadExerciseInfo() {
+  if (!exerciseInfoPromise) exerciseInfoPromise = import('./exercise-info.js');
+  return exerciseInfoPromise;
 }
+
+let workoutDataPromise = null;
+function loadWorkoutData() {
+  if (!workoutDataPromise) {
+    workoutDataPromise = Promise.all([
+      import('./workouts-data.js'),
+      import('./sports-data.js'),
+      import('./programs-data.js'),
+    ]).then(([w, s, p]) => [...w.WORKOUTS, ...s.SPORTS_WORKOUTS, ...p.PROGRAM_WORKOUTS]);
+  }
+  return workoutDataPromise;
+}
+
 
 let allNames = [];
 let currentFiltered = [];
@@ -22,7 +34,7 @@ let currentFiltered = [];
 let translatedMap = new Map();
 let libGen = 0;
 
-function renderFilteredVideos(names) {
+async function renderFilteredVideos(names) {
   currentFiltered = names;
   const container = document.getElementById('video-library');
   document.getElementById('video-count').textContent = t('videos.exerciseCount', { count: names.length });
@@ -30,6 +42,7 @@ function renderFilteredVideos(names) {
     container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px;">${t('videos.noMatches')}</div>`;
     return;
   }
+  const { getExerciseInfo } = await loadExerciseInfo();
   container.innerHTML = names.map(name => {
     const info = getExerciseInfo(name);
     const displayName = translatedMap.get(info.name) ?? info.name;
@@ -44,10 +57,12 @@ function renderFilteredVideos(names) {
   }).join('');
 }
 
-function triggerLibraryTranslation() {
+async function triggerLibraryTranslation() {
   const lang = getLanguage();
   if (lang === 'en') { translatedMap = new Map(); return; }
   const myGen = ++libGen;
+  const { getExerciseInfo } = await loadExerciseInfo();
+  if (myGen !== libGen) return; // language changed again while data was loading
   const texts = [];
   allNames.forEach(name => {
     const info = getExerciseInfo(name);
@@ -63,14 +78,18 @@ function triggerLibraryTranslation() {
   });
 }
 
-export function renderVideoLibrary() {
-  allNames = getAllExerciseNames([...WORKOUTS, ...SPORTS_WORKOUTS, ...PROGRAM_WORKOUTS]);
-  renderFilteredVideos(allNames);
+export async function renderVideoLibrary() {
+  const container = document.getElementById('video-library');
+  if (container) container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">${t('common.loading')}</div>`;
+  const [allWorkouts, { getAllExerciseNames }] = await Promise.all([loadWorkoutData(), loadExerciseInfo()]);
+  allNames = getAllExerciseNames(allWorkouts);
+  await renderFilteredVideos(allNames);
   triggerLibraryTranslation();
 }
 
-export function filterVideoLibrary(query) {
+export async function filterVideoLibrary(query) {
   const q = query.trim().toLowerCase();
+  const { getExerciseInfo } = await loadExerciseInfo();
   // Matches against the English name OR its translated counterpart (once
   // resolved), so a non-English speaker typing in their own language still
   // finds results instead of only matching untranslated English text.
@@ -81,10 +100,11 @@ export function filterVideoLibrary(query) {
         return translated ? translated.toLowerCase().includes(q) : false;
       })
     : allNames;
-  renderFilteredVideos(filtered);
+  await renderFilteredVideos(filtered);
 }
 
-export function openExerciseInfo(name) {
+export async function openExerciseInfo(name) {
+  const { getExerciseInfo } = await loadExerciseInfo();
   const info = getExerciseInfo(name);
   const displayName = translatedMap.get(info.name) ?? info.name;
   const displayCaption = translatedMap.get(info.caption) ?? info.caption;

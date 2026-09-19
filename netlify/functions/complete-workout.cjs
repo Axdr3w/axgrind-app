@@ -1,4 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
+const { verifyUser } = require('./lib/verify-user.cjs');
+const { awardXp } = require('./lib/award-xp.cjs');
 
 // XP amount is hardcoded here, never read from the request body — the client
 // only ever sends what was completed, never how much it's worth. See the
@@ -12,10 +14,13 @@ exports.handler = async (event) => {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: { message: 'Server is missing SUPABASE_SERVICE_ROLE_KEY.' } }) };
   }
+  const auth = await verifyUser(event);
+  if (auth.error) return auth.error;
+  const userId = auth.userId;
   try {
-    const { userId, workoutId, dayKey } = JSON.parse(event.body || '{}');
-    if (!userId || !workoutId || !dayKey) {
-      return { statusCode: 400, body: JSON.stringify({ error: { message: 'userId, workoutId, and dayKey are required.' } }) };
+    const { workoutId, dayKey } = JSON.parse(event.body || '{}');
+    if (!workoutId || !dayKey) {
+      return { statusCode: 400, body: JSON.stringify({ error: { message: 'workoutId and dayKey are required.' } }) };
     }
 
     const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -33,14 +38,11 @@ exports.handler = async (event) => {
       return { statusCode: 500, body: JSON.stringify({ error: { message: insertError.message } }) };
     }
 
-    const { data: profile, error: profileError } = await supabase.from('profiles').select('xp').eq('id', userId).single();
-    if (profileError) {
-      return { statusCode: 500, body: JSON.stringify({ error: { message: profileError.message } }) };
-    }
-    const newXp = (profile?.xp ?? 0) + WORKOUT_XP;
-    const { error: updateError } = await supabase.from('profiles').update({ xp: newXp }).eq('id', userId);
-    if (updateError) {
-      return { statusCode: 500, body: JSON.stringify({ error: { message: updateError.message } }) };
+    let newXp;
+    try {
+      newXp = await awardXp(supabase, userId, WORKOUT_XP);
+    } catch (err) {
+      return { statusCode: 500, body: JSON.stringify({ error: { message: err.message } }) };
     }
 
     return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ xpAwarded: WORKOUT_XP, newXp }) };

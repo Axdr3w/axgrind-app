@@ -12,6 +12,8 @@ function el(id) { return document.getElementById(id); }
 
 export async function initMeasurements(userId) {
   currentUserId = userId;
+  const wrap = el('measure-snapshot');
+  if (wrap) wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">${t('common.loading')}</div>`;
   try {
     measurements = await fetchMeasurements(userId);
   } catch {
@@ -62,7 +64,9 @@ async function submitMeasurements() {
     return;
   }
   const btn = el('measure-log-btn');
+  const originalText = btn.textContent;
   btn.disabled = true;
+  btn.textContent = originalText + '…';
   try {
     const result = await logMeasurements(currentUserId, values, todayStr());
     const today = todayStr();
@@ -81,6 +85,7 @@ async function submitMeasurements() {
     msg.className = 'progress-log-msg error';
   } finally {
     btn.disabled = false;
+    btn.textContent = originalText;
   }
 }
 

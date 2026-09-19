@@ -1,3 +1,9 @@
+import { t } from './i18n/index.js';
+import { fetchRecentQuests } from './api/quests.js';
+import { fetchWorkoutHistory } from './api/xp.js';
+import { computeStreak } from './gamification.js';
+import { toDateStr } from './date-utils.js';
+
 const QUOTES = [
   // ===== Original AX.GRIND set =====
   {q:"The only bad workout is the one that didn't happen.",a:"AX.GRIND"},
@@ -184,11 +190,91 @@ const QUOTES = [
 ];
 let quoteIdx = Math.floor(Math.random() * QUOTES.length);
 
+// Set once the user is known (see refreshQuoteForUser, called from main.js
+// after login) so the manual refresh button below can also occasionally
+// personalize, not just the one re-render right after sign-in.
+let statUserId = null;
+
 export function renderQuote() {
   const q = QUOTES[quoteIdx];
   document.getElementById('quote-text').innerHTML = q.q + '<span>— ' + q.a + '</span>';
 }
 export function newQuote() {
   quoteIdx = (quoteIdx + 1) % QUOTES.length;
+  if (statUserId) maybeShowStatQuote(statUserId);
+  else renderQuote();
+}
+
+// Called once main.js knows who's logged in (quotes.js has no user context
+// at boot — renderQuote() above fires unconditionally before login even
+// resolves, so guests always get the generic pool). Re-renders the quote
+// using the user's real stats when something interesting is available.
+export function refreshQuoteForUser(userId) {
+  statUserId = userId;
+  maybeShowStatQuote(userId);
+}
+
+// Roughly 1-in-3 renders show a stat-based quote instead of the generic
+// pool, and only when the user actually has something worth bragging about.
+async function maybeShowStatQuote(userId) {
+  if (!userId || Math.floor(Math.random() * 3) !== 0) {
+    renderQuote();
+    return;
+  }
+  try {
+    const stat = await computeStatQuote(userId);
+    // If a different user logged in while this was in flight, let their own
+    // refreshQuoteForUser() call own the render instead of clobbering it here.
+    if (userId !== statUserId) return;
+    if (stat) {
+      document.getElementById('quote-text').innerHTML = stat + '<span>— AX.GRIND</span>';
+      return;
+    }
+  } catch {
+    // network hiccup — fall through to the generic pool below
+    if (userId !== statUserId) return;
+  }
   renderQuote();
+}
+
+async function computeStatQuote(userId) {
+  const [quests, workouts] = await Promise.all([
+    fetchRecentQuests(userId, 60).catch(() => []),
+    fetchWorkoutHistory(userId, 90).catch(() => []),
+  ]);
+
+  const weekCount = countCompletionsSince(workouts, 7);
+  const priorWeeklyAvg = averagePriorWeeklyCompletions(workouts, 6);
+  if (weekCount >= 2 && weekCount > priorWeeklyAvg) {
+    return t('quotes.bestStart', { n: weekCount });
+  }
+
+  const streak = computeStreak(quests);
+  if (streak >= 3) {
+    return t('quotes.streakGoing', { n: streak });
+  }
+
+  return null;
+}
+
+function countCompletionsSince(workouts, days) {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  const sinceStr = toDateStr(since);
+  return workouts.filter((w) => w.completed_date >= sinceStr).length;
+}
+
+// Average completions per week over the `weeks` weeks before this one
+// (excludes the current, in-progress week so it's a fair comparison).
+function averagePriorWeeklyCompletions(workouts, weeks) {
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const windowStart = new Date();
+  windowStart.setDate(windowStart.getDate() - 7 * (weeks + 1));
+  const weekAgoStr = toDateStr(weekAgo);
+  const windowStartStr = toDateStr(windowStart);
+  const priorCount = workouts.filter(
+    (w) => w.completed_date >= windowStartStr && w.completed_date < weekAgoStr
+  ).length;
+  return priorCount / weeks;
 }

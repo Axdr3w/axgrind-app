@@ -1,4 +1,5 @@
 import { t } from './i18n/index.js';
+import { shareAchievementCard } from './share-card.js';
 import { fetchRecentQuests, fetchProfileXp } from './api/quests.js';
 import { fetchWorkoutCompletionCount, fetchWeightLogs } from './api/xp.js';
 import { fetchProgressPhotos } from './api/progressPhotos.js';
@@ -132,13 +133,29 @@ function showToast(achievement) {
       <div class="achievement-toast-label">${t('achievements.unlockedLabel')}</div>
       <div class="achievement-toast-title">${achievement.title}</div>
     </div>
+    <button type="button" class="achievement-toast-share">${t('achievements.shareLabel')}</button>
   `;
   container.appendChild(toast);
+  toast.querySelector('.achievement-toast-share').addEventListener('click', () => {
+    shareAchievementCard({ icon: achievement.icon, title: achievement.title });
+  });
   requestAnimationFrame(() => toast.classList.add('show'));
-  setTimeout(() => {
+
+  // 3.5s isn't enough time to notice the toast AND reach the Share button,
+  // so a touch/hover on the toast itself pauses the countdown — it only
+  // resumes (full 3.5s again) once the user's finger/cursor leaves it.
+  let dismissTimer;
+  const dismiss = () => {
     toast.classList.remove('show');
     setTimeout(() => toast.remove(), 400);
-  }, 3500);
+  };
+  const scheduleDismiss = () => { dismissTimer = setTimeout(dismiss, 3500); };
+  const pauseDismiss = () => clearTimeout(dismissTimer);
+  toast.addEventListener('mouseenter', pauseDismiss);
+  toast.addEventListener('mouseleave', scheduleDismiss);
+  toast.addEventListener('touchstart', pauseDismiss, { passive: true });
+  toast.addEventListener('touchend', scheduleDismiss, { passive: true });
+  scheduleDismiss();
 }
 
 export function toggleAchievements() {

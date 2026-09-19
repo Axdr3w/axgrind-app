@@ -68,3 +68,25 @@ export async function fetchProfileXp(userId) {
   if (error) throw error;
   return data?.xp ?? 0;
 }
+
+// Freezes used in the last 7 days — both to compute streak continuity
+// (a frozen date counts the same as a completed one, see gamification.js)
+// and to check the weekly allowance (1 per rolling 7 days).
+export async function fetchRecentStreakFreezes(userId, days = 60) {
+  if (!supabase) return [];
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  const { data, error } = await supabase
+    .from('streak_freezes')
+    .select('used_date')
+    .eq('user_id', userId)
+    .gte('used_date', toDateStr(since));
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function useStreakFreeze(userId, dateStr) {
+  if (!supabase) throw new Error('Not configured');
+  const { error } = await supabase.from('streak_freezes').insert({ user_id: userId, used_date: dateStr });
+  if (error) throw error;
+}

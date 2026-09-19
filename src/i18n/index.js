@@ -45,7 +45,9 @@ let currentLanguage = DEFAULT_LANGUAGE;
 
 // navigator.language looks like "es-MX", "zh-CN", "pt-BR", "en-US" — map down
 // to one of our supported codes, handling the two locales (zh, and implicitly
-// pt) where region actually changes which variant we ship.
+// pt) where region actually changes which variant we ship. Returns null when
+// the browser's language genuinely isn't one we support (callers use that to
+// tell "confidently detected" apart from "have to ask").
 export function detectLanguage() {
   const raw = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
   if (raw.startsWith('zh')) {
@@ -54,7 +56,7 @@ export function detectLanguage() {
   }
   const primary = raw.split('-')[0];
   if (isSupported(primary)) return primary;
-  return DEFAULT_LANGUAGE;
+  return null;
 }
 
 export function getLanguage() {
@@ -85,7 +87,21 @@ export function setLanguage(code, { persist = true } = {}) {
 
 export function initLanguageFromStorage() {
   const stored = localStorage.getItem(STORAGE_KEY);
-  setLanguage(stored && isSupported(stored) ? stored : detectLanguage(), { persist: false });
+  if (stored && isSupported(stored)) {
+    setLanguage(stored, { persist: false });
+    return;
+  }
+  // First-ever visit — nothing stored yet. If the browser reports a language
+  // we ship, adopt it silently and remember it as chosen so the picker never
+  // has to force itself open just to confirm what we already know. Only a
+  // genuine detection failure (browser language isn't one we support) should
+  // still fall through to the forced picker in main.js.
+  const detected = detectLanguage();
+  if (detected) {
+    setLanguage(detected, { persist: true });
+  } else {
+    setLanguage(DEFAULT_LANGUAGE, { persist: false });
+  }
 }
 
 function lookup(key) {

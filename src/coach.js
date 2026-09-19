@@ -1,6 +1,8 @@
 import { t, getLanguage } from './i18n/index.js';
 import { getLanguageMeta } from './i18n/languages.js';
 import { fetchSavedChats, saveChat, deleteSavedChat } from './api/coach.js';
+import { getAuthHeader } from './api/supabaseClient.js';
+import { escapeHtml } from './html-utils.js';
 
 let chatHistory = [];
 const chatMessages = document.getElementById('chat-messages');
@@ -31,17 +33,6 @@ export function teardownCoach() {
 }
 
 function timeNow() { return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
-
-// Chat replies are free-form model output, not developer-authored literals —
-// same as forum.js/dm.js, they must be escaped before going into innerHTML.
-function escapeHtml(str) {
-  return String(str ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
 
 function formatMsgBody(text) {
   return escapeHtml(text).replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
@@ -88,7 +79,7 @@ export async function sendChatMessage() {
   try {
     const resp = await fetch('/.netlify/functions/chat', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(await getAuthHeader()) },
       body: JSON.stringify({ messages: chatHistory, targetLangName: getLanguageMeta(getLanguage()).nativeName, userId: currentUserId })
     });
     const data = await resp.json();
@@ -122,13 +113,16 @@ export async function saveChatMessage(btn) {
   const msgDiv = btn.closest('.msg');
   const question = msgDiv.dataset.question;
   const answer = msgDiv.dataset.answer;
+  const originalText = btn.textContent;
   btn.disabled = true;
+  btn.textContent = originalText + '…';
   try {
     await saveChat(currentUserId, question, answer);
     btn.textContent = `✓ ${t('coach.savedBtn')}`;
     btn.classList.add('saved');
   } catch (err) {
     btn.disabled = false;
+    btn.textContent = originalText;
     alert(err.isLimitReached ? t('coach.savedLimitReached') : t('coach.saveError', { reason: err.message }));
   }
 }
