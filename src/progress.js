@@ -13,6 +13,12 @@ let currentUserId = null;
 let logs = []; // ascending by logged_at: [{ weight, logged_at }]
 let photos = []; // ascending by loggedAt: [{ loggedAt, url }]
 let goal = localStorage.getItem(GOAL_STORAGE_KEY) || 'maintain';
+// Tracked separately from "logs.length === 0" — a failed fetch and a
+// genuinely new account both leave logs empty, but only one of them should
+// tell a user with months of real weight history that there's "nothing
+// here yet." Conflating the two reads as data loss, not a network hiccup.
+let logsLoadError = false;
+let photosLoadError = false;
 
 function el(id) { return document.getElementById(id); }
 
@@ -21,15 +27,19 @@ export async function initProgress(userId) {
   renderGoalTabs();
   const chartWrap = el('progress-chart-wrap');
   if (chartWrap) chartWrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">${t('common.loading')}</div>`;
+  logsLoadError = false;
+  photosLoadError = false;
   try {
     logs = await fetchWeightLogs(userId);
   } catch {
     logs = [];
+    logsLoadError = true;
   }
   try {
     photos = await fetchProgressPhotos(userId);
   } catch {
     photos = [];
+    photosLoadError = true;
   }
   renderAll();
   renderFilmstrip();
@@ -41,6 +51,8 @@ export function teardownProgress() {
   currentUserId = null;
   logs = [];
   photos = [];
+  logsLoadError = false;
+  photosLoadError = false;
 }
 
 function renderGoalTabs() {
@@ -116,6 +128,10 @@ function buildPath(points, width, height, padTop, padBottom, padX) {
 function renderChart() {
   const wrap = el('progress-chart-wrap');
   if (!wrap) return;
+  if (logsLoadError) {
+    wrap.innerHTML = `<div class="progress-chart-empty error">${t('progress.chartLoadError')}</div>`;
+    return;
+  }
   if (logs.length < 2) {
     wrap.innerHTML = `<div class="progress-chart-empty">${t(logs.length === 1 ? 'progress.chartEmptyOne' : 'progress.chartEmptyNone')}</div>`;
     return;
@@ -302,6 +318,10 @@ async function fileToJpegBase64(file) {
 function renderFilmstrip() {
   const wrap = el('progress-photo-filmstrip');
   if (!wrap) return;
+  if (photosLoadError) {
+    wrap.innerHTML = `<div class="photo-filmstrip-empty error">${t('progress.photosLoadError')}</div>`;
+    return;
+  }
   if (photos.length === 0) {
     wrap.innerHTML = `<div class="photo-filmstrip-empty">${t('progress.photoEmpty')}</div>`;
     return;

@@ -7,6 +7,11 @@ const FIELDS = ['neck', 'shoulders', 'chest', 'arms', 'waist', 'hips', 'thighs',
 
 let currentUserId = null;
 let measurements = []; // ascending by logged_at
+// Same reasoning as progress.js's logsLoadError — a failed fetch and a
+// genuinely empty account both leave measurements at [], but only one of
+// them should show "log your first measurement" to someone who already has
+// months of history.
+let measurementsLoadError = false;
 
 function el(id) { return document.getElementById(id); }
 
@@ -14,10 +19,12 @@ export async function initMeasurements(userId) {
   currentUserId = userId;
   const wrap = el('measure-snapshot');
   if (wrap) wrap.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">${t('common.loading')}</div>`;
+  measurementsLoadError = false;
   try {
     measurements = await fetchMeasurements(userId);
   } catch {
     measurements = [];
+    measurementsLoadError = true;
   }
   renderSnapshot();
 }
@@ -25,11 +32,16 @@ export async function initMeasurements(userId) {
 export function teardownMeasurements() {
   currentUserId = null;
   measurements = [];
+  measurementsLoadError = false;
 }
 
 function renderSnapshot() {
   const wrap = el('measure-snapshot');
   if (!wrap) return;
+  if (measurementsLoadError) {
+    wrap.innerHTML = `<div class="photo-filmstrip-empty error">${t('measure.loadError')}</div>`;
+    return;
+  }
   if (measurements.length === 0) {
     wrap.innerHTML = `<div class="photo-filmstrip-empty">${t('measure.empty')}</div>`;
     return;

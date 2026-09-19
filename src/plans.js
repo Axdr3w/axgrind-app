@@ -1,7 +1,7 @@
 import { t, getLanguage } from './i18n/index.js';
 import { translateBatch } from './i18n/content-translate.js';
 import { completeWorkout, fetchCompletedWorkoutKeysToday } from './api/xp.js';
-import { fetchLastExerciseLog, logExerciseWeight } from './api/exerciseLogs.js';
+import { fetchAllExerciseLogs, logExerciseWeight } from './api/exerciseLogs.js';
 import { getRankMap, invalidateRankCache } from './rank-cache.js';
 import { renderBrainArticles } from './brain.js';
 import { checkForNewAchievements } from './achievements.js';
@@ -469,17 +469,38 @@ export function startWorkoutSession(workoutId, dayKey) {
   if (sessions.has(dayKey)) return;
   const session = {
     checked: new Set(), seconds: 0, running: true, intervalId: null, message: null, messageError: false,
-    voiceEnabled: false, restRemaining: null, plateCalcOpen: false,
+    voiceEnabled: false, restRemaining: null, toolsOpen: false,
     // Per-exercise weight logging: which rows have their log panel open,
-    // the last-logged value fetched for each (only fetched lazily, on open,
-    // so opening a workout never fires one query per exercise up front),
-    // and the not-yet-saved input values so re-rendering the modal (which
-    // happens on every checkbox tap) doesn't wipe out what's half-typed.
+    // the last-logged value for each (preloaded below for the whole day in
+    // one query, keyed by exercise index), and the not-yet-saved input
+    // values so re-rendering the modal (which happens on every checkbox
+    // tap) doesn't wipe out what's half-typed.
     logOpen: new Set(), lastLogCache: new Map(), logDraft: new Map(),
   };
   session.intervalId = setInterval(() => tickTimer(dayKey), 1000);
   sessions.set(dayKey, session);
   rerenderModal();
+
+  // One query for the whole day instead of one per exercise tapped — lets
+  // "last time you did X, try Y" show inline on every exercise row the
+  // moment the session starts, not just the row someone happens to open.
+  if (currentUserId && currentPlan) {
+    const day = findDayByKey(currentPlan, dayKey);
+    if (day) {
+      fetchAllExerciseLogs(currentUserId).then((logs) => {
+        if (!sessions.has(dayKey)) return; // session already ended/closed
+        const latestByName = new Map();
+        for (const log of logs) {
+          if (!latestByName.has(log.exercise_name)) latestByName.set(log.exercise_name, log);
+        }
+        day.exercises.forEach((ex, i) => {
+          const last = latestByName.get(ex.name);
+          if (last) session.lastLogCache.set(i, last);
+        });
+        rerenderModal();
+      }).catch(() => {});
+    }
+  }
 }
 
 export function skipRest(dayKey) {
@@ -489,10 +510,15 @@ export function skipRest(dayKey) {
   rerenderModal();
 }
 
-export function togglePlateCalc(dayKey) {
+// Voice guidance and the plate calculator used to be two separate
+// icon-only buttons (🔇/🔊, 🏋️) sitting next to each other in the toolbar —
+// usability testing found people genuinely couldn't tell what either one
+// did without tapping it first. One labeled "Tools" button revealing both
+// together needs no icon-literacy at all.
+export function toggleSessionTools(dayKey) {
   const session = sessions.get(dayKey);
   if (!session) return;
-  session.plateCalcOpen = !session.plateCalcOpen;
+  session.toolsOpen = !session.toolsOpen;
   rerenderModal();
 }
 
@@ -523,24 +549,14 @@ export function calcPlates(dayKey) {
     : t('plans.plateNone');
 }
 
-// Opening a log panel lazily fetches that one exercise's last entry — never
-// eagerly for every exercise on workout open, since most rows never get
-// logged in a given session and that would be one query each for nothing.
-export async function toggleExerciseLog(dayKey, idx, exerciseName) {
+// Data is already preloaded for the whole day (see startWorkoutSession) —
+// this just toggles the entry panel open/closed, no fetch needed.
+export function toggleExerciseLog(dayKey, idx) {
   const session = sessions.get(dayKey);
   if (!session) return;
-  if (session.logOpen.has(idx)) {
-    session.logOpen.delete(idx);
-    rerenderModal();
-    return;
-  }
-  session.logOpen.add(idx);
+  if (session.logOpen.has(idx)) session.logOpen.delete(idx);
+  else session.logOpen.add(idx);
   rerenderModal();
-  if (!session.lastLogCache.has(idx) && currentUserId) {
-    const last = await fetchLastExerciseLog(currentUserId, exerciseName);
-    session.lastLogCache.set(idx, last);
-    if (session.logOpen.has(idx)) rerenderModal();
-  }
 }
 
 // The modal body re-renders on every checkbox tap (renderModalBody rebuilds
@@ -667,26 +683,15 @@ function celebrateWorkoutFinish() {
   setTimeout(() => overlay.remove(), 1400);
 }
 
-// "Try Y" is a plain +5lbs nudge off the last logged weight, not an AI or
-// physiologically-modeled suggestion — deliberately simple and honestly
-// labeled, since the app doesn't (yet) know their rep targets or recovery.
+// The "last time" suggestion now shows inline on the exercise row itself
+// (see renderExerciseSuggestion) the moment a session starts, so this panel
+// — opened via the ⚖️ icon — only needs to handle entering today's numbers,
+// not repeat context that's already visible above it.
 function renderExerciseLogPanel(dayKey, idx, exerciseName, session) {
-  const last = session.lastLogCache.get(idx);
   const draft = session.logDraft.get(idx) || {};
-  let suggestion;
-  if (last) {
-    const repsPart = last.reps ? ` × ${last.reps}` : '';
-    const suggestedWeight = last.reps ? last.weight + 5 : last.weight;
-    suggestion = `<div class="exercise-log-suggestion">${t('plans.lastTimeLabel')}: ${last.weight} lbs${repsPart} — ${t('plans.tryLabel')} ${suggestedWeight}+</div>`;
-  } else if (session.lastLogCache.has(idx)) {
-    suggestion = `<div class="exercise-log-suggestion muted">${t('plans.noPriorLog')}</div>`;
-  } else {
-    suggestion = `<div class="exercise-log-suggestion muted">${t('common.loading')}</div>`;
-  }
   const nameJsAttr = exerciseName.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
   return `
     <div class="exercise-log-panel">
-      ${suggestion}
       <div class="exercise-log-inputs">
         <input type="number" inputmode="decimal" class="calc-input" id="exlog-weight-${dayKey}-${idx}" placeholder="${t('plans.weightPlaceholder')}" value="${draft.weight ?? ''}" oninput="updateExerciseLogDraft('${dayKey}',${idx},'weight',this.value)">
         <input type="number" inputmode="numeric" class="calc-input" id="exlog-reps-${dayKey}-${idx}" placeholder="${t('plans.repsPlaceholder')}" value="${draft.reps ?? ''}" oninput="updateExerciseLogDraft('${dayKey}',${idx},'reps',this.value)">
@@ -696,12 +701,26 @@ function renderExerciseLogPanel(dayKey, idx, exerciseName, session) {
   `;
 }
 
-// One-time explainer for the session toolbar's icon-only buttons — usability
-// testing found this exact spot tripping up a beginner, an experienced lifter
-// coming from a different app, and an older user, each for a different
-// reason: nobody could tell what 🔇/🔊, 🏋️, and ⚖️ actually did without
-// tapping them first. Same dismiss-once pattern (and localStorage key style)
-// as the Plans page's first-visit hint — client-side only, low-stakes.
+// "Try Y" is a plain +5lbs nudge off the last logged weight, not an AI or
+// physiologically-modeled suggestion — deliberately simple and honestly
+// labeled, since the app doesn't (yet) know their rep targets or recovery.
+// Shows for every exercise with history the instant a session starts —
+// previously this only appeared after tapping the ⚖️ icon, which meant the
+// one genuinely useful piece of information here was opt-in instead of
+// just being there.
+function renderExerciseSuggestion(last) {
+  if (!last) return '';
+  const repsPart = last.reps ? ` × ${last.reps}` : '';
+  const suggestedWeight = last.reps ? last.weight + 5 : last.weight;
+  return `<div class="ex-suggestion">${t('plans.lastTimeLabel')}: ${last.weight} lbs${repsPart} — ${t('plans.tryLabel')} ${suggestedWeight}+</div>`;
+}
+
+// One-time explainer for the one remaining icon-only control (the ⚖️ next
+// to each exercise) — voice guidance and the plate calculator moved behind
+// a labeled "Tools" button, so they no longer need explaining, but ⚖️ still
+// sits in a space-constrained per-exercise row with no room for a label.
+// Same dismiss-once pattern (and localStorage key style) as the Plans
+// page's first-visit hint — client-side only, low-stakes.
 const SESSION_ICONS_HINT_SEEN_KEY = 'ax-session-icons-hint-seen';
 
 function sessionIconsHintSeen() {
@@ -732,12 +751,18 @@ function renderDaySessionControls(dayKey, workoutId, totalExercises) {
           <button type="button" class="btn-follow btn-xs" onclick="skipRest('${dayKey}')">${t('plans.skipRest')}</button>
         </div>`
       : '';
-    const plateCalc = session.plateCalcOpen
-      ? `<div class="plate-calc">
-          <input type="number" inputmode="decimal" class="calc-input" id="plate-target-${dayKey}" placeholder="${t('plans.targetWeight')}" oninput="calcPlates('${dayKey}')">
-          <span class="plate-calc-sep">/</span>
-          <input type="number" inputmode="decimal" class="calc-input" id="plate-bar-${dayKey}" placeholder="${t('plans.barWeight')}" value="45" oninput="calcPlates('${dayKey}')">
-          <div class="plate-calc-result" id="plate-result-${dayKey}"></div>
+    // Voice guidance + the plate calculator used to be two separate
+    // icon-only buttons in the bar below; both live in this one panel now,
+    // opened by a single labeled "Tools" button.
+    const toolsPanel = session.toolsOpen
+      ? `<div class="session-tools-panel">
+          <button type="button" class="btn-follow btn-xs${session.voiceEnabled ? ' active' : ''}" onclick="toggleVoiceGuidance('${dayKey}')">${session.voiceEnabled ? '🔊' : '🔇'} ${t('plans.voiceToggle')}: ${session.voiceEnabled ? t('common.on') : t('common.off')}</button>
+          <div class="plate-calc">
+            <input type="number" inputmode="decimal" class="calc-input" id="plate-target-${dayKey}" placeholder="${t('plans.targetWeight')}" oninput="calcPlates('${dayKey}')">
+            <span class="plate-calc-sep">/</span>
+            <input type="number" inputmode="decimal" class="calc-input" id="plate-bar-${dayKey}" placeholder="${t('plans.barWeight')}" value="45" oninput="calcPlates('${dayKey}')">
+            <div class="plate-calc-result" id="plate-result-${dayKey}"></div>
+          </div>
         </div>`
       : '';
     return `
@@ -745,12 +770,11 @@ function renderDaySessionControls(dayKey, workoutId, totalExercises) {
       <div class="day-session-bar">
         <div class="day-timer" id="timer-${dayKey}">${formatTime(session.seconds)}</div>
         <button type="button" class="btn-follow btn-xs" onclick="toggleWorkoutTimer('${dayKey}')">${session.running ? '⏸ ' + t('plans.pauseTimer') : '▶ ' + t('plans.resumeTimer')}</button>
-        <button type="button" class="btn-follow btn-xs${session.voiceEnabled ? ' active' : ''}" onclick="toggleVoiceGuidance('${dayKey}')" title="${t('plans.voiceToggle')}" aria-label="${t('plans.voiceToggle')}">${session.voiceEnabled ? '🔊' : '🔇'}</button>
-        <button type="button" class="btn-follow btn-xs${session.plateCalcOpen ? ' active' : ''}" onclick="togglePlateCalc('${dayKey}')" title="${t('plans.plateCalcToggle')}" aria-label="${t('plans.plateCalcToggle')}">🏋️</button>
+        <button type="button" class="btn-follow btn-xs${session.toolsOpen ? ' active' : ''}" onclick="toggleSessionTools('${dayKey}')">🛠️ ${t('plans.toolsBtn')}</button>
         <div class="day-progress">${session.checked.size}/${totalExercises}</div>
         <button type="button" class="btn-accent btn-xs" onclick="finishWorkout('${workoutId}','${dayKey}')">${t('plans.finishWorkout')}</button>
       </div>
-      ${plateCalc}
+      ${toolsPanel}
       ${restBanner}
       ${msg}
     `;
@@ -798,9 +822,10 @@ async function renderModalBody(plan, tr) {
       // both (e.g. "Farmer's Walk").
       const nameJsAttr = ex.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
       const logToggle = session
-        ? `<button type="button" class="ex-log-toggle" onclick="event.stopPropagation();toggleExerciseLog('${dayKey}',${i},'${nameJsAttr}')" aria-label="${t('plans.logWeightToggle')}">⚖️</button>`
+        ? `<button type="button" class="ex-log-toggle" onclick="event.stopPropagation();toggleExerciseLog('${dayKey}',${i})" aria-label="${t('plans.logWeightToggle')}">⚖️</button>`
         : '';
-      html += `<div${rowAttrs}>${checkbox}<div class="ex-num">${i + 1}</div><div class="ex-name">${escapeHtml(pick(ex.name))}</div><div class="ex-sets">${escapeHtml(ex.sets)}</div>${ex.rest ? `<div class="ex-rest">${escapeHtml(ex.rest)}</div>` : ''}${logToggle}</div>`;
+      const suggestion = session ? renderExerciseSuggestion(session.lastLogCache.get(i)) : '';
+      html += `<div${rowAttrs}>${checkbox}<div class="ex-num">${i + 1}</div><div class="ex-name">${escapeHtml(pick(ex.name))}${suggestion}</div><div class="ex-sets">${escapeHtml(ex.sets)}</div>${ex.rest ? `<div class="ex-rest">${escapeHtml(ex.rest)}</div>` : ''}${logToggle}</div>`;
       if (session?.logOpen.has(i)) {
         html += renderExerciseLogPanel(dayKey, i, ex.name, session);
       }

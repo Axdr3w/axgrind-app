@@ -89,9 +89,25 @@ async function renderFeed(posts, append) {
   }
 }
 
+// Shaped like a real post (avatar + name line + body lines) so the loading
+// state reads as "your feed is coming" instead of a blank pause, and
+// doesn't reflow the layout once real posts replace it.
+function forumFeedSkeleton(count = 3) {
+  return Array.from({ length: count }, () => `
+    <div class="skeleton-forum-post">
+      <div class="skeleton-post-header">
+        <div class="skeleton-circle"></div>
+        <div class="skeleton-line" style="width:110px;"></div>
+      </div>
+      <div class="skeleton-line" style="width:92%;"></div>
+      <div class="skeleton-line" style="width:55%;"></div>
+    </div>
+  `).join('');
+}
+
 async function loadFeed() {
   const container = document.getElementById('forum-feed');
-  container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">${t('common.loading')}</div>`;
+  container.innerHTML = forumFeedSkeleton();
   let posts;
   try {
     [posts, rankMap] = await Promise.all([fetchPosts(), getRankMap().catch(() => rankMap)]);

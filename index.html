@@ -83,6 +83,18 @@
       <button class="btn-accent" onclick="showPage('plans')" data-i18n="home.ctaButton">Get Free Program →</button>
     </div>
 
+    <!-- Shown instead of .hero once logged in (see body:not(.locked) rule in
+         style.css) — the marketing pitch above is for someone deciding
+         whether to sign up; a returning user opening the app already made
+         that call and should see where they left off, not be sold to again
+         every single time. Populated by renderHomeDashboard() in main.js. -->
+    <div class="hero hero-loggedin" id="home-hero-loggedin">
+      <div class="hero-tag" data-i18n="home.welcomeBackTag">Welcome back</div>
+      <h1><span data-i18n="home.welcomeBackTitleLine1">KEEP</span><br><span data-i18n="home.welcomeBackTitleLine2">GRINDING.</span></h1>
+      <p id="home-hero-subtitle" data-i18n="common.loading">Loading...</p>
+      <button class="btn-accent" onclick="showPage('quests')" data-i18n="home.continueQuestsBtn">Continue Today's Quests →</button>
+    </div>
+
     <div class="focus-box">
       <div class="section-header" style="margin-bottom:10px;"><div class="section-title" data-i18n="focus.title">LOCK IN</div></div>
       <p class="focus-intro" data-i18n="focus.intro">Set a timer and stay in the app the whole time — switch away even for a second and the session fails. No XP for cheating yourself.</p>
@@ -219,7 +231,7 @@
     <div class="plan-intro-card" style="margin-bottom:14px;">
       <div style="font-size:12px;color:var(--muted);line-height:1.6;" data-i18n="videos.intro">Don't recognize a move from one of the plans? Look it up here — every exercise has a form cue and a video tutorial link. You can also tap any exercise inside a workout to jump straight to it.</div>
     </div>
-    <input class="calc-input" type="text" id="video-search" placeholder="Search exercises (e.g. squat, curl, push-up)..." style="margin-bottom:16px;" data-i18n-placeholder="videos.searchPlaceholder">
+    <input class="calc-input" type="text" id="video-search" placeholder="Search exercises (e.g. squat, curl, push-up)..." style="margin-bottom:16px;" data-i18n-placeholder="videos.searchPlaceholder" aria-label="Search exercises">
     <div id="video-library"></div>
   </div>
 
@@ -266,7 +278,7 @@
     </div>
 
     <div id="sport-filters" style="display:none;">
-      <input class="calc-input" type="text" id="sport-search" placeholder="Search sports..." style="margin-bottom:14px;" oninput="filterSportList(this.value)" data-i18n-placeholder="plans.sportSearchPlaceholder">
+      <input class="calc-input" type="text" id="sport-search" placeholder="Search sports..." style="margin-bottom:14px;" oninput="filterSportList(this.value)" data-i18n-placeholder="plans.sportSearchPlaceholder" aria-label="Search sports">
       <div id="sport-browse-list"></div>
     </div>
 
@@ -627,8 +639,10 @@
       </div>
       <div class="chat-save-notice" data-i18n="coach.saveNotice">💬 Chats aren't saved automatically — tap Save on any response to keep up to 20.</div>
       <div class="chat-save-notice" data-i18n="coach.disclaimer">⚠️ AI-generated, not medical advice — consult a doctor before starting any new exercise or nutrition program.</div>
+      <div class="chat-save-notice" data-i18n="coach.contextNotice">🎯 I can see the weights you've logged during workouts — ask me about your progress.</div>
       <div id="chat-live-view">
         <div class="quick-chips">
+          <button class="chip" onclick="sendChip(this)" data-i18n="coach.chipProgress">How's my progress looking?</button>
           <button class="chip" onclick="sendChip(this)" data-i18n="coach.chip1">Best chest exercises?</button>
           <button class="chip" onclick="sendChip(this)" data-i18n="coach.chip2">How much protein do I need?</button>
           <button class="chip" onclick="sendChip(this)" data-i18n="coach.chip3">Can't do squats — alternatives?</button>
@@ -725,7 +739,7 @@
       <div class="calc-box" style="margin-bottom:16px;">
         <div class="calc-label" style="margin-bottom:8px;" data-i18n="messages.newMessageLabel">New message — enter a username</div>
         <div style="display:flex;gap:8px;">
-          <input class="calc-input" type="text" id="dm-new-handle" placeholder="e.g. andrew" style="flex:1;" autocapitalize="none" autocorrect="off" spellcheck="false" data-i18n-placeholder="messages.usernamePlaceholder">
+          <input class="calc-input" type="text" id="dm-new-handle" placeholder="e.g. andrew" style="flex:1;" autocapitalize="none" autocorrect="off" spellcheck="false" data-i18n-placeholder="messages.usernamePlaceholder" aria-label="Username">
           <button class="btn-follow" id="dm-new-message-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;" data-i18n="messages.messageBtn">Message</button>
         </div>
         <div id="dm-list-message" class="status-msg" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
@@ -769,7 +783,7 @@
         <div id="magic-link-form">
           <div class="calc-label" style="margin-bottom:8px;" data-i18n="account.skipPassword">Or skip the password</div>
           <div style="display:flex;gap:8px;">
-            <input class="calc-input" type="email" id="magic-email" placeholder="you@email.com" style="flex:1;" autocomplete="email" data-i18n-placeholder="account.emailPlaceholder">
+            <input class="calc-input" type="email" id="magic-email" placeholder="you@email.com" style="flex:1;" autocomplete="email" data-i18n-placeholder="account.emailPlaceholder" aria-label="Email">
             <button class="btn-follow" id="magic-link-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;" data-i18n="account.sendLink">Send Link</button>
           </div>
         </div>

@@ -2,14 +2,15 @@ import './style.css';
 import { initLanguageFromStorage, hasChosenLanguage, getLanguage, setLanguage, t } from './i18n/index.js';
 import { openLanguagePicker } from './i18n/picker.js';
 import { renderQuote, newQuote, refreshQuoteForUser } from './quotes.js';
-import { renderWorkouts, filterCategory, filterMuscle, filterEnv, filterSportList, selectSportOrProgram, backToBrowseList, openWorkout, closeWorkout, initPlans, teardownPlans, startWorkoutSession, toggleWorkoutTimer, toggleExerciseChecked, toggleVoiceGuidance, finishWorkout, skipRest, togglePlateCalc, calcPlates, toggleExerciseLog, updateExerciseLogDraft, saveExerciseLog, dismissSessionIconsHint } from './plans.js';
+import { fetchRecentQuests, fetchRecentStreakFreezes } from './api/quests.js';
+import { trackPageView } from './api/analytics.js';
+import { computeStreak } from './gamification.js';
+import { renderWorkouts, filterCategory, filterMuscle, filterEnv, filterSportList, selectSportOrProgram, backToBrowseList, openWorkout, closeWorkout, initPlans, teardownPlans, startWorkoutSession, toggleWorkoutTimer, toggleExerciseChecked, toggleVoiceGuidance, finishWorkout, skipRest, toggleSessionTools, calcPlates, toggleExerciseLog, updateExerciseLogDraft, saveExerciseLog, dismissSessionIconsHint } from './plans.js';
 import { renderBrainArticles, selectBrainCategory, backToBrainCategories, openArticle, closeArticle, markArticleRead, initBrain, teardownBrain } from './brain.js';
 import { calcCalories } from './nutrition.js';
 import { handlePhotoUpload, removePhoto, analyzeBody, initAnalyzer, teardownAnalyzer } from './analyzer.js';
-import { sendChip, chatKeydown, autoGrow, sendChatMessage, saveChatMessage, toggleSavedView, deleteSavedChatItem, initCoach, teardownCoach } from './coach.js';
 import { renderVideoLibrary, filterVideoLibrary, openExerciseInfo, closeExerciseInfo } from './videos.js';
 import { initQuests, teardownQuests, toggleWorkoutHistory } from './quests.js';
-import { initForum, teardownForum, removeForumImage } from './forum.js';
 import { fetchDisplayName, updateDisplayName, fetchHandle, fetchLanguage, updateLanguage, fetchAccentColor, updateAccentColor, fetchBgTheme, updateBgTheme } from './api/profile.js';
 import { initThemeFromStorage, applyAccentColor, renderAccentUI, getAccentColor, applyBgTheme, renderBgThemeUI, getBgThemeId } from './theme.js';
 import { getLanguageMeta, isSupported } from './i18n/languages.js';
@@ -20,7 +21,6 @@ import { initProgress, teardownProgress, closePhotoLightbox } from './progress.j
 import { renderWrapped } from './wrapped.js';
 import { initAchievements, teardownAchievements, toggleAchievements } from './achievements.js';
 import { initMeasurements, teardownMeasurements } from './measurements.js';
-import { initDMs, teardownDMs } from './dm.js';
 import { initLeaderboard, teardownLeaderboard } from './leaderboard.js';
 import { getRankMap } from './rank-cache.js';
 import { initAds } from './ads.js';
@@ -54,18 +54,101 @@ function selectBgTheme(id) {
   if (lastUserId) updateBgTheme(lastUserId, id).catch((err) => console.error('[theme sync]', err));
 }
 
+// Forum, Messages, and Coach are only reachable through the More menu,
+// behind login — a guest evaluating the app before signing up never touches
+// any of them, so their code shouldn't be part of the bundle every visitor
+// downloads. Lazy-loaded the same way brain-data.js/workouts-data.js
+// already are, just applied to the page controller module itself instead
+// of a data file within an already-loaded one. Assigning the resolved
+// module's exports onto window binds every one of them the moment it
+// resolves — the same handful of functions (sendChatMessage,
+// removeForumImage, etc.) that used to sit in the static window-export
+// block further down this file.
+//
+// Each of these three pages is `display:none` until showPage() reveals it,
+// so nothing can be clicked before that happens — the only real race is a
+// user acting on the page faster than its chunk downloads, which is why
+// `chat` additionally disables its input/send button for that brief window.
+let forumModulePromise = null;
+function loadForumModule() {
+  if (!forumModulePromise) forumModulePromise = import('./forum.js').then((m) => { Object.assign(window, m); return m; });
+  return forumModulePromise;
+}
+let dmModulePromise = null;
+function loadDmModule() {
+  if (!dmModulePromise) dmModulePromise = import('./dm.js').then((m) => { Object.assign(window, m); return m; });
+  return dmModulePromise;
+}
+let coachModulePromise = null;
+function loadCoachModule() {
+  if (!coachModulePromise) coachModulePromise = import('./coach.js').then((m) => { Object.assign(window, m); return m; });
+  return coachModulePromise;
+}
+// Not in the static window-export block since they're only bound once their
+// module lazy-loads above — listed here purely so check-onclick-handlers.cjs
+// still verifies index.html isn't calling a name that doesn't actually
+// exist anywhere.
+const DEFERRED_WINDOW_HANDLERS = ['sendChatMessage', 'sendChip', 'autoGrow', 'toggleSavedView', 'removeForumImage'];
+
+// Populates the logged-in version of the Home hero (see .hero-loggedin in
+// index.html/style.css) with the user's actual streak instead of the
+// generic marketing pitch a guest sees. Failure just falls back to a
+// neutral "jump into today's quests" line rather than leaving the "Loading…"
+// placeholder stuck — same error-doesn't-mean-empty reasoning as Progress's
+// load-error states, just for a single line of copy instead of a chart.
+async function renderHomeDashboard(userId) {
+  const subtitle = document.getElementById('home-hero-subtitle');
+  if (!subtitle) return;
+  try {
+    const [quests, freezes] = await Promise.all([
+      fetchRecentQuests(userId, 60),
+      fetchRecentStreakFreezes(userId, 60),
+    ]);
+    const streak = computeStreak(quests, new Set(freezes.map((f) => f.used_date)));
+    if (streak >= 2) subtitle.textContent = t('home.streakActive', { count: streak });
+    else if (streak === 1) subtitle.textContent = t('home.streakActiveOne');
+    else subtitle.textContent = t('home.streakStart');
+  } catch {
+    subtitle.textContent = t('home.streakLoadError');
+  }
+}
+
 // Each entry's modules all live on that one page (including its sub-tabs,
 // e.g. Analyze's Progress/Measurements/AI-Scan panels, or Quests' embedded
 // Achievements/Leaderboard sections) — grouped so a single visit to the page
 // initializes everything on it, rather than one round-trip per sub-panel.
 const pageInitFns = {
-  home: (userId) => { initFocus(userId); },
+  home: (userId) => { initFocus(userId); renderHomeDashboard(userId); },
   quests: (userId) => { initQuests(userId); initAchievements(userId); initLeaderboard(userId); },
   plans: (userId) => { initPlans(userId); initBrain(userId).then(() => renderBrainArticles()); },
   analyze: (userId) => { initProgress(userId); initMeasurements(userId); initAnalyzer(userId); },
-  chat: (userId) => { initCoach(userId); },
-  forum: (userId) => { initForum(userId); maybeShowUsernameNudge('page-forum', t('account.forumNeedsUsername')); },
-  messages: (userId) => { initDMs(userId); maybeShowUsernameNudge('page-messages', t('account.messagesNeedUsername')); },
+  chat: (userId) => {
+    const sendBtn = document.getElementById('chat-send-btn');
+    const input = document.getElementById('chat-input');
+    if (sendBtn) sendBtn.disabled = true;
+    if (input) input.disabled = true;
+    loadCoachModule().then((mod) => {
+      mod.initCoach(userId);
+      if (sendBtn) sendBtn.disabled = false;
+      if (input) input.disabled = false;
+    });
+  },
+  forum: (userId) => {
+    const container = document.getElementById('forum-feed');
+    if (container) container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">${t('common.loading')}</div>`;
+    loadForumModule().then((mod) => {
+      mod.initForum(userId);
+      maybeShowUsernameNudge('page-forum', t('account.forumNeedsUsername'));
+    });
+  },
+  messages: (userId) => {
+    const container = document.getElementById('dm-conversation-list');
+    if (container) container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">${t('common.loading')}</div>`;
+    loadDmModule().then((mod) => {
+      mod.initDMs(userId);
+      maybeShowUsernameNudge('page-messages', t('account.messagesNeedUsername'));
+    });
+  },
   wrapped: (userId) => { renderWrapped(userId); },
 };
 
@@ -102,6 +185,7 @@ function showPage(id) {
   document.querySelectorAll('[data-page]').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   ensurePageInit(id);
+  trackPageView(id, lastUserId);
   const tab = document.querySelector(`.nav-tab[data-page="${id}"]`);
   if (tab) {
     tab.classList.add('active');
@@ -165,7 +249,7 @@ Object.assign(window, {
   toggleVoiceGuidance,
   finishWorkout,
   skipRest,
-  togglePlateCalc,
+  toggleSessionTools,
   calcPlates,
   toggleExerciseLog,
   updateExerciseLogDraft,
@@ -180,13 +264,6 @@ Object.assign(window, {
   handlePhotoUpload,
   removePhoto,
   analyzeBody,
-  sendChip,
-  chatKeydown,
-  autoGrow,
-  sendChatMessage,
-  saveChatMessage,
-  toggleSavedView,
-  deleteSavedChatItem,
   closeExerciseInfo,
   selectAccentColor,
   selectBgTheme,
@@ -197,7 +274,6 @@ Object.assign(window, {
   closeUsernameModal,
   toggleAchievements,
   selectAnalyzeSubtab,
-  removeForumImage,
 });
 
 // Applies the detected/stored language immediately (first paint is already
@@ -330,13 +406,17 @@ function updateAccountUI(session) {
       teardownMeasurements();
       teardownAchievements();
       teardownQuests();
-      teardownForum();
-      teardownDMs();
+      // These three are only bound to window if their page was ever visited
+      // this session (see loadForumModule/loadDmModule/loadCoachModule) —
+      // optional chaining no-ops on logout for a session that never opened
+      // Forum/Messages/Coach instead of throwing on an unresolved reference.
+      window.teardownForum?.();
+      window.teardownDMs?.();
       teardownLeaderboard();
       teardownPlans();
       teardownBrain();
       renderBrainArticles();
-      teardownCoach();
+      window.teardownCoach?.();
       teardownAnalyzer();
     }
   }
@@ -585,8 +665,73 @@ document.getElementById('tour-next-btn').addEventListener('click', tourNext);
 document.getElementById('tour-back-btn').addEventListener('click', tourBack);
 document.getElementById('tour-skip-btn').addEventListener('click', finishTour);
 
+// ===================== ESCAPE-TO-CLOSE =====================
+// Every modal previously had exactly two ways to close: tap the ✕, or tap
+// the backdrop — nothing for keyboard users, which is the first thing
+// anyone navigating without a pointer tries. Ordered innermost-first so
+// Escape closes only the topmost modal when one can open on top of another
+// (exercise-modal can open from inside an active workout-modal).
+//
+// focus-modal is deliberately excluded: it's a "stay committed" lock-in
+// timer (see focus.js) where leaving early is meant to cost a confirmation
+// dialog, not a free Escape tap — wiring it up here would quietly remove
+// the one piece of friction that feature exists to have.
+// reset-password-modal is also excluded: it has no existing close/cancel
+// path at all (only ever dismissed by completing the form), so there's no
+// existing function to wire this to without inventing new behavior.
+const ESCAPABLE_MODALS = [
+  ['exercise-modal', closeExerciseInfo],
+  ['article-modal', closeArticle],
+  ['workout-modal', closeWorkout],
+  ['nav-more-modal', closeNavMore],
+  ['username-modal', closeUsernameModal],
+  ['breath-modal', closeBreathSession],
+  ['photo-lightbox-modal', closePhotoLightbox],
+  ['onboarding-modal', finishTour],
+];
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  for (const [id, close] of ESCAPABLE_MODALS) {
+    const modalEl = document.getElementById(id);
+    if (modalEl && modalEl.classList.contains('open')) {
+      close();
+      return;
+    }
+  }
+});
+
 onAuthStateChange(updateAccountUI);
 getSession().then(updateAccountUI);
+
+// Home is already .active in the static HTML — nobody ever calls
+// showPage('home') for it, so its very first view (guest or logged in)
+// would otherwise never get tracked at all. Fired once, after the first
+// session check resolves either way, rather than from inside
+// updateAccountUI itself (which reruns on every auth change, not just
+// once at load — that would double-count a login as a second page view).
+getSession().then((session) => trackPageView('home', session?.user?.id ?? null));
+
+// Dev-only convenience: auto-signs in with a local test account so
+// previewing the app while developing doesn't require logging in by hand
+// every time the dev server restarts. import.meta.env.DEV is a build-time
+// constant Vite inlines as the literal `false` in a production build (via
+// `vite build`), so this entire block is dead code there — not a runtime
+// check that could misfire in production, structurally unreachable outside
+// `vite dev`. Both env vars are optional; with neither set (the default),
+// this does nothing and login works exactly as normal.
+if (import.meta.env.DEV) {
+  const devEmail = import.meta.env.VITE_DEV_AUTO_LOGIN_EMAIL;
+  const devPassword = import.meta.env.VITE_DEV_AUTO_LOGIN_PASSWORD;
+  if (devEmail && devPassword) {
+    getSession().then((session) => {
+      if (session) return; // already logged in — don't fight an existing session
+      signInWithPassword(devEmail, devPassword).then(({ error }) => {
+        if (error) console.warn('[dev auto-login] sign-in failed:', error.message);
+        else console.info('[dev auto-login] signed in as', devEmail);
+      });
+    });
+  }
+}
 
 const resetPasswordModal = document.getElementById('reset-password-modal');
 const resetPasswordForm = document.getElementById('reset-password-form');

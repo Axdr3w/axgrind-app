@@ -49,9 +49,24 @@ async function selectDate(dateStr) {
   await renderQuestList();
 }
 
+// Shaped like a real quest row (a circle + two lines) so the loading state
+// reads as "your quests are coming" instead of a blank pause, and doesn't
+// reflow the layout once real rows replace it.
+function questListSkeleton(count = 3) {
+  return Array.from({ length: count }, () => `
+    <div class="skeleton-quest-row">
+      <div class="skeleton-circle"></div>
+      <div class="skeleton-lines">
+        <div class="skeleton-line" style="width:65%;"></div>
+        <div class="skeleton-line" style="width:30%;"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
 async function renderQuestList() {
   const container = document.getElementById('quest-list');
-  container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">${t('common.loading')}</div>`;
+  container.innerHTML = questListSkeleton();
   let quests;
   try {
     quests = await fetchQuestsForDate(currentUserId, selectedDate);

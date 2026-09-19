@@ -37,8 +37,11 @@ while ((m = attrRe.exec(html))) {
   }
 }
 
-// Pull the keys out of Object.assign(window, { ... }) in main.js.
-const assignMatch = mainJs.match(/Object\.assign\(window,\s*\{([\s\S]*?)\}\);/);
+// Pull the keys out of Object.assign(window, { ... }) in main.js. Anchored
+// to the start of a line (real code always writes this as a top-level
+// statement) so a comment that merely mentions "Object.assign(window, {"
+// elsewhere in the file can't get matched instead of the real block.
+const assignMatch = mainJs.match(/^Object\.assign\(window,\s*\{([\s\S]*?)\}\);/m);
 if (!assignMatch) {
   console.error('check-onclick-handlers: could not find Object.assign(window, {...}) block in main.js — did it move or get renamed?');
   process.exit(1);
@@ -50,6 +53,20 @@ const exported = new Set(
     .filter(Boolean)
     .map((s) => s.split(':')[0].trim())
 );
+
+// Some pages (Forum/Messages/Coach) lazy-load their controller module on
+// first visit instead of being statically imported — their handlers get
+// bound to window only once that module resolves (see loadForumModule/
+// loadDmModule/loadCoachModule in main.js), so they're never in the static
+// Object.assign block above. main.js lists them in DEFERRED_WINDOW_HANDLERS
+// specifically so this script can still confirm they're accounted for.
+const deferredMatch = mainJs.match(/DEFERRED_WINDOW_HANDLERS\s*=\s*\[([\s\S]*?)\]/);
+if (deferredMatch) {
+  for (const raw of deferredMatch[1].split(',')) {
+    const name = raw.trim().replace(/^['"]|['"]$/g, '');
+    if (name) exported.add(name);
+  }
+}
 
 const missing = [...handlerNames].filter((name) => !exported.has(name)).sort();
 

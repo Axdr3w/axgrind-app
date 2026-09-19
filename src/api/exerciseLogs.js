@@ -3,17 +3,21 @@ import { supabase } from './supabaseClient.js';
 // Reads go straight through the anon client under RLS (auth.uid() = user_id
 // already scopes this to the caller's own rows) — no service-role function
 // needed, same as fetchMeasurements/fetchWeightLogs.
-export async function fetchLastExerciseLog(userId, exerciseName) {
-  if (!supabase) return null;
+//
+// Fetched once per workout session (not once per exercise) so "last time
+// you did X" can show on every exercise row the moment a session starts,
+// instead of only the one row someone happens to tap. 200 rows comfortably
+// covers months of daily logging across a real workout's exercise count;
+// deduping to "most recent per exercise" happens client-side in plans.js.
+export async function fetchAllExerciseLogs(userId) {
+  if (!supabase) return [];
   const { data } = await supabase
     .from('exercise_logs')
-    .select('weight, reps, logged_date')
+    .select('exercise_name, weight, reps, logged_date')
     .eq('user_id', userId)
-    .eq('exercise_name', exerciseName)
     .order('logged_date', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data ?? null;
+    .limit(200);
+  return data ?? [];
 }
 
 // One row per exercise per day — logging the same exercise again today
