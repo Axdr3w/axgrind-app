@@ -14,6 +14,23 @@
   [headers.values]
     Content-Type = "application/json"
 
+# The native app (see capacitor.config.json's server.url) only ever loads
+# this exact page, once, at launch — WKWebView can otherwise cache it
+# indefinitely across app opens and even TestFlight updates, since nothing
+# was telling it this specific page shouldn't be cached. The hashed JS/CSS
+# files it references (e.g. index-AbCd123.js) are unaffected and still
+# cache normally — their filenames already change whenever their content
+# does, so long-term caching them is safe and desired.
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
