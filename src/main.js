@@ -2,9 +2,10 @@ import './style.css';
 import { initLanguageFromStorage, hasChosenLanguage, getLanguage, setLanguage, t } from './i18n/index.js';
 import { openLanguagePicker } from './i18n/picker.js';
 import { renderQuote, newQuote, refreshQuoteForUser } from './quotes.js';
-import { fetchRecentQuests, fetchRecentStreakFreezes } from './api/quests.js';
+import { fetchRecentQuests, fetchRecentStreakFreezes, fetchQuestsForDate, fetchProfileXp } from './api/quests.js';
 import { trackPageView } from './api/analytics.js';
-import { computeStreak } from './gamification.js';
+import { computeStreak, levelFromXp } from './gamification.js';
+import { todayStr } from './date-utils.js';
 import { renderWorkouts, filterCategory, filterMuscle, filterEnv, filterSportList, selectSportOrProgram, backToBrowseList, openWorkout, closeWorkout, initPlans, teardownPlans, startWorkoutSession, toggleWorkoutTimer, toggleExerciseChecked, toggleVoiceGuidance, finishWorkout, skipRest, toggleSessionTools, calcPlates, toggleExerciseLog, updateExerciseLogDraft, saveExerciseLog, dismissSessionIconsHint } from './plans.js';
 import { renderBrainArticles, selectBrainCategory, backToBrainCategories, openArticle, closeArticle, markArticleRead, initBrain, teardownBrain } from './brain.js';
 import { calcCalories } from './nutrition.js';
@@ -91,23 +92,47 @@ function loadCoachModule() {
 const DEFERRED_WINDOW_HANDLERS = ['sendChatMessage', 'sendChip', 'autoGrow', 'toggleSavedView', 'removeForumImage'];
 
 // Populates the logged-in version of the Home hero (see .hero-loggedin in
-// index.html/style.css) with the user's actual streak instead of the
-// generic marketing pitch a guest sees. Failure just falls back to a
-// neutral "jump into today's quests" line rather than leaving the "Loading…"
-// placeholder stuck — same error-doesn't-mean-empty reasoning as Progress's
-// load-error states, just for a single line of copy instead of a chart.
+// index.html/style.css). The point of this screen is "what do I do right
+// now" — so beyond the streak, it pulls today's actual quest list and picks
+// one concrete next action (finish a quest / start a workout / set a quest)
+// rather than a generic "jump into today's quests" line every time.
+// Failure just falls back to a neutral line rather than leaving "Loading…"
+// stuck — same error-doesn't-mean-empty reasoning as Progress's load-error
+// states, just for a single line of copy instead of a chart.
 async function renderHomeDashboard(userId) {
   const subtitle = document.getElementById('home-hero-subtitle');
+  const levelEl = document.getElementById('home-level');
+  const streakEl = document.getElementById('home-streak');
+  const cta = document.getElementById('home-primary-cta');
   if (!subtitle) return;
   try {
-    const [quests, freezes] = await Promise.all([
+    const [quests, freezes, xp, todayQuests] = await Promise.all([
       fetchRecentQuests(userId, 60),
       fetchRecentStreakFreezes(userId, 60),
+      fetchProfileXp(userId),
+      fetchQuestsForDate(userId, todayStr()),
     ]);
     const streak = computeStreak(quests, new Set(freezes.map((f) => f.used_date)));
-    if (streak >= 2) subtitle.textContent = t('home.streakActive', { count: streak });
-    else if (streak === 1) subtitle.textContent = t('home.streakActiveOne');
-    else subtitle.textContent = t('home.streakStart');
+    if (levelEl) levelEl.textContent = levelFromXp(xp);
+    if (streakEl) streakEl.textContent = streak;
+
+    const incomplete = todayQuests
+      .filter((q) => !q.completed_at)
+      .sort((a, b) => (a.due_time || '99:99').localeCompare(b.due_time || '99:99'));
+
+    if (incomplete.length > 0) {
+      const next = incomplete[0];
+      subtitle.textContent = incomplete.length > 1
+        ? t('home.objectiveMulti', { title: next.title, count: incomplete.length - 1 })
+        : t('home.objectiveSingle', { title: next.title });
+      if (cta) { cta.textContent = t('home.continueQuestsBtn'); cta.onclick = () => showPage('quests'); }
+    } else if (todayQuests.length > 0) {
+      subtitle.textContent = t('home.objectiveAllDone');
+      if (cta) { cta.textContent = t('home.startWorkoutBtn'); cta.onclick = () => showPage('plans'); }
+    } else {
+      subtitle.textContent = t('home.objectiveNoQuests');
+      if (cta) { cta.textContent = t('home.addQuestBtn'); cta.onclick = () => showPage('quests'); }
+    }
   } catch {
     subtitle.textContent = t('home.streakLoadError');
   }

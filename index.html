@@ -75,9 +75,13 @@
          every single time. Populated by renderHomeDashboard() in main.js. -->
     <div class="hero hero-loggedin" id="home-hero-loggedin">
       <div class="hero-tag" data-i18n="home.welcomeBackTag">Welcome back</div>
+      <div class="quest-level-row" style="margin-bottom:14px;">
+        <div class="quest-level-badge">LVL <span id="home-level">1</span></div>
+        <div class="quest-streak">🔥 <span id="home-streak">0</span> <span data-i18n="quests.dayStreak">day streak</span></div>
+      </div>
       <h1><span data-i18n="home.welcomeBackTitleLine1">KEEP</span><br><span data-i18n="home.welcomeBackTitleLine2">GRINDING.</span></h1>
       <p id="home-hero-subtitle" data-i18n="common.loading">Loading...</p>
-      <button class="btn-accent" onclick="showPage('quests')" data-i18n="home.continueQuestsBtn">Continue Today's Quests →</button>
+      <button class="btn-accent" id="home-primary-cta" onclick="showPage('quests')" data-i18n="home.continueQuestsBtn">Continue Today's Quests →</button>
     </div>
 
     <div class="focus-box">
@@ -94,26 +98,6 @@
       </div>
       <div class="focus-xp-preview"><span data-i18n="focus.earnPrefix">+</span><span id="focus-xp-preview">250</span> <span data-i18n="focus.earnSuffix">XP if you finish</span></div>
       <button class="btn-accent btn-full" id="focus-start-btn" data-i18n="focus.startBtn">Start Session</button>
-    </div>
-
-    <div class="section-header"><div class="section-title" data-i18n="videos.title">EXERCISE LIBRARY</div><button class="section-link" onclick="showPage('videos')" data-i18n="home.browseAll">Browse all →</button></div>
-    <button type="button" class="card-reset feature-card" onclick="showPage('videos')" style="margin-bottom:20px;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-      <div class="feature-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="m16 10 5-3v10l-5-3"/></svg></div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.dontRecognize">Don't recognize a move?</div>
-      <div style="font-size:11px;color:var(--muted);" data-i18n="home.dontRecognizeDesc">Every exercise in the app has a form cue and a video tutorial link — search the full library</div>
-    </button>
-    <div class="section-header"><div class="section-title" data-i18n="home.aiFeaturesTitle">AI FEATURES</div></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-      <button type="button" class="card-reset feature-card" onclick="showPage('analyze')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div class="feature-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg></div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.bodyAnalyzerTitle">Body Analyzer</div>
-        <div style="font-size:11px;color:var(--muted);" data-i18n="home.bodyAnalyzerDesc">AI reads your physique & recommends a plan</div>
-      </button>
-      <button type="button" class="card-reset feature-card" onclick="showPage('chat')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div class="feature-icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="7" width="14" height="11" rx="2"/><path d="M9 7V5a3 3 0 0 1 6 0v2M9 12h.01M15 12h.01"/></svg></div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.aiCoachTitle">AI Coach</div>
-        <div style="font-size:11px;color:var(--muted);" data-i18n="home.aiCoachDesc">Ask anything about training & nutrition</div>
-      </button>
     </div>
 
     <!-- Off by default — see src/ads.js. Stays in the DOM (display:none) so
