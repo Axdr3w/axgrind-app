@@ -587,8 +587,8 @@
     <div class="analyze-subpage" id="analyze-subpage-scan" style="display:none;">
     <div class="analyzer-intro">
       <div class="big-icon">📸</div>
-      <h2><span data-i18n="analyze.titlePrefix">AI Body</span> <span data-i18n="analyze.titleHighlight">Analyzer</span></h2>
-      <p data-i18n="analyze.intro">Upload a photo and the AI will give you a detailed assessment of your physique, your strengths, your potential, and a personalized plan recommendation.</p>
+      <h2><span data-i18n="analyze.titlePrefix">AI Training</span> <span data-i18n="analyze.titleHighlight">Recommender</span></h2>
+      <p data-i18n="analyze.intro">Upload a photo and the AI will recommend a training plan and next steps based on your apparent experience level — it's a plan recommender, not a physique rating.</p>
     </div>
     <div id="upload-section">
       <button type="button" class="upload-zone" style="display:block;width:100%;margin:0 0 14px;font:inherit;color:inherit;" onclick="document.getElementById('body-file-input').click()">
@@ -602,13 +602,13 @@
     </div>
     <div id="photo-preview-section" style="display:none;">
       <div class="photo-preview"><img id="preview-img" src="" alt="Your photo"><button class="remove-btn" onclick="removePhoto()">✕ <span data-i18n="analyze.removeBtn">Remove</span></button></div>
-      <button class="btn-accent btn-full" onclick="analyzeBody()" data-i18n="analyze.analyzeBtn">Analyze My Physique →</button>
+      <button class="btn-accent btn-full" onclick="analyzeBody()" data-i18n="analyze.analyzeBtn">Get My Recommendation →</button>
     </div>
     <div id="analyze-loading" style="display:none;" class="analysis-result">
-      <div class="loading-state"><div class="spin"></div><p id="analyze-loading-text" data-i18n="analyze.loadingText">Analyzing your physique...</p></div>
+      <div class="loading-state"><div class="spin"></div><p id="analyze-loading-text" data-i18n="analyze.loadingText">Finding your plan...</p></div>
     </div>
     <div id="analyze-result" style="display:none;" class="analysis-result">
-      <h3 data-i18n="analyze.resultTitle">YOUR ANALYSIS</h3>
+      <h3 data-i18n="analyze.resultTitle">YOUR RECOMMENDATION</h3>
       <div id="analysis-content"></div>
       <div style="margin-top:16px;"><button class="btn-accent btn-full" onclick="removePhoto();document.getElementById('analyze-result').style.display='none';" data-i18n="analyze.analyzeAnother">Analyze Another Photo</button></div>
     </div>
@@ -827,7 +827,7 @@
         <div class="feature-card">
           <div style="font-size:26px;margin-bottom:7px;">📸</div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:.05em;margin-bottom:3px;" data-i18n="home.bodyAnalyzerTitle">Body Analyzer</div>
-          <div style="font-size:11px;color:var(--muted);" data-i18n="home.bodyAnalyzerDesc">AI reads your physique & recommends a plan</div>
+          <div style="font-size:11px;color:var(--muted);" data-i18n="home.bodyAnalyzerDesc">AI recommends a training plan from a photo</div>
         </div>
         <div class="feature-card">
           <div style="font-size:26px;margin-bottom:7px;">🤖</div>

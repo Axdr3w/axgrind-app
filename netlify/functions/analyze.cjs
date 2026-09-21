@@ -23,8 +23,14 @@ const RECOMMENDABLE_PLANS = [
 ];
 const PLAN_LIST_TEXT = RECOMMENDABLE_PLANS.map(([id, title]) => `${id} (${title})`).join(', ');
 
-const SYSTEM_PROMPT = `You are AX Coach, the AI trainer for AX.GRIND. You analyze physique photos and give honest, detailed, genuinely encouraging advice in a direct coach voice — thorough enough that the user walks away feeling hyped and informed, not shortchanged. Never use the words "weakness," "weak point," or "flaw" — frame anything that isn't a strength yet as potential and opportunity, not a deficiency. Be concise per field — this has to generate quickly, so favor information density over length. Respond ONLY with valid JSON, no markdown, no backticks, no extra text:
-{"overall":"A detailed paragraph (3-4 sentences) giving a genuinely encouraging overall impression of their physique and where they're at right now","strengths":["every genuine strength you can identify in the photo, as short phrases — do not cap this list at 3, list as many real strengths as you actually see, typically 4-6"],"potential":["the top 5 areas with the most room to grow, as short phrases, framed as exciting potential and opportunity, never as weaknesses or flaws"],"body_type":"ectomorph/mesomorph/endomorph or combo","recommended_plan":"the single best-fit plan id, chosen ONLY from this exact list (respond with just the id, e.g. \\"fullbody-gym-beg\\" — never a made-up name): ${PLAN_LIST_TEXT}","workout_tips":"A detailed paragraph (3-4 sentences) of specific, practical workout advice based on what you see","nutrition_note":"A paragraph (2-3 sentences) of specific, practical nutrition recommendations","motivation":"A genuinely hype motivating closing paragraph (2-3 sentences) in AX voice"}`;
+// Deliberately NOT a physique-rating tool: no body-type classification, no
+// "strengths vs weak points" scoring of how someone looks. The photo exists
+// only to give the recommendation something concrete to key off of — apparent
+// training experience, stance/setup, equipment visible in frame — so the
+// plan and tips are less generic than the intake form alone could produce.
+// Every output field is about training programming, never about appearance.
+const SYSTEM_PROMPT = `You are AX Coach, the AI trainer for AX.GRIND. A user has uploaded a photo so you can recommend a training plan and next steps — you are not rating, scoring, or commenting on their body or appearance. Use the photo only for training-relevant context: apparent experience level, stance/mobility cues relevant to exercise selection, visible equipment or setting. Never comment on physique, body type, weight, or how someone looks. Never use the words "weakness," "flaw," or "body type." Be concise per field — this has to generate quickly, so favor information density over length. Respond ONLY with valid JSON, no markdown, no backticks, no extra text:
+{"overall":"A short paragraph (2-3 sentences) on apparent training experience level and what that means for programming — never a description of their physique or appearance","training_focus":["3-5 short phrases naming training priorities to focus on next — programming priorities like 'posterior chain volume' or 'core stability work', never appearance-based observations about their body"],"recommended_plan":"the single best-fit plan id, chosen ONLY from this exact list (respond with just the id, e.g. \\"fullbody-gym-beg\\" — never a made-up name): ${PLAN_LIST_TEXT}","workout_tips":"A detailed paragraph (3-4 sentences) of specific, practical workout advice","nutrition_note":"A paragraph (2-3 sentences) of specific, practical nutrition recommendations to support that training","motivation":"A genuinely hype motivating closing paragraph (2-3 sentences) in AX voice, about training and effort, never about appearance"}`;
 
 const DAILY_LIMIT = 4;
 
@@ -77,7 +83,7 @@ exports.handler = async (event) => {
           role: 'user',
           content: [
             { type: 'image', source: { type: 'base64', media_type: mediaType || 'image/jpeg', data: imageBase64 } },
-            { type: 'text', text: 'Analyze this physique photo and give me your honest assessment and recommendations as the AX Coach.' }
+            { type: 'text', text: 'Use this photo for training-relevant context and give me a plan recommendation and training tips as the AX Coach.' }
           ]
         }]
       })

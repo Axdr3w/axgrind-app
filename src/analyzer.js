@@ -109,12 +109,10 @@ export async function analyzeBody() {
     const raw = (data.content || []).map(b => b.text || '').join('');
     let result;
     try { result = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
-    catch { result = {overall: raw, strengths:[], potential:[], body_type:'—', recommended_plan:'—', workout_tips:'', nutrition_note:'', motivation:'Keep grinding.'}; }
+    catch { result = {overall: raw, training_focus:[], recommended_plan:'—', workout_tips:'', nutrition_note:'', motivation:'Keep grinding.'}; }
     let html = '';
     if (result.overall) html += `<div class="analysis-section"><h4>${t('analyze.sectionOverall')}</h4><p>${result.overall}</p></div>`;
-    if (result.body_type) html += `<div class="analysis-section"><h4>${t('analyze.sectionBodyType')}</h4><p>${result.body_type}</p></div>`;
-    if (result.strengths?.length) html += `<div class="analysis-section"><h4>${t('analyze.sectionStrengths')}</h4><div class="analysis-tags">${result.strengths.map(s=>`<span class="a-tag green">${s}</span>`).join('')}</div></div>`;
-    if (result.potential?.length) html += `<div class="analysis-section"><h4>${t('analyze.sectionPotential')}</h4><div class="analysis-tags">${result.potential.map(s=>`<span class="a-tag yellow">${s}</span>`).join('')}</div></div>`;
+    if (result.training_focus?.length) html += `<div class="analysis-section"><h4>${t('analyze.sectionTrainingFocus')}</h4><div class="analysis-tags">${result.training_focus.map(s=>`<span class="a-tag green">${s}</span>`).join('')}</div></div>`;
     if (result.workout_tips) html += `<div class="analysis-section"><h4>${t('analyze.sectionWorkoutTips')}</h4><p>${result.workout_tips}</p></div>`;
     if (result.nutrition_note) html += `<div class="analysis-section"><h4>${t('analyze.sectionNutritionNote')}</h4><p>${result.nutrition_note}</p></div>`;
     const recommendedWorkout = result.recommended_plan ? await findWorkoutById(result.recommended_plan) : null;
