@@ -3,6 +3,7 @@ import { logWeight, fetchWeightLogs } from './api/xp.js';
 import { uploadProgressPhoto, fetchProgressPhotos, deleteProgressPhoto } from './api/progressPhotos.js';
 import { checkForNewAchievements } from './achievements.js';
 import { todayStr } from './date-utils.js';
+import { saveWeightToHealth } from './api/health.js';
 
 const GOAL_STORAGE_KEY = 'ax-weight-goal';
 const CHART_MAX_POINTS = 30;
@@ -256,6 +257,7 @@ async function submitLog() {
     const existingIdx = logs.findIndex((l) => l.logged_at === today);
     if (existingIdx >= 0) logs[existingIdx] = { weight: w, logged_at: today };
     else logs.push({ weight: w, logged_at: today });
+    saveWeightToHealth(w, today); // fire-and-forget — see health.js
     input.value = '';
     input.placeholder = String(w);
     msg.textContent = result.xpAwarded > 0 ? t('progress.logSuccessXp', { xp: result.xpAwarded }) : t('progress.logSuccessUpdated');
