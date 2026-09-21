@@ -82,7 +82,7 @@ async function renderQuestList() {
     const completed = Boolean(q.completed_at);
     return `
       <div class="quest-row${completed ? ' completed' : ''}">
-        <button class="quest-check" data-id="${q.id}" data-completed="${completed}" aria-label="${completed ? 'Completed' : 'Mark quest complete'}">${completed ? '✓' : ''}</button>
+        <button class="quest-check" data-id="${q.id}" data-completed="${completed}" data-xp="${q.xp_value}" aria-label="${completed ? 'Completed' : 'Mark quest complete'}">${completed ? '✓' : ''}</button>
         <div class="quest-info">
           <div class="quest-title">${q.title}</div>
           ${q.due_time ? `<div class="quest-time">${q.due_time.slice(0, 5)}</div>` : ''}
@@ -96,10 +96,14 @@ async function renderQuestList() {
   container.querySelectorAll('.quest-check').forEach(btn => {
     btn.addEventListener('click', async () => {
       const wasCompleted = btn.dataset.completed === 'true';
+      const xpValue = Number(btn.dataset.xp) || 0;
       await toggleQuestComplete(btn.dataset.id, wasCompleted);
       await renderQuestList();
       await renderHeader();
-      if (!wasCompleted) checkForNewAchievements();
+      if (!wasCompleted) {
+        showXpToast(xpValue);
+        checkForNewAchievements();
+      }
     });
   });
   container.querySelectorAll('.quest-delete').forEach(btn => {
@@ -109,6 +113,29 @@ async function renderQuestList() {
       await renderHeader();
     });
   });
+}
+
+// Completing a quest silently moved the XP bar and nothing else — the one
+// step of the whole loop (OPEN → QUESTS → TRAIN → LOG → XP → PROGRESS) that
+// never actually celebrated itself the way an achievement unlock does.
+// Reuses the same toast container/timing pattern as achievements.js, just
+// without a share button since there's nothing to share about +10 XP.
+function showXpToast(amount) {
+  if (amount <= 0) return;
+  const container = document.getElementById('achievement-toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = 'achievement-toast xp-toast';
+  toast.innerHTML = `
+    <div class="achievement-toast-icon">⚡</div>
+    <div class="achievement-toast-title">+${amount} XP</div>
+  `;
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('show'));
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 400);
+  }, 1600);
 }
 
 async function renderHeader() {

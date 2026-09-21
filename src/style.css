@@ -120,6 +120,9 @@ body:not(.locked) .hero-loggedin { display:block; }
 .achievement-toast-label { font-size:9px; color:var(--accent-soft); text-transform:uppercase; letter-spacing:.06em; font-weight:700; }
 .achievement-toast-title { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:.03em; }
 .achievement-toast-share { background:none; border:1px solid var(--accent-line); color:var(--accent); font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; padding:6px 12px; min-height:44px; min-width:44px; border-radius:var(--radius-md); cursor:pointer; flex-shrink:0; pointer-events:auto; transition:all .15s; }
+.xp-toast { border-color:var(--accent); padding:10px 16px; }
+.xp-toast .achievement-toast-icon { font-size:22px; }
+.xp-toast .achievement-toast-title { color:var(--accent); }
 
 .achievements-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
 .achievement-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-2xl); padding:14px 8px; text-align:center; transition:opacity .2s,filter .2s; }

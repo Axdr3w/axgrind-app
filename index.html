@@ -110,21 +110,16 @@
 
   <!-- QUESTS -->
   <div class="page" id="page-quests">
-    <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="quests.title">QUESTS</div></div>
+    <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="quests.title">PROGRESS</div></div>
 
+    <!-- 1. WHERE YOU ARE — level, streak, XP toward next level. -->
     <div class="quest-header-card">
       <div class="quest-level-row">
         <div class="quest-level-badge">LVL <span id="quest-level">1</span></div>
         <div class="quest-streak">🔥 <span id="quest-streak">0</span> <span data-i18n="quests.dayStreak">day streak</span></div>
-        <button class="btn-follow" id="open-leaderboard-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;margin-inline-start:auto;">🏆 <span data-i18n="quests.leaderboardBtn">Leaderboard</span></button>
       </div>
       <div class="xp-bar-track"><div class="xp-bar-fill" id="xp-bar-fill" style="width:0%"></div></div>
       <div class="xp-bar-label"><span id="xp-into-level">0</span>/100 <span data-i18n="quests.xpToNextLevel">XP to next level</span></div>
-    </div>
-
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-      <button type="button" class="chip" onclick="showPage('analyze')" data-i18n="quests.linkBodyProgress">📈 Body Progress</button>
-      <button type="button" class="chip" onclick="showPage('wrapped')" data-i18n="quests.linkWrapped">🎁 Grind Wrapped</button>
     </div>
 
     <div class="inline-banner" id="streak-freeze-offer" style="display:none;">
@@ -137,24 +132,7 @@
       <button type="button" data-i18n="plans.newHereHintDismiss">Got it</button>
     </div>
 
-    <button type="button" class="calc-box" id="history-toggle-box" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;margin-inline:0;" onclick="toggleWorkoutHistory()">
-      <div>
-        <div class="calc-label" style="margin-bottom:2px;" data-i18n="quests.historyLabel">Workout History</div>
-        <div style="font-size:12px;color:var(--muted);"><span id="history-total-count">0</span> <span data-i18n="quests.historyCompletedTotal">workouts completed all-time</span></div>
-      </div>
-      <span class="section-link" id="history-toggle-arrow">▾</span>
-    </button>
-    <div id="workout-history-list" style="display:none;margin-bottom:16px;"></div>
-
-    <button type="button" class="calc-box" id="achievements-toggle-box" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;margin-inline:0;" onclick="toggleAchievements()">
-      <div>
-        <div class="calc-label" style="margin-bottom:2px;" data-i18n="achievements.toggleLabel">Achievements</div>
-        <div style="font-size:12px;color:var(--muted);"><span id="achievements-unlocked-count">0</span>/<span id="achievements-total-count">0</span> <span data-i18n="achievements.unlockedSuffix">unlocked</span></div>
-      </div>
-      <span class="section-link" id="achievements-toggle-arrow">▾</span>
-    </button>
-    <div id="achievements-grid" class="achievements-grid" style="display:none;margin-bottom:16px;"></div>
-
+    <!-- 2. WHAT TO DO TODAY — the actionable part of the page. -->
     <div id="quest-day-view">
       <div class="day-strip" id="day-strip"></div>
 
@@ -188,6 +166,32 @@
       </div>
 
       <div id="quest-list"></div>
+    </div>
+
+    <!-- 3. WHAT IT ADDS UP TO — consequences of the activity above. -->
+    <button type="button" class="calc-box" id="achievements-toggle-box" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;margin-inline:0;" onclick="toggleAchievements()">
+      <div>
+        <div class="calc-label" style="margin-bottom:2px;" data-i18n="achievements.toggleLabel">Achievements</div>
+        <div style="font-size:12px;color:var(--muted);"><span id="achievements-unlocked-count">0</span>/<span id="achievements-total-count">0</span> <span data-i18n="achievements.unlockedSuffix">unlocked</span></div>
+      </div>
+      <span class="section-link" id="achievements-toggle-arrow">▾</span>
+    </button>
+    <div id="achievements-grid" class="achievements-grid" style="display:none;margin-bottom:16px;"></div>
+
+    <button type="button" class="calc-box" id="history-toggle-box" style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;margin-inline:0;" onclick="toggleWorkoutHistory()">
+      <div>
+        <div class="calc-label" style="margin-bottom:2px;" data-i18n="quests.historyLabel">Workout History</div>
+        <div style="font-size:12px;color:var(--muted);"><span id="history-total-count">0</span> <span data-i18n="quests.historyCompletedTotal">workouts completed all-time</span></div>
+      </div>
+      <span class="section-link" id="history-toggle-arrow">▾</span>
+    </button>
+    <div id="workout-history-list" style="display:none;margin-bottom:16px;"></div>
+
+    <!-- 4. ZOOM OUT — the long-term/social views, one tap further than today. -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <button type="button" class="chip" id="open-leaderboard-btn" data-i18n="quests.leaderboardBtn">🏆 Leaderboard</button>
+      <button type="button" class="chip" onclick="showPage('analyze')" data-i18n="quests.linkBodyProgress">📈 Body Progress</button>
+      <button type="button" class="chip" onclick="showPage('wrapped')" data-i18n="quests.linkWrapped">🎁 Grind Wrapped</button>
     </div>
 
     <div id="quest-leaderboard-view" style="display:none;">

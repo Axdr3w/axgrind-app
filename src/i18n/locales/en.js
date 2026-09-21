@@ -61,7 +61,7 @@ export default {
   'focus.tryAgainBtn': 'Try Again',
 
   // Quests
-  'quests.title': 'QUESTS',
+  'quests.title': 'PROGRESS',
   'quests.linkBodyProgress': '📈 Body Progress', 'quests.linkWrapped': '🎁 Grind Wrapped',
   'quests.dayStreak': 'day streak',
   'quests.streakFreezeOffer': "Missed a day? You've got 1 Streak Freeze available this week — use it to keep your streak going.",
@@ -74,7 +74,7 @@ export default {
   'achievements.shareLabel': 'Share',
   'quests.historyEmpty': "No completed workouts yet — finish one from Plans and it'll show up here.",
   'quests.historyErrorLoad': "Couldn't load history: {reason}",
-  'quests.leaderboardBtn': 'Leaderboard',
+  'quests.leaderboardBtn': '🏆 Leaderboard',
   'quests.xpToNextLevel': 'XP to next level',
   'quests.addQuestTitle': 'ADD A QUEST',
   'quests.fieldTitle': 'Title',
