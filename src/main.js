@@ -180,38 +180,32 @@ function ensurePageInit(pageId) {
   fn(lastUserId);
 }
 
+// Nav only has 5 primary tabs (Home/Train/Progress/Community/Profile), but
+// more pages exist than that — each secondary page belongs under one of
+// them and should highlight that parent tab rather than leaving the nav
+// looking like nothing is active.
+const PAGE_NAV_AREA = {
+  nutrition: 'plans', chat: 'plans', videos: 'plans',
+  analyze: 'quests', wrapped: 'quests',
+  messages: 'forum',
+  about: 'account',
+};
+
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('[data-page]').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   ensurePageInit(id);
   trackPageView(id, lastUserId);
-  const tab = document.querySelector(`.nav-tab[data-page="${id}"]`);
+  const navAreaId = PAGE_NAV_AREA[id] || id;
+  const tab = document.querySelector(`.nav-tab[data-page="${navAreaId}"]`);
   if (tab) {
     tab.classList.add('active');
     // On mobile the nav scrolls horizontally instead of wrapping, so keep
     // the active tab in view instead of leaving it scrolled off-screen.
     tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }
-  // A page reached through the "More" menu has no button in the primary
-  // row — highlight the More button itself so it's still clear which
-  // section is active, and mark the matching row inside the menu too.
-  const moreItem = document.querySelector(`.nav-more-item[data-page="${id}"]`);
-  if (moreItem) {
-    moreItem.classList.add('active');
-    document.getElementById('nav-more-btn').classList.add('active');
-  }
   window.scrollTo(0, 0);
-}
-
-function openNavMore() {
-  document.getElementById('nav-more-modal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-
-function closeNavMore() {
-  document.getElementById('nav-more-modal').classList.remove('open');
-  document.body.style.overflow = '';
 }
 
 // The Analyze tab grew into five distinct tools (weigh-ins, photos,
@@ -232,8 +226,6 @@ function selectAnalyzeSubtab(name) {
 // Legacy inline onclick/onchange handlers in index.html call these on window.
 Object.assign(window, {
   showPage,
-  openNavMore,
-  closeNavMore,
   newQuote,
   filterCategory,
   filterMuscle,
@@ -683,7 +675,6 @@ const ESCAPABLE_MODALS = [
   ['exercise-modal', closeExerciseInfo],
   ['article-modal', closeArticle],
   ['workout-modal', closeWorkout],
-  ['nav-more-modal', closeNavMore],
   ['username-modal', closeUsernameModal],
   ['breath-modal', closeBreathSession],
   ['photo-lightbox-modal', closePhotoLightbox],

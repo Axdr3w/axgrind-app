@@ -37,12 +37,6 @@ nav { max-width:860px; margin:0 auto; padding:12px 16px; display:flex; flex-dire
 .nav-tab { background:none; border:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:11px; font-weight:500; padding:5px 8px; border-radius:var(--radius-md); cursor:pointer; transition:all .15s; white-space:nowrap; }
 .nav-tab.active { background:#1a1a1a; color:var(--accent); }
 .nav-sep { color:var(--muted); opacity:.4; font-size:11px; }
-/* Only room for these on the wide (≥900px) sidebar layout — on the phone
-   bottom tab bar they stay tucked behind the More sheet instead. */
-.nav-tab-wide { display:none; }
-.nav-more-item { display:block; width:100%; text-align:left; background:none; border:none; border-bottom:1px solid var(--border); color:var(--text); font-family:'DM Sans',sans-serif; font-size:14px; font-weight:500; padding:14px 4px; cursor:pointer; }
-.nav-more-item:last-child { border-bottom:none; }
-.nav-more-item.active { color:var(--accent); }
 .container { max-width:860px; margin:0 auto; padding:20px 16px; }
 .page { display:none; }
 .page.active { display:block; animation:pageIn .18s ease; }
@@ -297,15 +291,6 @@ button.card-reset { all:unset; display:block; width:100%; box-sizing:border-box;
 .close-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:var(--radius-xl); width:44px; height:44px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; }
 .workout-sheet-body { padding:18px 20px; }
 
-/* Nav "More" sheet: a visually distinct treatment so it reads as a
-   navigation surface (destinations to jump to) rather than one more content
-   dialog like the exercise-info/article modals. Purely additive — the
-   openNavMore/closeNavMore JS and the base .workout-sheet/.workout-modal
-   mechanics are untouched. */
-.nav-sheet .workout-sheet-header { background:none; border-bottom:none; padding:4px 20px 6px; justify-content:center; }
-.nav-sheet .workout-sheet-header h2 { font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
-.nav-sheet .workout-sheet-body { padding:6px 16px 14px; }
-.nav-sheet .nav-more-item { padding:12px 4px; }
 .language-list { display:flex; flex-direction:column; gap:6px; max-height:60vh; overflow-y:auto; }
 .language-row { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-lg); padding:12px 14px; font-size:14px; color:var(--text); text-align:start; cursor:pointer; font-family:inherit; }
 .language-row.active { border-color:var(--accent); color:var(--accent); background:var(--accent-wash); }
@@ -577,7 +562,6 @@ button.card-reset { all:unset; display:block; width:100%; box-sizing:border-box;
 
 /* ===== AUTH GATE: everything but Account is hidden until logged in ===== */
 body.locked .nav-tab.gated { display:none; }
-body.locked .nav-more-item.gated { display:none; }
 body.locked .nav-sep { display:none; }
 body.locked .motivation-banner { display:none; }
 body.locked .page { display:none !important; }
@@ -618,9 +602,9 @@ body { padding-bottom:env(safe-area-inset-bottom); }
 
 /* Bottom tab bar below desktop width — the top of a phone screen is the
    hardest zone to reach one-handed; the bottom third is the easiest. Same
-   5 destinations (Home/Plans/Quests/Analyze/More) as the old top row, just
-   relocated and laid out as fixed, evenly-spaced tabs instead of a
-   horizontally-scrolling strip. .nav-wrapper (logo + language switcher)
+   5 destinations (Home/Train/Progress/Community/Profile) as the old top
+   row, just relocated and laid out as fixed, evenly-spaced tabs instead of
+   a horizontally-scrolling strip. .nav-wrapper (logo + language switcher)
    stays a sticky top bar — those are reached far less often. */
 @media (max-width:899px) {
   .nav-tabs {
@@ -695,8 +679,6 @@ body { padding-bottom:env(safe-area-inset-bottom); }
   .nav-tabs { flex-direction:column; width:100%; gap:4px; }
   .nav-tab { width:100%; text-align:center; padding:10px 4px; }
   .nav-sep { display:none; }
-  .nav-tab-wide { display:block; }
-  #nav-more-btn { display:none; }
 
   body { margin-inline-start:96px; }
   .container { max-width:1040px; }

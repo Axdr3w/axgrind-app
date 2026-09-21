@@ -17,11 +17,11 @@ export default {
   // Language picker
   'language.pickerTitle': 'Choose your language',
 
-  // Nav
-  'nav.home': 'Home', 'nav.quests': 'Quests', 'nav.videos': 'Videos', 'nav.plans': 'Plans',
-  'nav.nutrition': 'Nutrition', 'nav.analyze': 'Analyze', 'nav.coach': 'Coach', 'nav.about': 'About',
-  'nav.forum': 'Forum', 'nav.messages': 'Messages', 'nav.account': 'Account',
-  'nav.more': 'More ⋯', 'nav.moreTitle': 'More',
+  // Nav — 5 primary areas. Secondary pages (Nutrition, Coach, Videos, Analyze,
+  // Wrapped, Messages, About) no longer have their own nav tab; they're
+  // reached from inside the area that owns them (see PAGE_NAV_AREA in main.js).
+  'nav.home': 'Home', 'nav.train': 'Train', 'nav.progress': 'Progress',
+  'nav.community': 'Community', 'nav.profile': 'Profile',
 
   // Home
   'home.heroTag': 'Free Training — No Excuses',
@@ -63,6 +63,7 @@ export default {
 
   // Quests
   'quests.title': 'QUESTS',
+  'quests.linkBodyProgress': '📈 Body Progress', 'quests.linkWrapped': '🎁 Grind Wrapped',
   'quests.dayStreak': 'day streak',
   'quests.streakFreezeOffer': "Missed a day? You've got 1 Streak Freeze available this week — use it to keep your streak going.",
   'quests.streakFreezeBtn': 'Use Freeze',
@@ -101,12 +102,13 @@ export default {
   'quests.errorEnableReminders': "Couldn't enable reminders: {reason}",
 
   // Videos
-  'videos.title': 'EXERCISE LIBRARY',
+  'videos.title': 'EXERCISE LIBRARY', 'videos.trainLink': '← Train',
   'videos.intro': "Don't recognize a move from one of the plans? Look it up here — every exercise has a form cue and a video tutorial link. You can also tap any exercise inside a workout to jump straight to it.",
   'videos.searchPlaceholder': 'Search exercises (e.g. squat, curl, push-up)...',
 
   // Plans
   'plans.title': 'WORKOUT LIBRARY',
+  'plans.linkExerciseLibrary': '🎥 Exercise Library', 'plans.linkNutrition': '🍗 Nutrition', 'plans.linkCoach': '💬 Ask Coach',
   'plans.tapHint': 'Tap any workout to see full exercises',
   'plans.introPrefix': 'Every workout is ordered',
   'plans.orderedBold': 'Beginner → Intermediate → Advanced',
@@ -139,7 +141,7 @@ export default {
   'tour.step4.body': "Upload a photo and get a detailed AI assessment — your strengths, your potential, and a recommended plan. It's only ever used for that one analysis and never stored.",
 
   // Nutrition
-  'nutrition.title': 'NUTRITION', 'nutrition.subtitle': 'Fuel the grind',
+  'nutrition.title': 'NUTRITION', 'nutrition.subtitle': 'Fuel the grind', 'nutrition.trainLink': '← Train',
   'nutrition.calcTitle': 'CALORIE CALCULATOR',
   'nutrition.weightLabel': 'Weight (lbs)', 'nutrition.heightLabel': 'Height (in)', 'nutrition.ageLabel': 'Age',
   'nutrition.goalLabel': 'Goal', 'nutrition.goalCut': 'Cut (lose fat)', 'nutrition.goalMaintain': 'Maintain', 'nutrition.goalBulk': 'Bulk (gain muscle)',
@@ -233,6 +235,7 @@ export default {
   'measure.invalidEmpty': 'Enter at least one measurement.',
 
   // Analyze
+  'analyze.progressLink': '← Progress',
   'analyze.tabProgress': 'Progress', 'analyze.tabPhotos': 'Photos', 'analyze.tabMeasurements': 'Measurements', 'analyze.tabScan': 'AI Scan',
   'analyze.titlePrefix': 'AI Body', 'analyze.titleHighlight': 'Analyzer',
   'analyze.intro': 'Upload a photo and the AI will give you a detailed assessment of your physique, your strengths, your potential, and a personalized plan recommendation.',
@@ -252,7 +255,7 @@ export default {
   'analyze.errorGeneric': 'Something went wrong: {reason}\n\nMake sure you are using this app from the Netlify link.',
 
   // Coach
-  'coach.name': 'AX Coach AI', 'coach.status': 'Online — ask me anything',
+  'coach.name': 'AX Coach AI', 'coach.status': 'Online — ask me anything', 'coach.trainLink': '← Train',
   'coach.chip1': 'Best chest exercises?', 'coach.chip2': 'How much protein do I need?',
   'coach.chip3': "Can't do squats — alternatives?", 'coach.chip4': 'How to lose belly fat?',
   'coach.chip5': 'What to eat pre-workout?', 'coach.chip6': 'Best home back workout?',
@@ -275,6 +278,7 @@ export default {
   'coach.noSavedChats': 'No saved chats yet — tap Save on any response to keep it here.',
 
   // About
+  'about.profileLink': '← Profile',
   'about.tagline': 'Free Fitness Coach · Content Creator',
   'about.bio': "I built this to give everyone access to real training — no paywalls, no BS. This app is free and always will be — I make my living through content and coaching, not by charging you to work out (that's me below, not a mystery investor). Whether you're just starting out or you've been grinding for years, there's a program here for you.",
   'about.valueFree': 'Free forever', 'about.valueCommunity': 'Community first',
@@ -285,7 +289,7 @@ export default {
   'about.follow': 'Follow →',
 
   // Forum
-  'forum.title': 'FORUM',
+  'forum.title': 'FORUM', 'forum.messagesLink': '💬 Messages →',
   'forum.intro': "Share your progress, ask questions, post photos. Be respectful — you can report anything that shouldn't be here.",
   'forum.postPlaceholder': 'Share your progress...',
   'forum.addPhoto': 'Add Photo', 'forum.postBtn': 'Post', 'forum.loadMore': 'Load More',
@@ -305,7 +309,7 @@ export default {
   'forum.errorPost': "Couldn't post: {reason}",
 
   // Messages / DM
-  'messages.title': 'MESSAGES',
+  'messages.title': 'MESSAGES', 'messages.forumLink': '← Forum',
   'messages.newMessageLabel': 'New message — enter a username',
   'messages.usernamePlaceholder': 'e.g. andrew',
   'messages.messageBtn': 'Message',
@@ -326,7 +330,7 @@ export default {
   'messages.userIsBlocked': "You've blocked this user — unblock them from the Blocked users list to message again.",
 
   // Account
-  'account.title': 'ACCOUNT',
+  'account.title': 'ACCOUNT', 'account.aboutLink': 'About →',
   'account.loginTab': 'Log In', 'account.signupTab': 'Sign Up',
   'account.emailOrUsername': 'Email or Username', 'account.password': 'Password',
   'account.usernameLabel': 'Username',
@@ -461,7 +465,7 @@ export default {
 
   // Grind Wrapped
   'wrapped.viewLink': 'View My Grind Wrapped →',
-  'wrapped.backToAccount': '← Back to Account',
+  'wrapped.backToAccount': '← Back to Progress',
   'wrapped.title': 'GRIND WRAPPED',
   'wrapped.intro': 'Your training, added up. Every workout, every streak, every point of XP — this is the grind so far.',
   'wrapped.loadError': "Couldn't load your stats — try again in a bit.",

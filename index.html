@@ -35,37 +35,15 @@
     <div class="nav-tabs">
       <button class="nav-tab gated active" data-page="home" onclick="showPage('home')" data-i18n="nav.home">Home</button>
       <span class="nav-sep">|</span>
-      <button class="nav-tab gated" data-page="plans" onclick="showPage('plans')" data-i18n="nav.plans">Plans</button>
+      <button class="nav-tab gated" data-page="plans" onclick="showPage('plans')" data-i18n="nav.train">Train</button>
       <span class="nav-sep">|</span>
-      <button class="nav-tab gated" data-page="quests" onclick="showPage('quests')" data-i18n="nav.quests">Quests</button>
+      <button class="nav-tab gated" data-page="quests" onclick="showPage('quests')" data-i18n="nav.progress">Progress</button>
       <span class="nav-sep">|</span>
-      <button class="nav-tab gated" data-page="analyze" onclick="showPage('analyze')" data-i18n="nav.analyze">Analyze</button>
+      <button class="nav-tab gated" data-page="forum" onclick="showPage('forum')" data-i18n="nav.community">Community</button>
       <span class="nav-sep">|</span>
-      <button class="nav-tab gated nav-tab-wide" data-page="about" onclick="showPage('about')" data-i18n="nav.about">About</button>
-      <button class="nav-tab gated nav-tab-wide" data-page="nutrition" onclick="showPage('nutrition')" data-i18n="nav.nutrition">Nutrition</button>
-      <button class="nav-tab gated nav-tab-wide" data-page="chat" onclick="showPage('chat')" data-i18n="nav.coach">Coach</button>
-      <button class="nav-tab gated nav-tab-wide" data-page="videos" onclick="showPage('videos')" data-i18n="nav.videos">Videos</button>
-      <button class="nav-tab gated nav-tab-wide" data-page="forum" onclick="showPage('forum')" data-i18n="nav.forum">Forum</button>
-      <button class="nav-tab gated nav-tab-wide" data-page="messages" onclick="showPage('messages')" data-i18n="nav.messages">Messages</button>
-      <button class="nav-tab nav-tab-wide" data-page="account" onclick="showPage('account')" data-i18n="nav.account">Account</button>
-      <button class="nav-tab gated" id="nav-more-btn" onclick="openNavMore()" data-i18n="nav.more">More ⋯</button>
+      <button class="nav-tab" data-page="account" onclick="showPage('account')" data-i18n="nav.profile">Profile</button>
     </div>
   </nav>
-</div>
-
-<div class="workout-modal" id="nav-more-modal" onclick="if(event.target===this)closeNavMore()">
-  <div class="workout-sheet nav-sheet">
-    <div class="workout-sheet-header"><h2 data-i18n="nav.moreTitle">More</h2></div>
-    <div class="workout-sheet-body" id="nav-more-menu">
-      <button class="nav-more-item gated" data-page="about" onclick="showPage('about');closeNavMore()" data-i18n="nav.about">About</button>
-      <button class="nav-more-item" data-page="account" onclick="showPage('account');closeNavMore()" data-i18n="nav.account">Account</button>
-      <button class="nav-more-item gated" data-page="nutrition" onclick="showPage('nutrition');closeNavMore()" data-i18n="nav.nutrition">Nutrition</button>
-      <button class="nav-more-item gated" data-page="chat" onclick="showPage('chat');closeNavMore()" data-i18n="nav.coach">Coach</button>
-      <button class="nav-more-item gated" data-page="videos" onclick="showPage('videos');closeNavMore()" data-i18n="nav.videos">Videos</button>
-      <button class="nav-more-item gated" data-page="forum" onclick="showPage('forum');closeNavMore()" data-i18n="nav.forum">Forum</button>
-      <button class="nav-more-item gated" data-page="messages" onclick="showPage('messages');closeNavMore()" data-i18n="nav.messages">Messages</button>
-    </div>
-  </div>
 </div>
 
 <div class="container">
@@ -160,6 +138,11 @@
       <div class="xp-bar-label"><span id="xp-into-level">0</span>/100 <span data-i18n="quests.xpToNextLevel">XP to next level</span></div>
     </div>
 
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <button type="button" class="chip" onclick="showPage('analyze')" data-i18n="quests.linkBodyProgress">📈 Body Progress</button>
+      <button type="button" class="chip" onclick="showPage('wrapped')" data-i18n="quests.linkWrapped">🎁 Grind Wrapped</button>
+    </div>
+
     <div class="inline-banner" id="streak-freeze-offer" style="display:none;">
       <span data-i18n="quests.streakFreezeOffer">Missed a day? Use a Streak Freeze to keep your streak going.</span>
       <button type="button" id="streak-freeze-btn" data-i18n="quests.streakFreezeBtn">Use Freeze</button>
@@ -234,6 +217,7 @@
 
   <!-- VIDEOS / EXERCISE LIBRARY -->
   <div class="page" id="page-videos">
+    <button type="button" class="section-link" style="margin-bottom:8px;" onclick="showPage('plans')" data-i18n="videos.trainLink">← Train</button>
     <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="videos.title">EXERCISE LIBRARY</div><span style="font-size:11px;color:var(--muted);" id="video-count"></span></div>
     <div class="plan-intro-card" style="margin-bottom:14px;">
       <div style="font-size:12px;color:var(--muted);line-height:1.6;" data-i18n="videos.intro">Don't recognize a move from one of the plans? Look it up here — every exercise has a form cue and a video tutorial link. You can also tap any exercise inside a workout to jump straight to it.</div>
@@ -244,6 +228,11 @@
 
   <!-- PLANS -->
   <div class="page" id="page-plans">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      <button type="button" class="chip" onclick="showPage('videos')" data-i18n="plans.linkExerciseLibrary">🎥 Exercise Library</button>
+      <button type="button" class="chip" onclick="showPage('nutrition')" data-i18n="plans.linkNutrition">🍗 Nutrition</button>
+      <button type="button" class="chip" onclick="showPage('chat')" data-i18n="plans.linkCoach">💬 Ask Coach</button>
+    </div>
     <button type="button" class="quest-push-banner" style="cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;" onclick="openBreathIntro()">
       <div style="font-size:22px;">🌬️</div>
       <div style="flex:1;min-width:0;">
@@ -441,6 +430,7 @@
 
   <!-- NUTRITION -->
   <div class="page" id="page-nutrition">
+    <button type="button" class="section-link" style="margin-bottom:8px;" onclick="showPage('plans')" data-i18n="nutrition.trainLink">← Train</button>
     <div class="section-header" style="margin-bottom:16px;"><div class="section-title" data-i18n="nutrition.title">NUTRITION</div><span style="font-size:12px;color:var(--muted);" data-i18n="nutrition.subtitle">Fuel the grind</span></div>
     <div class="calc-box">
       <h3 data-i18n="nutrition.calcTitle">CALORIE CALCULATOR</h3>
@@ -527,6 +517,7 @@
 
   <!-- BODY ANALYZER -->
   <div class="page" id="page-analyze">
+    <button type="button" class="section-link" style="margin-bottom:8px;" onclick="showPage('quests')" data-i18n="analyze.progressLink">← Progress</button>
     <div class="muscle-tabs" id="analyze-subtabs" style="margin-bottom:16px;">
       <button class="muscle-tab active" onclick="selectAnalyzeSubtab('progress')" data-subtab="progress" data-i18n="analyze.tabProgress">Progress</button>
       <button class="muscle-tab" onclick="selectAnalyzeSubtab('photos')" data-subtab="photos" data-i18n="analyze.tabPhotos">Photos</button>
@@ -638,6 +629,7 @@
 
   <!-- AI COACH -->
   <div class="page" id="page-chat">
+    <button type="button" class="section-link" style="margin-bottom:8px;" onclick="showPage('plans')" data-i18n="coach.trainLink">← Train</button>
     <div class="chat-wrap">
       <div class="chat-header">
         <div class="chat-avatar">AX</div>
@@ -674,6 +666,7 @@
 
   <!-- ABOUT -->
   <div class="page" id="page-about">
+    <button type="button" class="section-link" style="margin-bottom:8px;" onclick="showPage('account')" data-i18n="about.profileLink">← Profile</button>
     <div class="about-card">
       <div class="about-header"><div class="avatar">AX</div><div><div class="about-name">AX.GRIND</div><div class="about-tagline" data-i18n="about.tagline">Free Fitness Coach · Content Creator</div></div></div>
       <div class="about-bio" data-i18n="about.bio">I built this to give everyone access to real training — no paywalls, no BS. Whether you're just starting out or you've been grinding for years, there's a program here for you.</div>
@@ -706,7 +699,7 @@
 
   <!-- WRAPPED -->
   <div class="page" id="page-wrapped">
-    <button type="button" class="section-link" onclick="showPage('account')" style="margin-bottom:10px;" data-i18n="wrapped.backToAccount">← Back to Account</button>
+    <button type="button" class="section-link" onclick="showPage('quests')" style="margin-bottom:10px;" data-i18n="wrapped.backToAccount">← Back to Progress</button>
     <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="wrapped.title">GRIND WRAPPED</div></div>
     <div class="plan-intro-card" style="margin-bottom:16px;">
       <div style="font-size:12px;color:var(--muted);line-height:1.6;" data-i18n="wrapped.intro">Your training, added up. Every workout, every streak, every point of XP — this is the grind so far.</div>
@@ -716,7 +709,7 @@
 
   <!-- FORUM -->
   <div class="page" id="page-forum">
-    <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="forum.title">FORUM</div></div>
+    <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="forum.title">FORUM</div><button class="section-link" onclick="showPage('messages')" data-i18n="forum.messagesLink">💬 Messages →</button></div>
     <div class="plan-intro-card" style="margin-bottom:14px;">
       <div style="font-size:12px;color:var(--muted);line-height:1.6;" data-i18n="forum.intro">Share your progress, ask questions, post photos. Be respectful — you can report anything that shouldn't be here.</div>
     </div>
@@ -742,7 +735,7 @@
   <!-- MESSAGES -->
   <div class="page" id="page-messages">
     <div id="dm-list-view">
-      <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="messages.title">MESSAGES</div></div>
+      <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="messages.title">MESSAGES</div><button class="section-link" onclick="showPage('forum')" data-i18n="messages.forumLink">← Forum</button></div>
       <div class="calc-box" style="margin-bottom:16px;">
         <div class="calc-label" style="margin-bottom:8px;" data-i18n="messages.newMessageLabel">New message — enter a username</div>
         <div style="display:flex;gap:8px;">
@@ -772,7 +765,7 @@
 
   <!-- ACCOUNT -->
   <div class="page" id="page-account">
-    <div class="section-header" id="account-page-title" style="margin-bottom:16px;"><div class="section-title" data-i18n="account.title">ACCOUNT</div></div>
+    <div class="section-header" id="account-page-title" style="margin-bottom:16px;"><div class="section-title" data-i18n="account.title">ACCOUNT</div><button class="section-link" onclick="showPage('about')" data-i18n="account.aboutLink">About →</button></div>
 
     <div id="account-guest-view">
       <div class="hero" style="margin-bottom:20px;">
