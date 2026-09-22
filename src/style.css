@@ -615,9 +615,15 @@ body { padding-bottom:env(safe-area-inset-bottom); }
     display:flex; flex-wrap:nowrap;
     background:var(--bg); border-top:1px solid var(--border);
     padding:4px 4px calc(4px + env(safe-area-inset-bottom));
-    gap:0;
+    gap:2px;
   }
-  .nav-tab { flex:1 1 0; min-width:0; display:flex; align-items:center; justify-content:center; min-height:48px; padding:6px 2px; font-size:11px; }
+  /* Labels like "Community"/"Progress" are longer than the old Plans/Quests/
+     Analyze set, so with 5 tabs and min-width:0 they need to wrap instead of
+     the base .nav-tab's white-space:nowrap — nowrap here meant long labels
+     bled outside their own flex cell and visually ran into the tab next to
+     it. text-overflow:ellipsis doesn't reliably apply on a flex container
+     with no wrapping child element, so wrapping to 2 lines is the robust fix. */
+  .nav-tab { flex:1 1 0; min-width:0; display:flex; align-items:center; justify-content:center; min-height:48px; padding:6px 3px; font-size:10.5px; white-space:normal; line-height:1.15; text-align:center; }
   .nav-sep { display:none; }
 
   body { padding-bottom:calc(56px + env(safe-area-inset-bottom)); }
