@@ -66,7 +66,8 @@ export default {
 
   // Quests
   'quests.title': 'PROGRESS',
-  'quests.linkBodyProgress': '📈 Body Progress', 'quests.linkWrapped': '🎁 Grind Wrapped',
+  'quests.hubBodyProgressTitle': 'BODY PROGRESS', 'quests.hubBodyProgressDesc': 'Weight trend, photos, and measurements over time',
+  'quests.hubWrappedTitle': 'GRIND WRAPPED', 'quests.hubWrappedDesc': 'Your training, added up — every workout, streak, and point of XP',
   'quests.dayStreak': 'day streak',
   'quests.streakFreezeOffer': "Missed a day? You've got 1 Streak Freeze available this week — use it to keep your streak going.",
   'quests.streakFreezeBtn': 'Use Freeze',
@@ -78,7 +79,7 @@ export default {
   'achievements.shareLabel': 'Share',
   'quests.historyEmpty': "No completed workouts yet — finish one from Plans and it'll show up here.",
   'quests.historyErrorLoad': "Couldn't load history: {reason}",
-  'quests.leaderboardBtn': '🏆 Leaderboard',
+  'quests.leaderboardBtn': 'LEADERBOARD', 'quests.leaderboardDescShort': 'See how your total XP stacks up against everyone else',
   'quests.xpToNextLevel': 'XP to next level',
   'quests.addQuestTitle': 'ADD A QUEST',
   'quests.fieldTitle': 'Title',
@@ -111,7 +112,10 @@ export default {
 
   // Plans
   'plans.title': 'WORKOUT LIBRARY',
-  'plans.linkExerciseLibrary': '🎥 Exercise Library', 'plans.linkNutrition': '🍗 Nutrition', 'plans.linkCoach': '💬 Ask Coach',
+  'plans.linkExerciseLibrary': '🎥 Search the exercise library →',
+  'plans.hubWorkoutTitle': 'WORKOUT', 'plans.hubWorkoutDesc': '300+ workouts across strength, sports & programs — plus the full exercise library',
+  'plans.hubNutritionTitle': 'NUTRITION', 'plans.hubNutritionDesc': 'Calorie calculator, macro guidance & food education to fuel your training',
+  'plans.hubCoachTitle': 'AX COACH', 'plans.hubCoachDesc': 'Ask about exercises, programming, or recovery — real coaching advice, not generic AI',
   'plans.tapHint': 'Tap any workout to see full exercises',
   'plans.introPrefix': 'Every workout is ordered',
   'plans.orderedBold': 'Beginner → Intermediate → Advanced',

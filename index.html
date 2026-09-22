@@ -187,11 +187,34 @@
     </button>
     <div id="workout-history-list" style="display:none;margin-bottom:16px;"></div>
 
-    <!-- 4. ZOOM OUT — the long-term/social views, one tap further than today. -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-      <button type="button" class="chip" id="open-leaderboard-btn" data-i18n="quests.leaderboardBtn">🏆 Leaderboard</button>
-      <button type="button" class="chip" onclick="showPage('analyze')" data-i18n="quests.linkBodyProgress">📈 Body Progress</button>
-      <button type="button" class="chip" onclick="showPage('wrapped')" data-i18n="quests.linkWrapped">🎁 Grind Wrapped</button>
+    <!-- 4. ZOOM OUT — the long-term/social views, one tap further than today.
+         Same descriptive-card treatment as Train's hub row — nothing above
+         this is hidden, these are additive destinations, not a takeover. -->
+    <div style="margin-bottom:16px;">
+      <button type="button" class="quest-push-banner" id="open-leaderboard-btn" style="cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;">
+        <div style="font-size:22px;">🏆</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13px;" data-i18n="quests.leaderboardBtn">LEADERBOARD</div>
+          <div style="font-size:11px;color:var(--muted);" data-i18n="quests.leaderboardDescShort">See how your total XP stacks up against everyone else</div>
+        </div>
+        <div style="color:var(--muted);font-size:16px;flex-shrink:0;">→</div>
+      </button>
+      <button type="button" class="quest-push-banner" style="cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;" onclick="showPage('analyze')">
+        <div style="font-size:22px;">📈</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13px;" data-i18n="quests.hubBodyProgressTitle">BODY PROGRESS</div>
+          <div style="font-size:11px;color:var(--muted);" data-i18n="quests.hubBodyProgressDesc">Weight trend, photos, and measurements over time</div>
+        </div>
+        <div style="color:var(--muted);font-size:16px;flex-shrink:0;">→</div>
+      </button>
+      <button type="button" class="quest-push-banner" style="cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;" onclick="showPage('wrapped')">
+        <div style="font-size:22px;">🎁</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13px;" data-i18n="quests.hubWrappedTitle">GRIND WRAPPED</div>
+          <div style="font-size:11px;color:var(--muted);" data-i18n="quests.hubWrappedDesc">Your training, added up — every workout, streak, and point of XP</div>
+        </div>
+        <div style="color:var(--muted);font-size:16px;flex-shrink:0;">→</div>
+      </button>
     </div>
 
     <div id="quest-leaderboard-view" style="display:none;">
@@ -216,11 +239,38 @@
 
   <!-- PLANS -->
   <div class="page" id="page-plans">
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
-      <button type="button" class="chip" onclick="showPage('videos')" data-i18n="plans.linkExerciseLibrary">🎥 Exercise Library</button>
-      <button type="button" class="chip" onclick="showPage('nutrition')" data-i18n="plans.linkNutrition">🍗 Nutrition</button>
-      <button type="button" class="chip" onclick="showPage('chat')" data-i18n="plans.linkCoach">💬 Ask Coach</button>
+    <!-- Train's own mini-homepage: three destinations with a description
+         each, instead of a row of unlabeled icon chips. Nutrition/AX Coach
+         navigate away; Workout just points at the library already on this
+         same page below — nothing here hides that library, it's still
+         visible by default so browsing workouts stays zero extra taps. -->
+    <div class="hub-row-list" style="margin-bottom:14px;">
+      <button type="button" class="quest-push-banner" style="cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;" onclick="document.getElementById('workout-library-section').scrollIntoView({behavior:'smooth'})">
+        <div style="font-size:22px;">🏋️</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13px;" data-i18n="plans.hubWorkoutTitle">WORKOUT</div>
+          <div style="font-size:11px;color:var(--muted);" data-i18n="plans.hubWorkoutDesc">300+ workouts across strength, sports & programs — plus the full exercise library</div>
+        </div>
+        <div style="color:var(--muted);font-size:16px;flex-shrink:0;">↓</div>
+      </button>
+      <button type="button" class="quest-push-banner" style="cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;" onclick="showPage('nutrition')">
+        <div style="font-size:22px;">🍗</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13px;" data-i18n="plans.hubNutritionTitle">NUTRITION</div>
+          <div style="font-size:11px;color:var(--muted);" data-i18n="plans.hubNutritionDesc">Calorie calculator, macro guidance & food education to fuel your training</div>
+        </div>
+        <div style="color:var(--muted);font-size:16px;flex-shrink:0;">→</div>
+      </button>
+      <button type="button" class="quest-push-banner" style="cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;" onclick="showPage('chat')">
+        <div style="font-size:22px;">💬</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:600;font-size:13px;" data-i18n="plans.hubCoachTitle">AX COACH</div>
+          <div style="font-size:11px;color:var(--muted);" data-i18n="plans.hubCoachDesc">Ask about exercises, programming, or recovery — real coaching advice, not generic AI</div>
+        </div>
+        <div style="color:var(--muted);font-size:16px;flex-shrink:0;">→</div>
+      </button>
     </div>
+
     <button type="button" class="quest-push-banner" style="cursor:pointer;width:100%;text-align:left;font:inherit;color:inherit;" onclick="openBreathIntro()">
       <div style="font-size:22px;">🌬️</div>
       <div style="flex:1;min-width:0;">
@@ -229,10 +279,12 @@
       </div>
       <div style="color:var(--muted);font-size:16px;flex-shrink:0;">→</div>
     </button>
+    <div id="workout-library-section">
     <div class="section-header" style="margin-bottom:8px;"><div class="section-title" data-i18n="plans.title">WORKOUT LIBRARY</div><span style="font-size:11px;color:var(--muted);" data-i18n="plans.tapHint">Tap any workout to see full exercises</span></div>
     <div class="plan-intro-card" style="margin-bottom:14px;">
       <div style="font-size:12px;color:var(--muted);line-height:1.6;"><span data-i18n="plans.introPrefix">Every workout is ordered</span> <strong style="color:var(--accent-soft);" data-i18n="plans.orderedBold">Beginner → Intermediate → Advanced</strong><span data-i18n="plans.introSuffix">. Choose Strength Training, a specific sport, a structured program, or Brain training below.</span></div>
     </div>
+    <button type="button" class="section-link" style="margin-bottom:10px;" onclick="showPage('videos')" data-i18n="plans.linkExerciseLibrary">🎥 Search the exercise library →</button>
 
     <div class="category-tabs">
       <button class="category-tab active" onclick="filterCategory('strength', this)">💪 <span data-i18n="plans.strengthTab">Strength Training</span></button>
@@ -286,6 +338,7 @@
 
     <div class="workout-cards" id="workout-cards"></div>
     <div class="cta-box"><div><h3 data-i18n="plans.wantCustomTitle">Want a custom plan?</h3><p data-i18n="plans.wantCustomDesc">DM me on Instagram or TikTok</p></div><a class="btn-dark" href="https://www.instagram.com/ax.grind" target="_blank" data-i18n="plans.dmNow">DM Now →</a></div>
+    </div>
   </div>
 
   <!-- ARTICLE MODAL -->
