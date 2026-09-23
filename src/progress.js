@@ -3,7 +3,7 @@ import { logWeight, fetchWeightLogs } from './api/xp.js';
 import { uploadProgressPhoto, fetchProgressPhotos, deleteProgressPhoto } from './api/progressPhotos.js';
 import { checkForNewAchievements } from './achievements.js';
 import { todayStr } from './date-utils.js';
-import { saveWeightToHealth } from './api/health.js';
+import { saveWeightToHealth, readLatestHealthWeight } from './api/health.js';
 
 const GOAL_STORAGE_KEY = 'ax-weight-goal';
 const CHART_MAX_POINTS = 30;
@@ -46,6 +46,33 @@ export async function initProgress(userId) {
   renderFilmstrip();
   renderCompare();
   renderOnThisDay();
+  maybeOfferHealthImport();
+}
+
+// A weigh-in that happened outside the app (a smart scale syncing straight
+// to Health) should be easy to bring in without retyping it — but only
+// offer this once there's something worth offering: today isn't already
+// logged, and the Health sample is actually recent (today or yesterday),
+// not some old reading from months ago. Silent no-op on non-iOS/web —
+// readLatestHealthWeight already returns null there.
+async function maybeOfferHealthImport() {
+  const banner = el('health-import-offer');
+  if (!banner || !currentUserId) return;
+  const today = todayStr();
+  if (logs.some((l) => l.logged_at === today)) return;
+  const sample = await readLatestHealthWeight();
+  if (!sample) return;
+  const sampleDateStr = sample.date.slice(0, 10);
+  const daysAgo = Math.round((new Date(today + 'T00:00:00') - new Date(sampleDateStr + 'T00:00:00')) / 86400000);
+  if (daysAgo < 0 || daysAgo > 1) return;
+  const weightRounded = Math.round(sample.weight * 10) / 10;
+  el('health-import-text').textContent = t('progress.healthImportOffer', { weight: weightRounded });
+  banner.style.display = 'flex';
+  el('health-import-btn').onclick = () => {
+    el('progress-weight-input').value = weightRounded;
+    banner.style.display = 'none';
+    el('progress-weight-input').focus();
+  };
 }
 
 export function teardownProgress() {
@@ -258,6 +285,8 @@ async function submitLog() {
     if (existingIdx >= 0) logs[existingIdx] = { weight: w, logged_at: today };
     else logs.push({ weight: w, logged_at: today });
     saveWeightToHealth(w, today); // fire-and-forget — see health.js
+    const healthBanner = el('health-import-offer');
+    if (healthBanner) healthBanner.style.display = 'none';
     input.value = '';
     input.placeholder = String(w);
     msg.textContent = result.xpAwarded > 0 ? t('progress.logSuccessXp', { xp: result.xpAwarded }) : t('progress.logSuccessUpdated');

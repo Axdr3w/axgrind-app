@@ -212,6 +212,8 @@ export default {
   'progress.goalLabel': 'Goal',
   'progress.weightLabel': "Today's weight (lbs)", 'progress.logBtn': 'Log Weight',
   'progress.xpHint': '+15 XP for your first log of the day',
+  'progress.healthImportOffer': 'Apple Health has a recent weigh-in: {weight} lbs',
+  'progress.healthImportBtn': 'Use this',
   'progress.invalidWeight': 'Enter a weight between 40 and 700 lbs.',
   'progress.logSuccessXp': 'Logged! +{xp} XP',
   'progress.logSuccessUpdated': "Updated today's entry.",
