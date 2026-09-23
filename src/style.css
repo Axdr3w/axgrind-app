@@ -628,6 +628,11 @@ body { padding-bottom:env(safe-area-inset-bottom); }
 
   body { padding-bottom:calc(56px + env(safe-area-inset-bottom)); }
 
+  /* Same fixed bottom bar exists at this whole width range (not just true
+     phone widths below), so the chat input needs the same clearance —
+     otherwise it renders underneath the nav bar between 681-899px too. */
+  .chat-wrap { height:calc(100vh - 140px - 56px - env(safe-area-inset-bottom)); }
+
   /* Every button in .nav-tabs is .gated (nothing to show a logged-out
      guest), so the bar itself would otherwise render as an empty strip. */
   body.locked .nav-tabs { display:none; }
@@ -648,7 +653,11 @@ body { padding-bottom:env(safe-area-inset-bottom); }
   .workout-sheet { max-width:none; width:100%; border-radius:var(--radius-pill) 20px 0 0; max-height:92dvh; display:flex; flex-direction:column; animation:sheet-up .22s ease-out; padding-bottom:env(safe-area-inset-bottom); }
   .workout-sheet-body { overflow-y:auto; }
 
-  .chat-wrap { height:calc(100dvh - 128px); }
+  /* -128px clears the top nav bar; -56px - the safe-area inset clears the
+     fixed bottom tab bar (see .nav-tabs in the 899px breakpoint above) —
+     without it the chat input row rendered underneath the nav bar,
+     unreachable to tap. */
+  .chat-wrap { height:calc(100dvh - 128px - 56px - env(safe-area-inset-bottom)); }
 
   .calc-row { flex-wrap:wrap; }
   .calc-row .calc-field { min-width:100px; }
