@@ -59,6 +59,29 @@ export async function updateBgTheme(userId, themeId) {
   if (error) throw error;
 }
 
+// Captured silently on login (see main.js) — never asks the user, just
+// keeps the account's timezone current so the daily reminder can compute
+// "their local time" without a settings trip. Overwritten every login
+// rather than set-once, so travel/relocation stays accurate for free.
+export async function updateTimezone(userId, timezone) {
+  if (!supabase || !timezone) return;
+  const { error } = await supabase.from('profiles').update({ timezone }).eq('id', userId);
+  if (error) throw error;
+}
+
+export async function fetchReminderTime(userId) {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from('profiles').select('reminder_time').eq('id', userId).single();
+  if (error) throw error;
+  return data?.reminder_time ?? null;
+}
+
+export async function updateReminderTime(userId, reminderTime) {
+  if (!supabase) return;
+  const { error } = await supabase.from('profiles').update({ reminder_time: reminderTime }).eq('id', userId);
+  if (error) throw error;
+}
+
 export async function fetchHasSeenTour(userId) {
   if (!supabase) return true; // not configured — don't force a tour that can't track itself
   const { data, error } = await supabase.from('profiles').select('has_seen_tour').eq('id', userId).single();

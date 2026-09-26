@@ -923,6 +923,15 @@
           <div class="calc-label" data-i18n="account.bgThemeLabel">Background</div>
           <div id="bg-theme-swatches" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
         </div>
+        <div class="calc-field" style="margin-bottom:14px;">
+          <label class="calc-label" for="reminder-time-input" data-i18n="account.reminderTimeLabel">Daily Reminder (local time)</label>
+          <div style="display:flex;gap:8px;">
+            <input class="calc-input" type="time" id="reminder-time-input" style="flex:1;">
+            <button class="btn-follow" id="save-reminder-time-btn" type="button" style="width:auto;white-space:nowrap;margin-top:0;" data-i18n="account.save">Save</button>
+          </div>
+          <div id="reminder-time-message" class="status-msg" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;" data-i18n="account.reminderTimeHint">A nudge if you haven't trained yet — defaults to 6:00 PM if you don't set one. Needs reminders enabled (Progress page).</div>
+        </div>
         <button class="btn-follow" id="logout-btn" data-i18n="account.logout">Log Out</button>
       </div>
       <div class="about-card" style="border-color:rgba(255,80,50,.3);">

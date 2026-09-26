@@ -12,7 +12,7 @@ import { calcCalories } from './nutrition.js';
 import { handlePhotoUpload, removePhoto, analyzeBody, initAnalyzer, teardownAnalyzer } from './analyzer.js';
 import { renderVideoLibrary, filterVideoLibrary, openExerciseInfo, closeExerciseInfo } from './videos.js';
 import { initQuests, teardownQuests, toggleWorkoutHistory } from './quests.js';
-import { fetchDisplayName, updateDisplayName, fetchHandle, fetchLanguage, updateLanguage, fetchAccentColor, updateAccentColor, fetchBgTheme, updateBgTheme } from './api/profile.js';
+import { fetchDisplayName, updateDisplayName, fetchHandle, fetchLanguage, updateLanguage, fetchAccentColor, updateAccentColor, fetchBgTheme, updateBgTheme, updateTimezone, fetchReminderTime, updateReminderTime } from './api/profile.js';
 import { initThemeFromStorage, applyAccentColor, renderAccentUI, getAccentColor, applyBgTheme, renderBgThemeUI, getBgThemeId } from './theme.js';
 import { getLanguageMeta, isSupported } from './i18n/languages.js';
 import { maybeStartTour, tourNext, tourBack, finishTour } from './onboarding.js';
@@ -367,6 +367,14 @@ function updateAccountUI(session) {
         if (forUserId !== lastUserId) return;
         document.getElementById('display-name-input').value = name || '';
       });
+      fetchReminderTime(session.user.id).then((time) => {
+        if (forUserId !== lastUserId) return;
+        // Left blank (not defaulted to 18:00 here) so the input's own
+        // placeholder-less empty state signals "using the 6pm default" —
+        // filling it in would make every new user look like they'd
+        // already made an active choice they never actually made.
+        document.getElementById('reminder-time-input').value = time || '';
+      }).catch(() => {});
       fetchHandle(session.user.id).then((handle) => {
         if (forUserId !== lastUserId) return;
         const handleDisplay = document.getElementById('account-handle-display');
@@ -395,6 +403,16 @@ function updateAccountUI(session) {
       }).catch(() => {
         document.getElementById('account-language-display').textContent = getLanguageMeta(getLanguage()).nativeName;
       });
+      // Silent, every login — see updateTimezone's comment for why this
+      // isn't a one-time write. Never surfaced to the user; just keeps the
+      // account's timezone current for the daily reminder scheduler.
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        updateTimezone(session.user.id, tz).catch((err) => console.error('[timezone sync]', err));
+      } catch {
+        // Intl.DateTimeFormat throwing would be bizarre, but this is
+        // background best-effort work — never worth surfacing an error for.
+      }
       fetchAccentColor(session.user.id).then((color) => {
         if (forUserId !== lastUserId) return;
         if (color) applyAccentColor(color);
@@ -675,6 +693,20 @@ document.getElementById('save-display-name-btn').addEventListener('click', async
 
 document.getElementById('accent-color-picker').addEventListener('input', (e) => {
   selectAccentColor(e.target.value);
+});
+
+document.getElementById('save-reminder-time-btn').addEventListener('click', async () => {
+  const msgEl = document.getElementById('reminder-time-message');
+  const time = document.getElementById('reminder-time-input').value; // 'HH:MM' or '' if cleared
+  if (!lastUserId) return;
+  try {
+    await updateReminderTime(lastUserId, time || null);
+    msgEl.textContent = t('account.saved');
+    msgEl.style.color = '#4ade80';
+  } catch (err) {
+    msgEl.textContent = t('account.errorSaveReminderTime', { reason: err.message });
+    msgEl.style.color = '#ff6040';
+  }
 });
 
 // ===================== ONBOARDING TOUR =====================

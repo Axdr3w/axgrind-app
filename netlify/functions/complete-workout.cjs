@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const { verifyUser } = require('./lib/verify-user.cjs');
 const { awardXp } = require('./lib/award-xp.cjs');
+const { sendPushToUser } = require('./lib/send-push.cjs');
 
 // XP amount is hardcoded here, never read from the request body — the client
 // only ever sends what was completed, never how much it's worth. See the
@@ -44,6 +45,14 @@ exports.handler = async (event) => {
     } catch (err) {
       return { statusCode: 500, body: JSON.stringify({ error: { message: err.message } }) };
     }
+
+    // Best-effort, never blocks the response — a push failure shouldn't
+    // turn a successful workout completion into an error for the user.
+    sendPushToUser(supabase, userId, {
+      title: 'Workout complete 💪',
+      body: `+${WORKOUT_XP} XP earned. Nice work.`,
+      url: '/',
+    }).catch(() => {});
 
     return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ xpAwarded: WORKOUT_XP, newXp }) };
   } catch (err) {

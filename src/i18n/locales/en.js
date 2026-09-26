@@ -368,6 +368,7 @@ export default {
   'account.messagesNeedUsername': "You'll need a username to message people.",
   'account.pickUsernameSave': 'Continue',
   'account.errorSaveDisplayName': "Couldn't save: {reason}",
+  'account.errorSaveReminderTime': "Couldn't save: {reason}",
   'account.forgotPassword': 'Forgot password?',
   'account.forgotPasswordDesc': "Enter your email and we'll send you a link to reset your password.",
   'account.sendResetLink': 'Send Reset Link',
@@ -472,6 +473,8 @@ export default {
   'account.deleteFailed': "Couldn't delete account: {reason}",
   'account.accentColorLabel': 'App Color',
   'account.bgThemeLabel': 'Background',
+  'account.reminderTimeLabel': 'Daily Reminder (local time)',
+  'account.reminderTimeHint': "A nudge if you haven't trained yet — defaults to 6:00 PM if you don't set one. Needs reminders enabled (Progress page).",
 
   // Grind Wrapped
   'wrapped.viewLink': 'View My Grind Wrapped →',
