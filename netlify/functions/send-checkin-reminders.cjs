@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const webpush = require('web-push');
+const { sendPushToUser } = require('./lib/send-push.cjs');
 
 function dateStr(d) {
   const y = d.getUTCFullYear();
@@ -26,12 +26,11 @@ const MAX_CHECKPOINT_DAYS = Math.max(...CHECKPOINTS.map((c) => c.days));
 // so the two scheduled jobs don't both hit Supabase/web-push in the same
 // minute.
 exports.handler = async () => {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.VAPID_PRIVATE_KEY) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Missing server env vars.' }) };
   }
 
   const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT, process.env.VITE_VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
 
   const { data: subs, error: subsError } = await supabase.from('push_subscriptions').select('*');
   if (subsError) {
@@ -68,24 +67,7 @@ exports.handler = async () => {
     const checkpoint = CHECKPOINTS.find((c) => c.days === gapDays);
     if (!checkpoint) continue;
 
-    const userSubs = (subs || []).filter((s) => s.user_id === userId);
-    for (const sub of userSubs) {
-      try {
-        await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
-          JSON.stringify({
-            title: checkpoint.title,
-            body: checkpoint.body,
-            url: '/',
-          })
-        );
-        sent += 1;
-      } catch (err) {
-        if (err.statusCode === 404 || err.statusCode === 410) {
-          await supabase.from('push_subscriptions').delete().eq('id', sub.id);
-        }
-      }
-    }
+    sent += await sendPushToUser(supabase, userId, { title: checkpoint.title, body: checkpoint.body, url: '/' });
   }
 
   return { statusCode: 200, body: JSON.stringify({ checked, sent }) };

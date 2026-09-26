@@ -19,6 +19,7 @@
     "@capacitor/ios": "^8.5.0",
     "@supabase/supabase-js": "^2.110.8",
     "heic2any": "^0.0.4",
+    "jsonwebtoken": "^9.0.3",
     "web-push": "^3.6.7"
   }
 }

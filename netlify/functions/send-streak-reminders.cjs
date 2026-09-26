@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const webpush = require('web-push');
+const { sendPushToUser } = require('./lib/send-push.cjs');
 
 function dateStr(d) {
   const y = d.getUTCFullYear();
@@ -34,12 +34,11 @@ function streakAsOfYesterday(completedDates, yesterdayStr) {
 // Firing once near the end of the UTC day keeps that skew small without
 // needing per-user timezone storage, which is a bigger feature on its own.
 exports.handler = async () => {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.VAPID_PRIVATE_KEY) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Missing server env vars.' }) };
   }
 
   const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT, process.env.VITE_VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
 
   const { data: subs, error: subsError } = await supabase.from('push_subscriptions').select('*');
   if (subsError) {
@@ -67,24 +66,11 @@ exports.handler = async () => {
     const streak = streakAsOfYesterday(completedDates, yesterday);
     if (streak < 1) continue; // no active streak to protect — don't nag
 
-    const userSubs = (subs || []).filter((s) => s.user_id === userId);
-    for (const sub of userSubs) {
-      try {
-        await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
-          JSON.stringify({
-            title: `🔥 ${streak}-day streak on the line`,
-            body: "You haven't completed a quest today — do one now to keep it going.",
-            url: '/',
-          })
-        );
-        sent += 1;
-      } catch (err) {
-        if (err.statusCode === 404 || err.statusCode === 410) {
-          await supabase.from('push_subscriptions').delete().eq('id', sub.id);
-        }
-      }
-    }
+    sent += await sendPushToUser(supabase, userId, {
+      title: `🔥 ${streak}-day streak on the line`,
+      body: "You haven't completed a quest today — do one now to keep it going.",
+      url: '/',
+    });
   }
 
   return { statusCode: 200, body: JSON.stringify({ checked, sent }) };

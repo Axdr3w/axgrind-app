@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const webpush = require('web-push');
+const { sendPushToUser } = require('./lib/send-push.cjs');
 
 function dateStr(d) {
   const y = d.getUTCFullYear();
@@ -13,12 +13,11 @@ function dateStr(d) {
 const GRACE_MS = 6 * 60 * 60 * 1000;
 
 exports.handler = async () => {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.VAPID_PRIVATE_KEY) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Missing server env vars.' }) };
   }
 
   const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT, process.env.VITE_VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
 
   const now = new Date();
   // quest_date is compared as a plain calendar date with no timezone, so widen
@@ -51,22 +50,7 @@ exports.handler = async () => {
 
   let sent = 0;
   for (const quest of due) {
-    const { data: subs } = await supabase.from('push_subscriptions').select('*').eq('user_id', quest.user_id);
-
-    for (const sub of subs || []) {
-      try {
-        await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
-          JSON.stringify({ title: 'AX.GRIND Quest Reminder', body: quest.title, url: '/' })
-        );
-        sent += 1;
-      } catch (err) {
-        if (err.statusCode === 404 || err.statusCode === 410) {
-          await supabase.from('push_subscriptions').delete().eq('id', sub.id);
-        }
-      }
-    }
-
+    sent += await sendPushToUser(supabase, quest.user_id, { title: 'AX.GRIND Quest Reminder', body: quest.title, url: '/' });
     await supabase.from('quests').update({ reminder_sent_at: new Date().toISOString() }).eq('id', quest.id);
   }
 

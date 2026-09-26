@@ -33,6 +33,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
 
+    // Relayed to PushPlugin.swift via NotificationCenter since the token
+    // arrives here, not synchronously from a plugin call — see that file's
+    // header comment for the full reasoning.
+    func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        let tokenHex = deviceToken.map { String(format: "%02.2hhx", $0) }.joined()
+        NotificationCenter.default.post(name: .axPushDidRegister, object: nil, userInfo: ["token": tokenHex])
+    }
+
+    func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        NotificationCenter.default.post(name: .axPushDidFailToRegister, object: nil, userInfo: ["error": error.localizedDescription])
+    }
+
     func application(_ application: UIApplication,
                      configurationForConnecting connectingSceneSession: UISceneSession,
                      options: UIScene.ConnectionOptions) -> UISceneConfiguration {
