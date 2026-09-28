@@ -616,6 +616,14 @@ body { padding-bottom:env(safe-area-inset-bottom); }
     background:var(--bg); border-top:1px solid var(--border);
     padding:4px 4px calc(4px + env(safe-area-inset-bottom));
     gap:2px;
+    /* WKWebView (the native app's webview) and iOS Safari both have a
+       long-standing bug where a plain position:fixed element visibly lags
+       behind and drifts during a scroll gesture instead of staying pinned
+       to the viewport — it only "catches up" once scrolling stops. Forcing
+       it onto its own GPU compositing layer makes WebKit track it with the
+       viewport in real time instead of repainting it per scroll frame. */
+    transform:translateZ(0);
+    will-change:transform;
   }
   /* Labels like "Community"/"Progress" are longer than the old Plans/Quests/
      Analyze set, so with 5 tabs and min-width:0 they need to wrap instead of
