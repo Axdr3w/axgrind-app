@@ -484,6 +484,15 @@ button.card-reset { all:unset; display:block; width:100%; box-sizing:border-box;
 .quest-delete { background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:4px; flex-shrink:0; }
 
 /* ===== ACCOUNT / AUTH ===== */
+.oauth-buttons { display:flex; flex-direction:column; gap:8px; }
+.oauth-btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; font-family:'DM Sans',sans-serif; font-weight:600; font-size:13px; padding:11px; border-radius:var(--radius-lg); cursor:pointer; transition:transform .12s ease, filter .12s ease; }
+.oauth-btn:active { transform:translateY(1px); }
+.oauth-btn-google { background:#fff; color:#1f1f1f; border:1px solid rgba(0,0,0,.1); }
+.oauth-btn-google:hover { filter:brightness(.97); }
+.oauth-btn-apple { background:#000; color:#fff; border:1px solid var(--border); }
+.oauth-btn-apple:hover { filter:brightness(1.2); }
+.oauth-divider { display:flex; align-items:center; gap:10px; margin:16px 0; font-size:11px; color:var(--muted); }
+.oauth-divider::before, .oauth-divider::after { content:''; flex:1; height:1px; background:var(--border); }
 .auth-tabs { display:flex; gap:6px; margin-bottom:18px; }
 .auth-tabs .muscle-tab { flex:1; text-align:center; border-radius:var(--radius-lg); padding:8px; }
 .auth-form { display:flex; flex-direction:column; }

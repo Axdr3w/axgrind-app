@@ -32,6 +32,15 @@
 	<string>AX.GRIND reads your weight from Apple Health so entries logged elsewhere (like a smart scale) show up in your progress automatically.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>AX.GRIND saves the weight you log in the app to Apple Health, so it's part of your Health history too.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.axgrind.app</string>
+			</array>
+		</dict>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>

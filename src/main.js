@@ -29,6 +29,7 @@ import {
   signUpWithPassword,
   signInWithPassword,
   signInWithMagicLink,
+  signInWithOAuth,
   signOut,
   getSession,
   onAuthStateChange,
@@ -636,6 +637,24 @@ magicLinkBtn.addEventListener('click', async () => {
     magicLinkBtn.textContent = originalText;
   }
 });
+
+async function handleOAuthClick(provider, btn) {
+  btn.disabled = true;
+  try {
+    const { error } = await signInWithOAuth(provider);
+    // On the web this line is rarely reached — supabase-js navigates the
+    // whole page to the provider's consent screen before the promise
+    // settles. It only meaningfully resolves here on native iOS, where
+    // signInWithOAuth stays in-app via AuthPlugin.swift and returns a real
+    // result — success there fires onAuthStateChange -> updateAccountUI
+    // on its own, same as every other sign-in path.
+    if (error) setAuthMessage(error.message, true);
+  } finally {
+    btn.disabled = false;
+  }
+}
+document.getElementById('google-signin-btn').addEventListener('click', (e) => handleOAuthClick('google', e.currentTarget));
+document.getElementById('apple-signin-btn').addEventListener('click', (e) => handleOAuthClick('apple', e.currentTarget));
 
 document.getElementById('magic-link-use-different').addEventListener('click', () => {
   document.getElementById('magic-link-sent-state').style.display = 'none';
