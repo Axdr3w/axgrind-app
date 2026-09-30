@@ -485,6 +485,8 @@ button.card-reset { all:unset; display:block; width:100%; box-sizing:border-box;
 
 /* ===== ACCOUNT / AUTH ===== */
 .oauth-buttons { display:flex; flex-direction:column; gap:8px; }
+#google-gis-mount { width:100%; display:flex; justify-content:center; }
+#google-gis-mount > div { width:100% !important; }
 .oauth-btn { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; font-family:'DM Sans',sans-serif; font-weight:600; font-size:13px; padding:11px; border-radius:var(--radius-lg); cursor:pointer; transition:transform .12s ease, filter .12s ease; }
 .oauth-btn:active { transform:translateY(1px); }
 .oauth-btn-google { background:#fff; color:#1f1f1f; border:1px solid rgba(0,0,0,.1); }

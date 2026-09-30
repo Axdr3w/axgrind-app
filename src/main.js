@@ -25,11 +25,14 @@ import { initMeasurements, teardownMeasurements } from './measurements.js';
 import { initLeaderboard, teardownLeaderboard } from './leaderboard.js';
 import { getRankMap } from './rank-cache.js';
 import { initAds } from './ads.js';
+import { Capacitor } from '@capacitor/core';
 import {
   signUpWithPassword,
   signInWithPassword,
   signInWithMagicLink,
-  signInWithOAuth,
+  signInWithIdToken,
+  signInWithGoogleNative,
+  signInWithApple,
   signOut,
   getSession,
   onAuthStateChange,
@@ -638,23 +641,83 @@ magicLinkBtn.addEventListener('click', async () => {
   }
 });
 
-async function handleOAuthClick(provider, btn) {
+function isNativeIOS() {
+  return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
+}
+
+// Google: on the web, Google's own Identity Services library renders its
+// official button into #google-gis-mount and hands back an identity token
+// directly (no page redirect — see auth.js's signInWithIdToken for why
+// that matters). Google's client-side library doesn't reliably work inside
+// the native app's embedded webview (the same restriction that blocks a
+// direct OAuth redirect there), so on native iOS the pre-built custom
+// button stays visible instead, wired to the existing system-browser flow.
+const googleGisMount = document.getElementById('google-gis-mount');
+const googleSigninBtn = document.getElementById('google-signin-btn');
+
+async function handleGoogleCredential(response) {
+  const { error } = await signInWithIdToken('google', response.credential);
+  if (error) setAuthMessage(error.message, true);
+}
+
+async function handleGoogleNativeClick() {
+  googleSigninBtn.disabled = true;
+  try {
+    const { error } = await signInWithGoogleNative();
+    if (error) setAuthMessage(error.message, true);
+  } finally {
+    googleSigninBtn.disabled = false;
+  }
+}
+
+if (isNativeIOS()) {
+  googleSigninBtn.addEventListener('click', handleGoogleNativeClick);
+} else {
+  googleSigninBtn.style.display = 'none';
+  googleGisMount.style.display = 'flex';
+  (function initGoogleSignIn() {
+    if (!window.google?.accounts?.id) { setTimeout(initGoogleSignIn, 150); return; }
+    google.accounts.id.initialize({
+      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+      callback: handleGoogleCredential,
+    });
+    google.accounts.id.renderButton(googleGisMount, {
+      theme: 'filled_black',
+      size: 'large',
+      text: 'continue_with',
+      shape: 'rectangular',
+      logo_alignment: 'left',
+      width: Math.min(googleGisMount.offsetWidth || 320, 400),
+    });
+  })();
+}
+
+// Apple: signInWithApple() picks the right path itself — the real Face
+// ID/Touch ID system sheet on native iOS, Apple ID JS's same-page popup on
+// the web (see auth.js) — both end up handing Supabase an identity token
+// the same way Google's does above.
+document.getElementById('apple-signin-btn').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
   btn.disabled = true;
   try {
-    const { error } = await signInWithOAuth(provider);
-    // On the web this line is rarely reached — supabase-js navigates the
-    // whole page to the provider's consent screen before the promise
-    // settles. It only meaningfully resolves here on native iOS, where
-    // signInWithOAuth stays in-app via AuthPlugin.swift and returns a real
-    // result — success there fires onAuthStateChange -> updateAccountUI
-    // on its own, same as every other sign-in path.
+    const { error } = await signInWithApple();
     if (error) setAuthMessage(error.message, true);
   } finally {
     btn.disabled = false;
   }
+});
+
+if (!isNativeIOS()) {
+  (function initAppleSignIn() {
+    if (!window.AppleID) { setTimeout(initAppleSignIn, 150); return; }
+    AppleID.auth.init({
+      clientId: import.meta.env.VITE_APPLE_SERVICES_ID,
+      scope: 'email name',
+      redirectURI: window.location.origin + '/',
+      usePopup: true,
+    });
+  })();
 }
-document.getElementById('google-signin-btn').addEventListener('click', (e) => handleOAuthClick('google', e.currentTarget));
-document.getElementById('apple-signin-btn').addEventListener('click', (e) => handleOAuthClick('apple', e.currentTarget));
 
 document.getElementById('magic-link-use-different').addEventListener('click', () => {
   document.getElementById('magic-link-sent-state').style.display = 'none';

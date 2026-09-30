@@ -2,7 +2,8 @@ import { registerPlugin, Capacitor } from '@capacitor/core';
 import { supabase, getAuthHeader } from './api/supabaseClient.js';
 
 // Talks to the custom native plugin in ios/App/App/AuthPlugin.swift — see
-// signInWithOAuth below for why the native app needs it at all.
+// signInWithGoogleNative and signInWithApple below for why the native app
+// needs it at all.
 const AxAuth = registerPlugin('AxAuth');
 
 const NOT_CONFIGURED = { error: { message: 'Accounts aren\'t set up yet — Supabase credentials are missing.' } };
@@ -33,31 +34,39 @@ export async function signInWithMagicLink(email) {
   });
 }
 
-// On the web this just redirects the whole page to Google/Apple and back —
-// standard supabase-js behavior. On native iOS it can't do that: Google
-// actively blocks OAuth sign-in from a plain embedded webview (the
-// "disallowed_useragent" error), so navigating the Capacitor WKWebView
-// straight to the consent screen doesn't work. Instead, on native we ask
-// Supabase for the sign-in URL without letting it auto-navigate
-// (skipBrowserRedirect), hand that URL to AuthPlugin.swift which opens it
-// in a system-level ASWebAuthenticationSession, and manually exchange the
-// `code` it comes back with for a session — the same "handle the redirect
-// ourselves" shape as completeSessionFromUrl below, since a Universal
-// Link/custom-scheme redirect never triggers a real page navigation for
-// supabase-js's own URL-detection to run against (detectSessionInUrl is
-// off — see supabaseClient.js).
-export async function signInWithOAuth(provider) {
+// Both Google and Apple sign-in hand Supabase a signed identity token
+// straight from the provider's own client-side library (Google Identity
+// Services / Apple ID JS on web, native Face ID/Touch ID on iOS — see
+// main.js and AuthPlugin.swift) instead of going through Supabase's own
+// /authorize redirect. That matters for two reasons: it avoids a full-page
+// redirect through Supabase's raw project URL (which read as a phishing
+// site to real users — Google's own anti-phishing UX literally names the
+// domain that will receive the redirect), and it sidesteps a fragile
+// server-side step (Supabase exchanging a signed JWT client secret with
+// Apple) that was intermittently failing as "sign up not completed."
+export async function signInWithIdToken(provider, token) {
+  if (!supabase) return NOT_CONFIGURED;
+  return supabase.auth.signInWithIdToken({ provider, token });
+}
+
+// Google doesn't have a same-plugin native option yet (that needs Google's
+// own GoogleSignIn-iOS SDK added as a separate Xcode dependency), so native
+// iOS still goes through the system browser: Google actively blocks OAuth
+// sign-in from a plain embedded webview (the "disallowed_useragent"
+// error), so navigating the Capacitor WKWebView straight to the consent
+// screen doesn't work. Instead we ask Supabase for the sign-in URL without
+// letting it auto-navigate (skipBrowserRedirect), hand that URL to
+// AuthPlugin.swift which opens it in a system-level
+// ASWebAuthenticationSession, and manually exchange the `code` it comes
+// back with for a session — the same "handle the redirect ourselves" shape
+// as completeSessionFromUrl below, since a custom-scheme redirect never
+// triggers a real page navigation for supabase-js's own URL-detection to
+// run against (detectSessionInUrl is off — see supabaseClient.js).
+export async function signInWithGoogleNative() {
   if (!supabase) return NOT_CONFIGURED;
 
-  if (!isNativeIOS()) {
-    return supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: window.location.origin },
-    });
-  }
-
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider,
+    provider: 'google',
     options: { redirectTo: NATIVE_OAUTH_REDIRECT, skipBrowserRedirect: true },
   });
   if (error) return { error };
@@ -71,6 +80,29 @@ export async function signInWithOAuth(provider) {
   return supabase.auth.exchangeCodeForSession(code);
 }
 
+// Apple, unlike Google, gets a real native option: AuthPlugin.swift's
+// signInWithApple uses ASAuthorizationAppleIDProvider — the actual system
+// Face ID/Touch ID sheet, no browser involved at all. On web, Apple ID JS
+// runs the same identity-token exchange as a same-page popup.
+export async function signInWithApple() {
+  if (!supabase) return NOT_CONFIGURED;
+
+  if (isNativeIOS()) {
+    const result = await AxAuth.signInWithApple();
+    if (result.error) return { error: { message: result.error } };
+    return signInWithIdToken('apple', result.idToken);
+  }
+
+  if (!window.AppleID) return { error: { message: "Apple sign-in isn't available right now." } };
+  try {
+    const response = await window.AppleID.auth.signIn();
+    return signInWithIdToken('apple', response.authorization.id_token);
+  } catch (err) {
+    if (err?.error === 'popup_closed_by_user') return { data: null, error: null };
+    return { error: { message: 'Apple sign-in failed. Please try again.' } };
+  }
+}
+
 // Handles both a tapped magic-link email and a tapped password-reset
 // email. In the web build this runs against the current page's own URL
 // on load; in the native app it also runs against whatever URL arrives
@@ -81,20 +113,6 @@ export async function signInWithOAuth(provider) {
 // ...) so the caller can react, e.g. opening the "set new password" modal.
 export async function completeSessionFromUrl(url) {
   if (!supabase) return null;
-
-  // The web-side leg of signInWithOAuth's PKCE flow: Google/Apple redirect
-  // back to this same page with a one-time ?code= in the query string
-  // (never the hash), which supabase-js won't auto-exchange on its own
-  // here (detectSessionInUrl is off). Strip it from the URL bar either way
-  // so a page refresh doesn't retry an already-used code.
-  const codeMatch = /[?&]code=([^&]+)/.exec(url);
-  if (codeMatch) {
-    const code = decodeURIComponent(codeMatch[1]);
-    window.history.replaceState({}, '', window.location.pathname);
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    return error ? null : 'oauth';
-  }
-
   const hashIndex = url.indexOf('#');
   if (hashIndex === -1) return null;
   const params = new URLSearchParams(url.slice(hashIndex + 1));
