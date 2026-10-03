@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const webpush = require('web-push');
+const { sendPushToUser } = require('./lib/send-push.cjs');
 
 // Computes 'YYYY-MM-DD' and 'HH:MM' for `now` in the given IANA timezone
 // using Intl (no date library needed) — the date format matches
@@ -26,24 +26,24 @@ function toMinutes(hhmm) {
   return h * 60 + m;
 }
 
-// This function runs every 15 minutes — a reminder fires the first run
-// where the user's local clock has just passed their target time, within
-// this window. last_daily_reminder_sent_date (compared against their own
-// local date) is what actually prevents re-firing on later runs, so this
-// window only needs to be wide enough to not miss anyone between runs.
-const WINDOW_MINUTES = 15;
+// A reminder fires the first run where the user's local clock has just
+// passed their target time, within this window.
+// last_daily_reminder_sent_date (compared against their own local date) is
+// what actually prevents re-firing on later runs, so this window only
+// needs to be wide enough to not miss anyone between runs — meaning it
+// must stay equal to the cron interval at the bottom of this file.
+const WINDOW_MINUTES = 30;
 function justPassed(nowMin, targetMin) {
   const diff = (nowMin - targetMin + 1440) % 1440;
   return diff < WINDOW_MINUTES;
 }
 
 exports.handler = async () => {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.VAPID_PRIVATE_KEY) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Missing server env vars.' }) };
   }
 
   const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-  webpush.setVapidDetails(process.env.VAPID_SUBJECT, process.env.VITE_VAPID_PUBLIC_KEY, process.env.VAPID_PRIVATE_KEY);
 
   const { data: subs, error: subsError } = await supabase.from('push_subscriptions').select('*');
   if (subsError) return { statusCode: 500, body: JSON.stringify({ error: subsError.message }) };
@@ -85,29 +85,17 @@ exports.handler = async () => {
     await supabase.from('profiles').update({ last_daily_reminder_sent_date: local.date }).eq('id', profile.id);
     if (quests && quests.length > 0) continue;
 
-    const userSubs = (subs || []).filter((s) => s.user_id === profile.id);
-    for (const sub of userSubs) {
-      try {
-        await webpush.sendNotification(
-          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth_key } },
-          JSON.stringify({
-            title: 'AX.GRIND',
-            body: "Haven't trained yet today — even a quick session keeps your streak alive.",
-            url: '/',
-          })
-        );
-        sent += 1;
-      } catch (err) {
-        if (err.statusCode === 404 || err.statusCode === 410) {
-          await supabase.from('push_subscriptions').delete().eq('id', sub.id);
-        }
-      }
-    }
+    sent += await sendPushToUser(supabase, profile.id, {
+      title: 'AX.GRIND',
+      body: "Haven't trained yet today — even a quick session keeps your streak alive.",
+      url: '/',
+    }, 'daily');
   }
 
   return { statusCode: 200, body: JSON.stringify({ checked, sent }) };
 };
 
 exports.config = {
-  schedule: '*/15 * * * *',
+  // Must stay in step with WINDOW_MINUTES above.
+  schedule: '*/30 * * * *',
 };

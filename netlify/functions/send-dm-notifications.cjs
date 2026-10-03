@@ -1,10 +1,12 @@
 const { createClient } = require('@supabase/supabase-js');
-const { sendPushToUser } = require('./lib/send-push.cjs');
+const { notifyDmMessage } = require('./lib/notify-events.cjs');
 
-// notified_at (not read_at) is what makes this idempotent — a message can
-// sit unread for days without getting re-notified on every 5-minute run.
+// Backstop only. DM notifications normally fire the instant the message
+// row is inserted, via the Supabase database webhook that calls
+// notify-event.cjs — this sweep exists to catch anything that webhook
+// failed to deliver. notified_at keeps the two from double-sending.
 exports.handler = async () => {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY || !process.env.VAPID_PRIVATE_KEY) {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { statusCode: 500, body: JSON.stringify({ error: 'Missing server env vars.' }) };
   }
 
@@ -17,39 +19,15 @@ exports.handler = async () => {
     .order('created_at', { ascending: true })
     .limit(200); // bounded per run — a burst catches up over a couple of runs rather than one giant batch
   if (error) return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
-  if (!messages || messages.length === 0) return { statusCode: 200, body: JSON.stringify({ checked: 0, sent: 0 }) };
-
-  const conversationIds = [...new Set(messages.map((m) => m.conversation_id))];
-  const { data: conversations } = await supabase
-    .from('dm_conversations')
-    .select('id, user1_id, user2_id')
-    .in('id', conversationIds);
-  const conversationById = new Map((conversations || []).map((c) => [c.id, c]));
-
-  const senderIds = [...new Set(messages.map((m) => m.sender_id))];
-  const { data: senders } = await supabase.from('profiles').select('id, display_name, handle').in('id', senderIds);
-  const senderById = new Map((senders || []).map((s) => [s.id, s]));
 
   let sent = 0;
-  for (const msg of messages) {
-    const conversation = conversationById.get(msg.conversation_id);
-    if (conversation) {
-      const recipientId = conversation.user1_id === msg.sender_id ? conversation.user2_id : conversation.user1_id;
-      const sender = senderById.get(msg.sender_id);
-      const senderName = sender?.display_name || sender?.handle || 'Someone';
-      const preview = (msg.body || '').slice(0, 100);
-      sent += await sendPushToUser(supabase, recipientId, {
-        title: `New message from ${senderName}`,
-        body: preview,
-        url: '/',
-      });
-    }
-    await supabase.from('dm_messages').update({ notified_at: new Date().toISOString() }).eq('id', msg.id);
+  for (const message of messages || []) {
+    sent += await notifyDmMessage(supabase, message);
   }
 
-  return { statusCode: 200, body: JSON.stringify({ checked: messages.length, sent }) };
+  return { statusCode: 200, body: JSON.stringify({ checked: (messages || []).length, sent }) };
 };
 
 exports.config = {
-  schedule: '*/5 * * * *',
+  schedule: '*/30 * * * *',
 };

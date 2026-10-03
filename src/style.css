@@ -491,6 +491,10 @@ button.card-reset { all:unset; display:block; width:100%; box-sizing:border-box;
 .oauth-btn-apple:hover { filter:brightness(1.2); }
 .oauth-divider { display:flex; align-items:center; gap:10px; margin:16px 0; font-size:11px; color:var(--muted); }
 .oauth-divider::before, .oauth-divider::after { content:''; flex:1; height:1px; background:var(--border); }
+.notify-pref-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); }
+.notify-pref-row:last-child { border-bottom:none; }
+.notify-pref-row label { font-size:12.5px; cursor:pointer; }
+.notify-pref-row input[type="checkbox"] { width:17px; height:17px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; }
 .auth-tabs { display:flex; gap:6px; margin-bottom:18px; }
 .auth-tabs .muscle-tab { flex:1; text-align:center; border-radius:var(--radius-lg); padding:8px; }
 .auth-form { display:flex; flex-direction:column; }

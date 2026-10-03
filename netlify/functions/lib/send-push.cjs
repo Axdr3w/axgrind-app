@@ -13,6 +13,20 @@ function ensureConfigured() {
 // just reusing the one column both platforms already share as a unique key.
 const APNS_ENDPOINT_PREFIX = 'apns:';
 
+// Maps a notification type to the profiles column that opts out of it (see
+// supabase/notification_preferences.sql). Checked here rather than at each
+// call site so a new notification type can't ship ignoring the user's
+// choice — the worst case for an unrecognised type is that it sends, which
+// matches how every type behaved before preferences existed.
+const PREF_COLUMN = {
+  quest: 'notify_quest_reminders',
+  daily: 'notify_daily_reminder',
+  streak: 'notify_streak',
+  dm: 'notify_dms',
+  forum: 'notify_forum_replies',
+  rank: 'notify_rank_changes',
+};
+
 // Sends one payload to every device a user has push enabled on — Web Push
 // for browser subscriptions, APNs for the native iOS app (see PushPlugin.
 // swift for why these need to be two different delivery paths at all).
@@ -20,7 +34,13 @@ const APNS_ENDPOINT_PREFIX = 'apns:';
 // endpoint or a 410 device token) instead of leaving it to fail forever on
 // every future send. Never throws — a notification failing is never worth
 // breaking whatever real action triggered it.
-async function sendPushToUser(supabase, userId, payload) {
+async function sendPushToUser(supabase, userId, payload, type) {
+  const prefColumn = PREF_COLUMN[type];
+  if (prefColumn) {
+    const { data: profile } = await supabase.from('profiles').select(prefColumn).eq('id', userId).maybeSingle();
+    if (profile && profile[prefColumn] === false) return 0;
+  }
+
   const { data: subs } = await supabase.from('push_subscriptions').select('*').eq('user_id', userId);
   let sent = 0;
 

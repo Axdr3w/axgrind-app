@@ -477,6 +477,16 @@ export default {
   'account.bgThemeLabel': 'Background',
   'account.reminderTimeLabel': 'Daily Reminder (local time)',
   'account.reminderTimeHint': "A nudge if you haven't trained yet — defaults to 6:00 PM if you don't set one. Needs reminders enabled (Progress page).",
+  'account.notificationsLabel': 'Notifications',
+  'account.notifyQuestReminders': 'Quest reminders',
+  'account.notifyDailyReminder': 'Daily training reminder',
+  'account.notifyStreak': 'Streak at risk',
+  'account.notifyDms': 'Direct messages',
+  'account.notifyForumReplies': 'Replies to my posts',
+  'account.notifyRankChanges': 'Leaderboard movement',
+  'account.notificationsSaved': 'Saved',
+  'account.notificationsSaveFailed': "Couldn't save that — try again.",
+  'account.notificationsUnavailable': 'Notification settings are unavailable right now.',
 
   // Grind Wrapped
   'wrapped.viewLink': 'View My Grind Wrapped →',

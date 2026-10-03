@@ -12,7 +12,7 @@ import { calcCalories } from './nutrition.js';
 import { handlePhotoUpload, removePhoto, analyzeBody, initAnalyzer, teardownAnalyzer } from './analyzer.js';
 import { renderVideoLibrary, filterVideoLibrary, openExerciseInfo, closeExerciseInfo } from './videos.js';
 import { initQuests, teardownQuests, toggleWorkoutHistory } from './quests.js';
-import { fetchDisplayName, updateDisplayName, fetchHandle, fetchLanguage, updateLanguage, fetchAccentColor, updateAccentColor, fetchBgTheme, updateBgTheme, updateTimezone, fetchReminderTime, updateReminderTime } from './api/profile.js';
+import { fetchDisplayName, updateDisplayName, fetchHandle, fetchLanguage, updateLanguage, fetchAccentColor, updateAccentColor, fetchBgTheme, updateBgTheme, updateTimezone, fetchReminderTime, updateReminderTime, NOTIFICATION_PREFS, fetchNotificationPrefs, updateNotificationPref } from './api/profile.js';
 import { initThemeFromStorage, applyAccentColor, renderAccentUI, getAccentColor, applyBgTheme, renderBgThemeUI, getBgThemeId } from './theme.js';
 import { getLanguageMeta, isSupported } from './i18n/languages.js';
 import { maybeStartTour, tourNext, tourBack, finishTour } from './onboarding.js';
@@ -343,6 +343,59 @@ function setAuthMessage(text, isError) {
   authMessage.style.color = isError ? '#ff6040' : '#4ade80';
 }
 
+// Each toggle saves the moment it's flipped rather than behind a Save
+// button — there's nothing to batch about a single boolean, and a settings
+// screen that quietly discards a change because you navigated away is
+// worse than one extra write. The checkbox is reverted if the write fails,
+// so what's on screen always reflects what's actually stored.
+async function renderNotificationPrefs(userId) {
+  const container = document.getElementById('notification-prefs');
+  const message = document.getElementById('notification-prefs-message');
+  container.innerHTML = '';
+  message.textContent = '';
+
+  let prefs;
+  try {
+    prefs = await fetchNotificationPrefs(userId);
+  } catch {
+    message.textContent = t('account.notificationsUnavailable');
+    message.style.color = 'var(--muted)';
+    return;
+  }
+
+  for (const pref of NOTIFICATION_PREFS) {
+    const row = document.createElement('div');
+    row.className = 'notify-pref-row';
+
+    const label = document.createElement('label');
+    label.htmlFor = `pref-${pref.column}`;
+    label.textContent = t(pref.labelKey);
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `pref-${pref.column}`;
+    checkbox.checked = prefs[pref.column] !== false;
+    checkbox.addEventListener('change', async () => {
+      const desired = checkbox.checked;
+      checkbox.disabled = true;
+      try {
+        await updateNotificationPref(userId, pref.column, desired);
+        message.textContent = t('account.notificationsSaved');
+        message.style.color = '#4ade80';
+      } catch {
+        checkbox.checked = !desired;
+        message.textContent = t('account.notificationsSaveFailed');
+        message.style.color = '#ff6040';
+      } finally {
+        checkbox.disabled = false;
+      }
+    });
+
+    row.append(label, checkbox);
+    container.appendChild(row);
+  }
+}
+
 let lastUserId = null;
 
 function updateAccountUI(session) {
@@ -369,6 +422,7 @@ function updateAccountUI(session) {
         if (forUserId !== lastUserId) return;
         document.getElementById('display-name-input').value = name || '';
       });
+      renderNotificationPrefs(session.user.id);
       fetchReminderTime(session.user.id).then((time) => {
         if (forUserId !== lastUserId) return;
         // Left blank (not defaulted to 18:00 here) so the input's own

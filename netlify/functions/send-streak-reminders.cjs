@@ -70,7 +70,7 @@ exports.handler = async () => {
       title: `🔥 ${streak}-day streak on the line`,
       body: "You haven't completed a quest today — do one now to keep it going.",
       url: '/',
-    });
+    }, 'streak');
   }
 
   return { statusCode: 200, body: JSON.stringify({ checked, sent }) };

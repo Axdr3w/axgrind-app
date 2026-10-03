@@ -82,6 +82,33 @@ export async function updateReminderTime(userId, reminderTime) {
   if (error) throw error;
 }
 
+// Which push notification types this user still wants (see
+// supabase/notification_preferences.sql). The server is the real enforcer
+// — netlify/functions/lib/send-push.cjs checks these columns before every
+// send — so this is purely the settings UI's read/write path.
+export const NOTIFICATION_PREFS = [
+  { column: 'notify_quest_reminders', labelKey: 'account.notifyQuestReminders' },
+  { column: 'notify_daily_reminder', labelKey: 'account.notifyDailyReminder' },
+  { column: 'notify_streak', labelKey: 'account.notifyStreak' },
+  { column: 'notify_dms', labelKey: 'account.notifyDms' },
+  { column: 'notify_forum_replies', labelKey: 'account.notifyForumReplies' },
+  { column: 'notify_rank_changes', labelKey: 'account.notifyRankChanges' },
+];
+
+export async function fetchNotificationPrefs(userId) {
+  if (!supabase) return {};
+  const columns = NOTIFICATION_PREFS.map((p) => p.column).join(', ');
+  const { data, error } = await supabase.from('profiles').select(columns).eq('id', userId).single();
+  if (error) throw error;
+  return data || {};
+}
+
+export async function updateNotificationPref(userId, column, enabled) {
+  if (!supabase) return;
+  const { error } = await supabase.from('profiles').update({ [column]: enabled }).eq('id', userId);
+  if (error) throw error;
+}
+
 export async function fetchHasSeenTour(userId) {
   if (!supabase) return true; // not configured — don't force a tour that can't track itself
   const { data, error } = await supabase.from('profiles').select('has_seen_tour').eq('id', userId).single();

@@ -50,7 +50,7 @@ exports.handler = async () => {
 
   let sent = 0;
   for (const quest of due) {
-    sent += await sendPushToUser(supabase, quest.user_id, { title: 'AX.GRIND Quest Reminder', body: quest.title, url: '/' });
+    sent += await sendPushToUser(supabase, quest.user_id, { title: 'AX.GRIND Quest Reminder', body: quest.title, url: '/' }, 'quest');
     await supabase.from('quests').update({ reminder_sent_at: new Date().toISOString() }).eq('id', quest.id);
   }
 
@@ -58,5 +58,10 @@ exports.handler = async () => {
 };
 
 exports.config = {
-  schedule: '* * * * *',
+  // Every 30 minutes. Running this every minute meant ~43k invocations a
+  // month — about a third of the whole Netlify quota — almost all of them
+  // finding nothing due. A reminder can now land up to half an hour after
+  // its target, which is well within tolerance for "you have a quest
+  // coming up"; GRACE_MS above already allows for far longer gaps.
+  schedule: '*/30 * * * *',
 };

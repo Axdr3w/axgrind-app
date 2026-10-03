@@ -32,7 +32,7 @@ exports.handler = async () => {
         title: '🏆 You moved up the leaderboard',
         body: `You're now #${currentRank}, up from #${previousRank}.`,
         url: '/',
-      });
+      }, 'rank');
     }
 
     if (currentRank !== previousRank) {
