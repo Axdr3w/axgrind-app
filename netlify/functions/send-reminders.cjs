@@ -1,5 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const { sendPushToUser } = require('./lib/send-push.cjs');
+const { zonedTimeToUtc } = require('./lib/timezone.cjs');
 
 function dateStr(d) {
   const y = d.getUTCFullYear();
@@ -40,10 +41,22 @@ exports.handler = async () => {
     return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
   }
 
-  // NOTE: due_time is interpreted as UTC clock time (no per-user timezone
-  // support yet) - a 5pm reminder fires at 5pm UTC, not 5pm local time.
+  // due_time is a wall-clock time the user picked, so it only means
+  // anything against their own timezone — read as UTC it fired up to 12
+  // hours off (a 5pm reminder reaching a Pacific user at 10am). Users
+  // whose timezone hasn't been captured yet fall back to the old UTC
+  // reading rather than losing reminders entirely; the client records one
+  // on next login (see updateTimezone in src/api/profile.js).
+  const userIds = [...new Set((quests || []).map((q) => q.user_id))];
+  const { data: profiles } = userIds.length
+    ? await supabase.from('profiles').select('id, timezone').in('id', userIds)
+    : { data: [] };
+  const timezoneByUser = new Map((profiles || []).map((p) => [p.id, p.timezone]));
+
   const due = (quests || []).filter((q) => {
-    const dueAt = new Date(`${q.quest_date}T${q.due_time}Z`);
+    const timezone = timezoneByUser.get(q.user_id);
+    const dueAt = (timezone && zonedTimeToUtc(q.quest_date, q.due_time, timezone))
+      || new Date(`${q.quest_date}T${q.due_time}Z`);
     const reminderAt = new Date(dueAt.getTime() - q.reminder_minutes_before * 60000);
     return reminderAt <= now && now.getTime() - dueAt.getTime() < GRACE_MS;
   });

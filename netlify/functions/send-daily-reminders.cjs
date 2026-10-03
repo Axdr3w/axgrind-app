@@ -1,23 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const { sendPushToUser } = require('./lib/send-push.cjs');
-
-// Computes 'YYYY-MM-DD' and 'HH:MM' for `now` in the given IANA timezone
-// using Intl (no date library needed) — the date format matches
-// quest_date's plain local-calendar-string convention (see date-utils.js)
-// so the completion lookup below compares correctly against what the
-// client already wrote.
-function localParts(now, timeZone) {
-  try {
-    const fmt = new Intl.DateTimeFormat('en-CA', {
-      timeZone, year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', hour12: false,
-    });
-    const parts = Object.fromEntries(fmt.formatToParts(now).map((p) => [p.type, p.value]));
-    return { date: `${parts.year}-${parts.month}-${parts.day}`, time: `${parts.hour}:${parts.minute}` };
-  } catch {
-    return null; // invalid/unknown timezone string stored — skip that user
-  }
-}
+const { localParts } = require('./lib/timezone.cjs');
 
 const DEFAULT_REMINDER_TIME = '18:00'; // 6pm local, if the user never set one
 
