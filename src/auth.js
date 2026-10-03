@@ -53,7 +53,12 @@ export async function signInWithApple() {
     return supabase.auth.signInWithIdToken({ provider: 'apple', token: response.authorization.id_token });
   } catch (err) {
     if (err?.error === 'popup_closed_by_user') return { data: null, error: null };
-    return { error: { message: 'Apple sign-in failed. Please try again.' } };
+    // Apple reports the real cause as a short code (invalid_client,
+    // invalid_request, ...) that says exactly which part of the Services
+    // ID config is off — worth surfacing rather than flattening to a
+    // generic retry message no one can act on.
+    console.error('[apple sign-in]', err);
+    return { error: { message: `Apple sign-in failed (${err?.error || err?.message || 'unknown'}).` } };
   }
 }
 
