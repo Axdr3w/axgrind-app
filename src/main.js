@@ -645,78 +645,85 @@ function isNativeIOS() {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
 }
 
-// Google: on the web, Google's own Identity Services library renders its
-// official button into #google-gis-mount and hands back an identity token
-// directly (no page redirect — see auth.js's signInWithIdToken for why
-// that matters). Google's client-side library doesn't reliably work inside
-// the native app's embedded webview (the same restriction that blocks a
-// direct OAuth redirect there), so on native iOS the pre-built custom
-// button stays visible instead, wired to the existing system-browser flow.
 const googleGisMount = document.getElementById('google-gis-mount');
 const googleSigninBtn = document.getElementById('google-signin-btn');
+const appleSigninBtn = document.getElementById('apple-signin-btn');
 
 async function handleGoogleCredential(response) {
   const { error } = await signInWithIdToken('google', response.credential);
   if (error) setAuthMessage(error.message, true);
 }
 
-async function handleGoogleNativeClick() {
-  googleSigninBtn.disabled = true;
-  try {
-    const { error } = await signInWithGoogleNative();
-    if (error) setAuthMessage(error.message, true);
-  } finally {
-    googleSigninBtn.disabled = false;
-  }
-}
-
-if (isNativeIOS()) {
-  googleSigninBtn.addEventListener('click', handleGoogleNativeClick);
-} else {
-  googleSigninBtn.style.display = 'none';
-  googleGisMount.style.display = 'flex';
-  (function initGoogleSignIn() {
-    if (!window.google?.accounts?.id) { setTimeout(initGoogleSignIn, 150); return; }
-    google.accounts.id.initialize({
-      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-      callback: handleGoogleCredential,
-    });
-    google.accounts.id.renderButton(googleGisMount, {
-      theme: 'filled_black',
-      size: 'large',
-      text: 'continue_with',
-      shape: 'rectangular',
-      logo_alignment: 'left',
-      width: Math.min(googleGisMount.offsetWidth || 320, 400),
-    });
-  })();
-}
-
-// Apple: signInWithApple() picks the right path itself — the real Face
-// ID/Touch ID system sheet on native iOS, Apple ID JS's same-page popup on
-// the web (see auth.js) — both end up handing Supabase an identity token
-// the same way Google's does above.
-document.getElementById('apple-signin-btn').addEventListener('click', async (e) => {
-  const btn = e.currentTarget;
+async function handleProviderClick(btn, signIn) {
   btn.disabled = true;
   try {
-    const { error } = await signInWithApple();
+    const { error } = await signIn();
     if (error) setAuthMessage(error.message, true);
+  } catch (err) {
+    // A rejected call would otherwise leave the button looking simply
+    // dead, which is exactly the symptom App Review reported.
+    setAuthMessage(err?.message || 'Sign-in is unavailable right now.', true);
   } finally {
     btn.disabled = false;
   }
-});
+}
 
-if (!isNativeIOS()) {
-  (function initAppleSignIn() {
-    if (!window.AppleID) { setTimeout(initAppleSignIn, 150); return; }
-    AppleID.auth.init({
-      clientId: import.meta.env.VITE_APPLE_SERVICES_ID,
-      scope: 'email name',
-      redirectURI: window.location.origin + '/',
-      usePopup: true,
-    });
-  })();
+// Both providers need AuthPlugin.swift present in the running binary when
+// on native. Any build produced before that plugin existed doesn't have
+// it — and because the native app is a WKWebView pointed at the live site
+// (capacitor.config.json's server.url), those older builds pick up this
+// page the moment it deploys, these buttons included. Offering a button
+// the binary underneath can't service is what got build 40 rejected under
+// Guideline 2.1(a) ("unresponsive when tapped"), so on native the whole
+// block stays hidden until the plugin is actually there to answer it.
+if (isNativeIOS() && !Capacitor.isPluginAvailable('AxAuth')) {
+  document.querySelector('.oauth-buttons').style.display = 'none';
+  document.querySelector('.oauth-divider').style.display = 'none';
+} else {
+  // Google: on the web, Google's own Identity Services library renders its
+  // official button into #google-gis-mount and hands back an identity token
+  // directly (no page redirect — see auth.js's signInWithIdToken for why
+  // that matters). That library doesn't work inside the native app's
+  // embedded webview (the same restriction that blocks a direct OAuth
+  // redirect there), so on native the pre-built custom button stays visible
+  // instead, wired to the system-browser flow.
+  if (isNativeIOS()) {
+    googleSigninBtn.addEventListener('click', () => handleProviderClick(googleSigninBtn, signInWithGoogleNative));
+  } else {
+    googleSigninBtn.style.display = 'none';
+    googleGisMount.style.display = 'flex';
+    (function initGoogleSignIn() {
+      if (!window.google?.accounts?.id) { setTimeout(initGoogleSignIn, 150); return; }
+      google.accounts.id.initialize({
+        client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+      });
+      google.accounts.id.renderButton(googleGisMount, {
+        theme: 'filled_black',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'rectangular',
+        logo_alignment: 'left',
+        width: Math.min(googleGisMount.offsetWidth || 320, 400),
+      });
+    })();
+
+    (function initAppleSignIn() {
+      if (!window.AppleID) { setTimeout(initAppleSignIn, 150); return; }
+      AppleID.auth.init({
+        clientId: import.meta.env.VITE_APPLE_SERVICES_ID,
+        scope: 'email name',
+        redirectURI: window.location.origin + '/',
+        usePopup: true,
+      });
+    })();
+  }
+
+  // Apple: signInWithApple() picks the right path itself — the real Face
+  // ID/Touch ID system sheet on native iOS, Apple ID JS's same-page popup
+  // on the web (see auth.js) — both end up handing Supabase an identity
+  // token the same way Google's does above.
+  appleSigninBtn.addEventListener('click', () => handleProviderClick(appleSigninBtn, signInWithApple));
 }
 
 document.getElementById('magic-link-use-different').addEventListener('click', () => {
