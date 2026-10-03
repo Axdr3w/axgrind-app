@@ -343,7 +343,6 @@ export default {
   // Account
   'account.title': 'ACCOUNT', 'account.aboutLink': 'About →',
   'account.loginTab': 'Log In', 'account.signupTab': 'Sign Up',
-  'account.continueWithGoogle': 'Continue with Google',
   'account.continueWithApple': 'Continue with Apple',
   'account.orEmail': 'or continue with email',
   'account.emailOrUsername': 'Email or Username', 'account.password': 'Password',

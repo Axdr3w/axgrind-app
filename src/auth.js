@@ -2,8 +2,7 @@ import { registerPlugin, Capacitor } from '@capacitor/core';
 import { supabase, getAuthHeader } from './api/supabaseClient.js';
 
 // Talks to the custom native plugin in ios/App/App/AuthPlugin.swift — see
-// signInWithGoogleNative and signInWithApple below for why the native app
-// needs it at all.
+// signInWithApple below for why the native app needs it at all.
 const AxAuth = registerPlugin('AxAuth');
 
 const NOT_CONFIGURED = { error: { message: 'Accounts aren\'t set up yet — Supabase credentials are missing.' } };
@@ -11,10 +10,6 @@ const NOT_CONFIGURED = { error: { message: 'Accounts aren\'t set up yet — Supa
 function isNativeIOS() {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
 }
-
-// Must exactly match a Redirect URL allowed in Supabase's Auth > URL
-// Configuration settings, and the CFBundleURLSchemes entry in Info.plist.
-const NATIVE_OAUTH_REDIRECT = 'com.axgrind.app://auth-callback';
 
 export async function signUpWithPassword(email, password) {
   if (!supabase) return NOT_CONFIGURED;
@@ -34,69 +29,28 @@ export async function signInWithMagicLink(email) {
   });
 }
 
-// Both Google and Apple sign-in hand Supabase a signed identity token
-// straight from the provider's own client-side library (Google Identity
-// Services / Apple ID JS on web, native Face ID/Touch ID on iOS — see
-// main.js and AuthPlugin.swift) instead of going through Supabase's own
-// /authorize redirect. That matters for two reasons: it avoids a full-page
-// redirect through Supabase's raw project URL (which read as a phishing
-// site to real users — Google's own anti-phishing UX literally names the
-// domain that will receive the redirect), and it sidesteps a fragile
+// Apple sign-in hands Supabase a signed identity token straight from
+// Apple's own client — AuthPlugin.swift's ASAuthorizationAppleIDProvider
+// (the real system Face ID/Touch ID sheet, no browser at all) on native,
+// Apple ID JS's same-page popup on web. That's instead of routing through
+// Supabase's own /authorize redirect, which matters for two reasons: it
+// avoids a full-page redirect through Supabase's raw project URL (which
+// read as a phishing site to real users), and it sidesteps a fragile
 // server-side step (Supabase exchanging a signed JWT client secret with
 // Apple) that was intermittently failing as "sign up not completed."
-export async function signInWithIdToken(provider, token) {
-  if (!supabase) return NOT_CONFIGURED;
-  return supabase.auth.signInWithIdToken({ provider, token });
-}
-
-// Google doesn't have a same-plugin native option yet (that needs Google's
-// own GoogleSignIn-iOS SDK added as a separate Xcode dependency), so native
-// iOS still goes through the system browser: Google actively blocks OAuth
-// sign-in from a plain embedded webview (the "disallowed_useragent"
-// error), so navigating the Capacitor WKWebView straight to the consent
-// screen doesn't work. Instead we ask Supabase for the sign-in URL without
-// letting it auto-navigate (skipBrowserRedirect), hand that URL to
-// AuthPlugin.swift which opens it in a system-level
-// ASWebAuthenticationSession, and manually exchange the `code` it comes
-// back with for a session — the same "handle the redirect ourselves" shape
-// as completeSessionFromUrl below, since a custom-scheme redirect never
-// triggers a real page navigation for supabase-js's own URL-detection to
-// run against (detectSessionInUrl is off — see supabaseClient.js).
-export async function signInWithGoogleNative() {
-  if (!supabase) return NOT_CONFIGURED;
-
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: NATIVE_OAUTH_REDIRECT, skipBrowserRedirect: true },
-  });
-  if (error) return { error };
-
-  const result = await AxAuth.openOAuthSession({ url: data.url, callbackScheme: 'com.axgrind.app' });
-  if (result.error) return { error: { message: result.error } };
-
-  const code = new URL(result.url).searchParams.get('code');
-  if (!code) return { error: { message: 'Sign-in did not complete.' } };
-
-  return supabase.auth.exchangeCodeForSession(code);
-}
-
-// Apple, unlike Google, gets a real native option: AuthPlugin.swift's
-// signInWithApple uses ASAuthorizationAppleIDProvider — the actual system
-// Face ID/Touch ID sheet, no browser involved at all. On web, Apple ID JS
-// runs the same identity-token exchange as a same-page popup.
 export async function signInWithApple() {
   if (!supabase) return NOT_CONFIGURED;
 
   if (isNativeIOS()) {
     const result = await AxAuth.signInWithApple();
     if (result.error) return { error: { message: result.error } };
-    return signInWithIdToken('apple', result.idToken);
+    return supabase.auth.signInWithIdToken({ provider: 'apple', token: result.idToken });
   }
 
   if (!window.AppleID) return { error: { message: "Apple sign-in isn't available right now." } };
   try {
     const response = await window.AppleID.auth.signIn();
-    return signInWithIdToken('apple', response.authorization.id_token);
+    return supabase.auth.signInWithIdToken({ provider: 'apple', token: response.authorization.id_token });
   } catch (err) {
     if (err?.error === 'popup_closed_by_user') return { data: null, error: null };
     return { error: { message: 'Apple sign-in failed. Please try again.' } };
