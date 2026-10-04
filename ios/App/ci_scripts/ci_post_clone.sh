@@ -20,3 +20,8 @@ fi
 npm install
 npm run build
 npx cap sync ios
+
+# cap sync rewrites packageClassList from npm plugin packages only, dropping
+# the plugins defined in the app target itself — without this they silently
+# never register at runtime. See the script's header for the full reasoning.
+node scripts/register-native-plugins.cjs
