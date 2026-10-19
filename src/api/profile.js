@@ -20,6 +20,13 @@ export async function fetchHandle(userId) {
   return data?.handle ?? null;
 }
 
+export async function fetchUsernameSetup(userId) {
+  if (!supabase) return null;
+  const { data, error } = await supabase.from('profiles').select('handle, username_prompt_dismissed, member_number').eq('id', userId).single();
+  if (error) throw error;
+  return data;
+}
+
 export async function fetchLanguage(userId) {
   if (!supabase) return null;
   const { data, error } = await supabase.from('profiles').select('language').eq('id', userId).single();

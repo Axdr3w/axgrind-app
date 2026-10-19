@@ -143,6 +143,9 @@ body:not(.locked) .hero-loggedin { display:block; }
 .focus-time { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:.05em; margin-top:6px; font-variant-numeric:tabular-nums; }
 .focus-xp-live { text-align:center; font-size:13px; color:var(--muted); margin-bottom:14px; font-variant-numeric:tabular-nums; }
 .focus-warning { text-align:center; font-size:11px; color:var(--error); background:rgba(255,80,50,.08); border:1px solid rgba(255,80,50,.25); border-radius:var(--radius-lg); padding:10px; }
+.focus-minimize-btn { display:block; margin:14px auto 0; padding:8px 12px; border:1px solid var(--accent-line); border-radius:var(--radius-pill); background:var(--accent-wash); }
+.focus-session-pill { position:fixed; z-index:190; left:50%; bottom:calc(18px + env(safe-area-inset-bottom)); transform:translate(-50%,12px); opacity:0; pointer-events:none; border:1px solid var(--accent-line); border-radius:var(--radius-pill); background:var(--surface3); color:var(--text); box-shadow:var(--shadow-2); padding:11px 17px; font:600 12px 'DM Sans',sans-serif; font-variant-numeric:tabular-nums; cursor:pointer; transition:opacity .18s, transform .18s; white-space:nowrap; }
+.focus-session-pill.visible { opacity:1; pointer-events:auto; transform:translate(-50%,0); }
 
 /* QUOTE */
 .motivation-banner { background:linear-gradient(135deg,#111 0%,#1a1a00 100%); border:1px solid var(--accent-wash); border-radius:var(--radius-2xl); padding:12px 16px; margin-bottom:18px; display:flex; align-items:center; gap:10px; }
@@ -235,6 +238,44 @@ button.card-reset { all:unset; display:block; width:100%; box-sizing:border-box;
 .meal-name { font-size:12px; font-weight:500; flex:1; }
 .meal-cals { font-size:11px; color:var(--muted); }
 .calc-box { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-3xl); padding:20px; margin-bottom:20px; }
+.fuel-tracker { background:linear-gradient(155deg,var(--surface3),var(--surface)); border:1px solid var(--accent-line); border-radius:var(--radius-3xl); padding:18px; margin-bottom:20px; box-shadow:var(--shadow-2); }
+.fuel-tracker-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:14px; }
+.fuel-tracker-subtitle { font-size:11px; color:var(--muted); line-height:1.5; margin-top:3px; }
+.fuel-total { text-align:right; flex-shrink:0; display:flex; flex-direction:column; }
+.fuel-total strong { color:var(--accent-soft); font:26px 'Bebas Neue',sans-serif; line-height:1; font-variant-numeric:tabular-nums; }
+.fuel-total span,.fuel-storage-note { color:var(--muted); font-size:9px; }
+.fuel-goal-row { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:8px; }
+.fuel-goal-row .calc-label { margin:0; }
+.fuel-goal-controls { display:flex; align-items:center; gap:10px; }
+.fuel-goal-controls .calc-input { width:110px; }
+.fuel-goal-controls .section-link:disabled,.calc-result .section-link:disabled { opacity:.45; cursor:not-allowed; }
+.fuel-progress-track { height:8px; overflow:hidden; border-radius:var(--radius-pill); background:var(--surface2); }
+.fuel-progress-track > div { width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--accent-soft),var(--accent)); transition:width .25s ease; }
+.fuel-remaining { min-height:17px; margin:7px 0 13px; color:var(--muted); font-size:10px; }
+.fuel-entry-form { display:grid; grid-template-columns:105px minmax(90px,1fr) 90px auto; gap:7px; }
+.fuel-entry-form .calc-input,.fuel-entry-form .calc-select { min-width:0; padding:9px; font-size:11px; }
+.fuel-entry-form button { padding:8px 14px; border-radius:var(--radius-lg); font-size:11px; font-weight:700; cursor:pointer; }
+.fuel-entry-list { display:grid; gap:6px; margin-top:12px; }
+.fuel-entry-row { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:var(--radius-lg); background:var(--surface2); }
+.fuel-entry-meal { min-width:54px; color:var(--accent-soft); font-size:9px; font-weight:700; text-transform:uppercase; }
+.fuel-entry-name { flex:1; min-width:0; overflow-wrap:anywhere; font-size:11px; }
+.fuel-entry-cals { color:var(--muted); font-size:10px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.fuel-entry-remove { min-width:32px; min-height:32px; border:0; border-radius:var(--radius-md); background:none; color:var(--muted); cursor:pointer; }
+.fuel-entry-remove:hover { color:var(--error); background:rgba(255,80,50,.08); }
+.fuel-empty { padding:12px; color:var(--muted); font-size:11px; text-align:center; }
+.fuel-storage-note { margin-top:10px; text-align:center; }
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+@media (max-width:520px) {
+  .fuel-tracker { padding:15px; }
+  .fuel-goal-row { align-items:flex-start; flex-direction:column; gap:6px; }
+  .fuel-goal-controls { width:100%; justify-content:space-between; }
+  .fuel-entry-form { grid-template-columns:minmax(0,1fr) 100px; grid-template-areas:"meal calories" "food food" "add add"; }
+  #fuel-meal-type { grid-area:meal; }
+  #fuel-food-name { grid-area:food; }
+  #fuel-food-calories { grid-area:calories; }
+  .fuel-entry-form button { grid-area:add; }
+  .focus-session-pill { max-width:calc(100vw - 28px); overflow:hidden; text-overflow:ellipsis; }
+}
 .calc-box h3 { font-family:'Bebas Neue',sans-serif; font-size:var(--text-lg); margin-bottom:12px; letter-spacing:.05em; }
 .calc-row { display:flex; gap:8px; margin-bottom:8px; }
 .calc-field { flex:1; }
@@ -489,6 +530,7 @@ button.card-reset { all:unset; display:block; width:100%; box-sizing:border-box;
 .oauth-btn:active { transform:translateY(1px); }
 .oauth-btn-apple { background:#000; color:#fff; border:1px solid var(--border); }
 .oauth-btn-apple:hover { filter:brightness(1.2); }
+.google-signin-slot { display:flex; justify-content:center; width:100%; min-height:40px; }
 .oauth-divider { display:flex; align-items:center; gap:10px; margin:16px 0; font-size:11px; color:var(--muted); }
 .oauth-divider::before, .oauth-divider::after { content:''; flex:1; height:1px; background:var(--border); }
 .notify-pref-row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 0; border-bottom:1px solid var(--border); }

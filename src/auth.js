@@ -29,6 +29,15 @@ export async function signInWithMagicLink(email) {
   });
 }
 
+export async function signInWithGoogle(idToken, nonce) {
+  if (!supabase) return NOT_CONFIGURED;
+  return supabase.auth.signInWithIdToken({
+    provider: 'google',
+    token: idToken,
+    nonce,
+  });
+}
+
 // Apple sign-in hands Supabase a signed identity token straight from
 // Apple's own client — AuthPlugin.swift's ASAuthorizationAppleIDProvider
 // (the real system Face ID/Touch ID sheet, no browser at all) on native,
@@ -72,6 +81,15 @@ export async function signInWithApple() {
 // ...) so the caller can react, e.g. opening the "set new password" modal.
 export async function completeSessionFromUrl(url) {
   if (!supabase) return null;
+  const parsed = new URL(url, window.location.origin);
+  const code = parsed.searchParams.get('code');
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) throw error;
+    parsed.searchParams.delete('code');
+    window.history.replaceState({}, document.title, parsed.pathname + parsed.search + parsed.hash);
+    return 'oauth';
+  }
   const hashIndex = url.indexOf('#');
   if (hashIndex === -1) return null;
   const params = new URLSearchParams(url.slice(hashIndex + 1));
@@ -149,5 +167,16 @@ export async function setUsername(userId, handle) {
   });
   const data = await resp.json();
   if (data.error) throw new Error(data.error.message);
+  return data;
+}
+
+export async function deferUsername() {
+  const resp = await fetch('/.netlify/functions/defer-username', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(await getAuthHeader()) },
+    body: JSON.stringify({}),
+  });
+  const data = await resp.json();
+  if (!resp.ok || data.error) throw new Error(data.error?.message || 'Could not save this choice.');
   return data;
 }

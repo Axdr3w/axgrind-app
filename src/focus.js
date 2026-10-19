@@ -18,6 +18,7 @@ let sessionGen = 0;
 let totalSeconds = 0;
 let remainingSeconds = 0;
 let tickInterval = null;
+let sessionState = 'idle';
 
 function el(id) { return document.getElementById(id); }
 
@@ -27,6 +28,11 @@ export function initFocus(userId) {
 }
 
 export function teardownFocus() {
+  stopTicking();
+  sessionState = 'idle';
+  hideSessionPill();
+  el('focus-modal')?.classList.remove('open');
+  document.body.style.overflow = '';
   currentUserId = null;
 }
 
@@ -49,9 +55,61 @@ function onVisibilityChange() {
   if (document.hidden) failSession();
 }
 
+function ensureSessionPill() {
+  let pill = el('focus-session-pill');
+  if (!pill) {
+    pill = document.createElement('button');
+    pill.type = 'button';
+    pill.id = 'focus-session-pill';
+    pill.className = 'focus-session-pill';
+    pill.setAttribute('aria-live', 'off');
+    pill.addEventListener('click', openFocusModal);
+    document.body.appendChild(pill);
+  }
+  return pill;
+}
+
+function updateSessionPill(label) {
+  if (sessionState === 'idle' || el('focus-modal')?.classList.contains('open')) return;
+  const pill = ensureSessionPill();
+  pill.textContent = `🔥 ${label} · ${t('focus.returnToTimer')}`;
+  pill.classList.add('visible');
+}
+
+function hideSessionPill() {
+  el('focus-session-pill')?.classList.remove('visible');
+}
+
+function minimizeFocusModal() {
+  el('focus-modal')?.classList.remove('open');
+  document.body.style.overflow = '';
+  if (sessionState === 'running') {
+    updateSessionPill(formatTime(remainingSeconds));
+  } else if (sessionState === 'complete') {
+    updateSessionPill(t('focus.successTitle'));
+  } else if (sessionState === 'failed') {
+    updateSessionPill(t('focus.failTitle'));
+  }
+}
+
+function openFocusModal() {
+  if (sessionState === 'idle') return;
+  el('focus-modal')?.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  hideSessionPill();
+}
+
+function formatTime(seconds) {
+  const mm = String(Math.floor(Math.max(0, seconds) / 60)).padStart(2, '0');
+  const ss = String(Math.max(0, seconds) % 60).padStart(2, '0');
+  return `${mm}:${ss}`;
+}
+
 function startSession() {
+  if (sessionState === 'running') return;
   sessionGen++;
   const myGen = sessionGen;
+  sessionState = 'running';
   totalSeconds = selectedMinutes * 60;
   remainingSeconds = totalSeconds;
 
@@ -59,6 +117,7 @@ function startSession() {
   el('focus-modal').classList.add('open');
   document.body.style.overflow = 'hidden';
   document.addEventListener('visibilitychange', onVisibilityChange);
+  el('focus-minimize-btn').addEventListener('click', minimizeFocusModal);
   el('focus-giveup-btn').addEventListener('click', () => {
     if (confirm(t('focus.confirmGiveUp'))) failSession();
   });
@@ -88,6 +147,7 @@ function updateActiveUI() {
   if (ember) ember.style.transform = `scale(${1 + pct * 0.9})`;
   const xpLive = el('focus-xp-live');
   if (xpLive) xpLive.textContent = t('focus.xpLive', { current: Math.floor(elapsed / 60 * XP_PER_MINUTE), total: selectedMinutes * XP_PER_MINUTE });
+  updateSessionPill(formatTime(remainingSeconds));
 }
 
 function stopTicking() {
@@ -100,6 +160,7 @@ function stopTicking() {
 async function completeSession(gen) {
   if (gen !== sessionGen) return;
   stopTicking();
+  sessionState = 'complete';
   try {
     const result = currentUserId ? await completeFocusSession(currentUserId, selectedMinutes) : { xpAwarded: selectedMinutes * XP_PER_MINUTE };
     el('focus-modal-body').innerHTML = resultHTML(true, result.xpAwarded);
@@ -107,16 +168,26 @@ async function completeSession(gen) {
     el('focus-modal-body').innerHTML = resultHTML(true, null, err.message);
   }
   wireResultClose();
+  updateSessionPill(t('focus.successTitle'));
 }
 
 function failSession() {
+  if (sessionState !== 'running') return;
   stopTicking();
+  sessionState = 'failed';
   el('focus-modal-body').innerHTML = resultHTML(false);
   wireResultClose();
+  updateSessionPill(t('focus.failTitle'));
 }
 
 export function closeFocusModal() {
+  if (sessionState === 'running') {
+    minimizeFocusModal();
+    return;
+  }
   stopTicking();
+  sessionState = 'idle';
+  hideSessionPill();
   el('focus-modal').classList.remove('open');
   document.body.style.overflow = '';
 }
@@ -137,6 +208,7 @@ function activeHTML() {
     </div>
     <div class="focus-xp-live" id="focus-xp-live"></div>
     <div class="focus-warning">${t('focus.activeWarning')}</div>
+    <button class="section-link focus-minimize-btn" id="focus-minimize-btn" type="button">${t('focus.browseInApp')}</button>
     <button class="section-link" id="focus-giveup-btn" style="display:block;margin:14px auto 0;">${t('focus.giveUp')}</button>
   `;
 }

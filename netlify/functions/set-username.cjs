@@ -22,7 +22,7 @@ exports.handler = async (event) => {
     }
 
     const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
-    const { error } = await supabase.from('profiles').update({ handle }).eq('id', auth.userId);
+    const { error } = await supabase.from('profiles').update({ handle, username_prompt_dismissed: true }).eq('id', auth.userId);
 
     if (error) {
       if (error.code === '23505') {

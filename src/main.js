@@ -8,16 +8,16 @@ import { computeStreak, levelFromXp } from './gamification.js';
 import { todayStr } from './date-utils.js';
 import { renderWorkouts, filterCategory, filterMuscle, filterEnv, filterSportList, selectSportOrProgram, backToBrowseList, openWorkout, closeWorkout, initPlans, teardownPlans, startWorkoutSession, toggleWorkoutTimer, toggleExerciseChecked, toggleVoiceGuidance, finishWorkout, skipRest, toggleSessionTools, calcPlates, toggleExerciseLog, updateExerciseLogDraft, saveExerciseLog, dismissSessionIconsHint } from './plans.js';
 import { renderBrainArticles, selectBrainCategory, backToBrainCategories, openArticle, closeArticle, markArticleRead, initBrain, teardownBrain } from './brain.js';
-import { calcCalories } from './nutrition.js';
+import { calcCalories, initNutrition } from './nutrition.js';
 import { handlePhotoUpload, removePhoto, analyzeBody, initAnalyzer, teardownAnalyzer } from './analyzer.js';
 import { renderVideoLibrary, filterVideoLibrary, openExerciseInfo, closeExerciseInfo } from './videos.js';
 import { initQuests, teardownQuests, toggleWorkoutHistory } from './quests.js';
-import { fetchDisplayName, updateDisplayName, fetchHandle, fetchLanguage, updateLanguage, fetchAccentColor, updateAccentColor, fetchBgTheme, updateBgTheme, updateTimezone, fetchReminderTime, updateReminderTime, NOTIFICATION_PREFS, fetchNotificationPrefs, updateNotificationPref } from './api/profile.js';
+import { fetchDisplayName, updateDisplayName, fetchHandle, fetchUsernameSetup, fetchLanguage, updateLanguage, fetchAccentColor, updateAccentColor, fetchBgTheme, updateBgTheme, updateTimezone, fetchReminderTime, updateReminderTime, NOTIFICATION_PREFS, fetchNotificationPrefs, updateNotificationPref } from './api/profile.js';
 import { initThemeFromStorage, applyAccentColor, renderAccentUI, getAccentColor, applyBgTheme, renderBgThemeUI, getBgThemeId } from './theme.js';
 import { getLanguageMeta, isSupported } from './i18n/languages.js';
 import { maybeStartTour, tourNext, tourBack, finishTour } from './onboarding.js';
 import { openBreathIntro, closeBreathSession } from './breathwork.js';
-import { initFocus, teardownFocus } from './focus.js';
+import { initFocus, teardownFocus, closeFocusModal } from './focus.js';
 import { initProgress, teardownProgress, closePhotoLightbox } from './progress.js';
 import { renderWrapped } from './wrapped.js';
 import { initAchievements, teardownAchievements, toggleAchievements } from './achievements.js';
@@ -31,11 +31,13 @@ import {
   signInWithPassword,
   signInWithMagicLink,
   signInWithApple,
+  signInWithGoogle,
   signOut,
   getSession,
   onAuthStateChange,
   resolveLoginIdentifier,
   setUsername,
+  deferUsername,
   deleteAccount,
   completeSessionFromUrl,
   requestPasswordReset,
@@ -179,9 +181,8 @@ const pageInitFns = {
   wrapped: (userId) => { renderWrapped(userId); },
 };
 
-// A username is only actually required to post/comment/DM — it's no longer
-// forced at login (see promptForUsername) — so Forum/Messages nudge for one
-// the first time they're opened without one, instead of blocking the page.
+// Forum and Messages need a handle for user-to-user interactions. Anyone who
+// deferred the sign-in prompt can still add one from the account screen.
 function maybeShowUsernameNudge(pageId, message) {
   if (document.getElementById('account-handle-display').dataset.hasHandle !== '0') return;
   const page = document.getElementById(pageId);
@@ -222,6 +223,7 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('[data-page]').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
+  if (id === 'nutrition') initNutrition(lastUserId);
   ensurePageInit(id);
   trackPageView(id, lastUserId);
   const navAreaId = PAGE_NAV_AREA[id] || id;
@@ -290,7 +292,6 @@ Object.assign(window, {
   openBreathIntro,
   closeBreathSession,
   closePhotoLightbox,
-  closeUsernameModal,
   toggleAchievements,
   selectAnalyzeSubtab,
 });
@@ -409,6 +410,7 @@ function updateAccountUI(session) {
     if (session.user.id !== lastUserId) {
       const forUserId = session.user.id;
       lastUserId = session.user.id;
+      initNutrition(session.user.id);
       initializedPages = new Set();
       // Only the page the user is actually looking at right now needs its
       // data immediately — everywhere else lazy-inits the moment showPage()
@@ -431,18 +433,15 @@ function updateAccountUI(session) {
         // already made an active choice they never actually made.
         document.getElementById('reminder-time-input').value = time || '';
       }).catch(() => {});
-      fetchHandle(session.user.id).then((handle) => {
+      fetchUsernameSetup(session.user.id).then((setup) => {
         if (forUserId !== lastUserId) return;
+        const handle = setup?.handle;
         const handleDisplay = document.getElementById('account-handle-display');
         handleDisplay.textContent = handle ? '@' + handle : t('account.noUsernameSet');
         handleDisplay.dataset.hasHandle = handle ? '1' : '0';
-        // A username is only load-bearing for Forum/Messages — everything
-        // else works fine without one, so it's no longer a forced gate at
-        // login. Forum/Messages prompt for it themselves when it's actually
-        // needed; here it's just a clickable hint (see the click listener
-        // near promptForUsername) for anyone who wants to set it up early.
+        if (!handle && !setup?.username_prompt_dismissed) promptForUsername();
         maybeStartTour(session.user.id);
-      });
+      }).catch((err) => console.error('[username setup]', err));
       getRankMap().then((map) => {
         if (forUserId !== lastUserId) return;
         const rank = map.get(session.user.id);
@@ -493,6 +492,7 @@ function updateAccountUI(session) {
       lastUserId = null;
       initializedPages.clear();
       teardownFocus();
+      initNutrition(null);
       teardownProgress();
       teardownMeasurements();
       teardownAchievements();
@@ -585,8 +585,23 @@ loginForm.addEventListener('submit', async (e) => {
     const password = document.getElementById('login-password').value;
     try {
       const email = await resolveLoginIdentifier(identifier);
-      const { error } = await signInWithPassword(email, password);
-      setAuthMessage(error ? error.message : t('account.loggedIn'), !!error);
+      const { data, error } = await signInWithPassword(email, password);
+      if (error) {
+        setAuthMessage(error.message, true);
+        return;
+      }
+
+      // Don't tell someone they're signed in just because the request had no
+      // error. Confirm Supabase actually returned and saved a browser session,
+      // then update the visible account immediately instead of relying only
+      // on the auth event callback.
+      const session = data?.session || await getSession();
+      if (!session?.user) {
+        setAuthMessage('No signed-in session was created. If this is a new account, confirm your email first, then try again.', true);
+        return;
+      }
+      updateAccountUI(session);
+      loginForm.reset();
     } catch (err) {
       setAuthMessage(err.message, true);
     }
@@ -631,11 +646,8 @@ const pickUsernameForm = document.getElementById('pick-username-form');
 const pickUsernameInput = document.getElementById('pick-username-input');
 const pickUsernameMessage = document.getElementById('pick-username-message');
 
-// A username is only actually needed for Forum/Messages (everywhere else
-// falls back to "AX.GRIND member" just fine) — so this is opened on demand
-// rather than forced at login: from the clickable "no username set" hint on
-// Account (see the click listener below), or by Forum/DMs themselves the
-// first time a handle-less user tries to use them.
+// Shown after sign-in for accounts without a handle, or from the account
+// screen when someone wants to replace their numbered fallback.
 function promptForUsername() {
   pickUsernameInput.value = '';
   pickUsernameMessage.textContent = '';
@@ -662,10 +674,26 @@ pickUsernameForm.addEventListener('submit', async (e) => {
     const handleDisplay = document.getElementById('account-handle-display');
     handleDisplay.textContent = '@' + handle;
     handleDisplay.dataset.hasHandle = '1';
+    handleDisplay.dataset.usernameDeferred = '0';
     closeUsernameModal();
   } catch (err) {
     pickUsernameMessage.textContent = err.message;
     pickUsernameMessage.style.color = '#ff6040';
+  }
+});
+
+document.getElementById('defer-username-btn').addEventListener('click', async () => {
+  const button = document.getElementById('defer-username-btn');
+  button.disabled = true;
+  try {
+    await deferUsername();
+    document.getElementById('account-handle-display').dataset.usernameDeferred = '1';
+    closeUsernameModal();
+  } catch (err) {
+    pickUsernameMessage.textContent = err.message;
+    pickUsernameMessage.style.color = '#ff6040';
+  } finally {
+    button.disabled = false;
   }
 });
 
@@ -698,6 +726,56 @@ function isNativeIOS() {
 }
 
 const appleSigninBtn = document.getElementById('apple-signin-btn');
+const googleSigninSlot = document.getElementById('google-signin-slot');
+let googleSigninInitialized = false;
+
+async function initGoogleSignIn() {
+  if (googleSigninInitialized || !googleSigninSlot) return;
+  if (!window.google?.accounts?.id) {
+    setTimeout(initGoogleSignIn, 150);
+    return;
+  }
+  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    console.warn('[Google sign-in] VITE_GOOGLE_CLIENT_ID is not configured.');
+    googleSigninSlot.textContent = 'Google sign-in is temporarily unavailable.';
+    return;
+  }
+
+  const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))));
+  const encodedNonce = new TextEncoder().encode(nonce);
+  const nonceDigest = await crypto.subtle.digest('SHA-256', encodedNonce);
+  const hashedNonce = Array.from(new Uint8Array(nonceDigest))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+
+  googleSigninInitialized = true;
+  window.google.accounts.id.initialize({
+    client_id: clientId,
+    nonce: hashedNonce,
+    callback: async ({ credential }) => {
+      if (!credential) return;
+      googleSigninSlot.style.pointerEvents = 'none';
+      try {
+        const { error } = await signInWithGoogle(credential, nonce);
+        if (error) setAuthMessage(error.message, true);
+      } catch (err) {
+        setAuthMessage(err?.message || 'Google sign-in is unavailable right now.', true);
+      } finally {
+        googleSigninSlot.style.pointerEvents = '';
+      }
+    },
+  });
+  window.google.accounts.id.renderButton(googleSigninSlot, {
+    theme: 'outline',
+    size: 'large',
+    text: 'continue_with',
+    shape: 'rectangular',
+    width: Math.min(400, Math.max(200, Math.floor(googleSigninSlot.getBoundingClientRect().width))),
+  });
+}
+
+initGoogleSignIn();
 
 // Native iOS needs AuthPlugin.swift present in the running binary. Any
 // build produced before that plugin existed doesn't have it — and because
@@ -708,8 +786,7 @@ const appleSigninBtn = document.getElementById('apple-signin-btn');
 // Guideline 2.1(a) ("unresponsive when tapped"), so on native it stays
 // hidden until the plugin is actually there to answer it.
 if (isNativeIOS() && !Capacitor.isPluginAvailable('AxAuth')) {
-  document.querySelector('.oauth-buttons').style.display = 'none';
-  document.querySelector('.oauth-divider').style.display = 'none';
+  appleSigninBtn.style.display = 'none';
 } else {
   // signInWithApple() picks the right path itself — the real Face ID/Touch
   // ID system sheet on native iOS, Apple ID JS's same-page popup on the
@@ -825,18 +902,16 @@ document.getElementById('tour-skip-btn').addEventListener('click', finishTour);
 // Escape closes only the topmost modal when one can open on top of another
 // (exercise-modal can open from inside an active workout-modal).
 //
-// focus-modal is deliberately excluded: it's a "stay committed" lock-in
-// timer (see focus.js) where leaving early is meant to cost a confirmation
-// dialog, not a free Escape tap — wiring it up here would quietly remove
-// the one piece of friction that feature exists to have.
+// Escape minimizes an active focus session so the timer continues while the
+// user browses the app; it closes the modal only after the session ends.
 // reset-password-modal is also excluded: it has no existing close/cancel
 // path at all (only ever dismissed by completing the form), so there's no
 // existing function to wire this to without inventing new behavior.
 const ESCAPABLE_MODALS = [
+  ['focus-modal', closeFocusModal],
   ['exercise-modal', closeExerciseInfo],
   ['article-modal', closeArticle],
   ['workout-modal', closeWorkout],
-  ['username-modal', closeUsernameModal],
   ['breath-modal', closeBreathSession],
   ['photo-lightbox-modal', closePhotoLightbox],
   ['onboarding-modal', finishTour],
@@ -925,7 +1000,7 @@ resetPasswordForm.addEventListener('submit', async (e) => {
 function handleAuthUrl(url) {
   completeSessionFromUrl(url).then((type) => {
     if (type === 'recovery') openResetPasswordModal();
-  });
+  }).catch((err) => setAuthMessage(err?.message || 'Sign-in could not be completed.', true));
 }
 
 handleAuthUrl(window.location.href);

@@ -18,7 +18,16 @@ if (!isSupabaseConfigured) {
 // Universal Link opening the native app never triggers a real page
 // navigation for Supabase's own URL-detection to run against.
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey, { auth: { detectSessionInUrl: false } })
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        // Keep browser sign-ins across refreshes. These are Supabase's
+        // defaults, written explicitly here because account persistence is
+        // part of the app's sign-in contract.
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: false,
+      },
+    })
   : null;
 
 // Every Netlify function that writes data, awards XP, or spends paid API

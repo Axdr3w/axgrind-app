@@ -30,6 +30,7 @@
      Supabase verifies directly (signInWithIdToken), so the popup is the
      only thing users ever see; the address bar never leaves axgrind.fit. -->
 <script src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js" async defer></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="locked">
 <div class="nav-wrapper">
@@ -92,7 +93,7 @@
 
     <div class="focus-box">
       <div class="section-header" style="margin-bottom:10px;"><div class="section-title" data-i18n="focus.title">LOCK IN</div></div>
-      <p class="focus-intro" data-i18n="focus.intro">Set a timer and stay in the app the whole time — switch away even for a second and the session fails. No XP for cheating yourself.</p>
+      <p class="focus-intro" data-i18n="focus.intro">Set a timer and stay in AX.GRIND. You can browse workouts and other app pages while the timer runs.</p>
       <div class="calc-label" style="margin-bottom:8px;" data-i18n="focus.durationLabel">Duration</div>
       <div class="muscle-tabs" id="focus-duration-tabs" style="margin-bottom:16px;">
         <button class="muscle-tab" data-min="5">5m</button>
@@ -435,10 +436,10 @@
     </div>
   </div>
 
-  <!-- USERNAME GATE (mandatory the moment a signed-in user has no handle yet, e.g. after a magic-link sign-up) -->
+  <!-- Username setup shown to new accounts; deferring assigns a numbered AX.GRIND fallback. -->
   <div class="workout-modal" id="username-modal">
     <div class="workout-sheet">
-      <div class="workout-sheet-header"><h2 data-i18n="account.pickUsernameTitle">Pick a username</h2><button class="close-btn" onclick="closeUsernameModal()" aria-label="Close">✕</button></div>
+      <div class="workout-sheet-header"><h2 data-i18n="account.pickUsernameTitle">Pick a username</h2></div>
       <div class="workout-sheet-body">
         <p style="font-size:13px;color:var(--muted);line-height:1.65;margin-bottom:16px;" data-i18n="account.pickUsernameDesc">Pick a username so people see you as you, not "AX.GRIND member," in the Forum and Messages.</p>
         <form id="pick-username-form">
@@ -448,6 +449,7 @@
           </div>
           <button class="btn-accent btn-full" type="submit" data-i18n="account.pickUsernameSave">Continue</button>
         </form>
+        <button type="button" class="btn-follow btn-full" id="defer-username-btn" style="margin-top:10px;">Choose later</button>
         <div id="pick-username-message" style="margin-top:10px;font-size:13px;"></div>
       </div>
     </div>
@@ -499,8 +501,32 @@
           <div class="result-macro-item"><span data-i18n="nutrition.carbsLabel">Carbs:</span> <span id="r-carbs">—</span>g</div>
           <div class="result-macro-item"><span data-i18n="nutrition.fatsLabel">Fats:</span> <span id="r-fats">—</span>g</div>
         </div>
+        <button class="section-link" id="fuel-use-result" type="button" style="margin-top:10px;" data-i18n="nutrition.useEstimate">Use calorie estimate</button>
       </div>
     </div>
+    <section class="fuel-tracker" aria-labelledby="fuel-tracker-title">
+      <div class="fuel-tracker-heading">
+        <div><div class="section-title" id="fuel-tracker-title" data-i18n="nutrition.trackerTitle">TODAY'S FUEL</div><p class="fuel-tracker-subtitle" data-i18n="nutrition.trackerDesc">Log meals as you go. A helpful guide, not a scorecard.</p></div>
+        <div class="fuel-total"><strong id="fuel-total">0</strong><span data-i18n="nutrition.loggedToday">calories logged</span></div>
+      </div>
+      <div class="fuel-goal-row">
+        <label class="calc-label" for="fuel-goal-input" data-i18n="nutrition.dailyTarget">Daily target (optional)</label>
+        <div class="fuel-goal-controls"><input class="calc-input" id="fuel-goal-input" type="number" min="500" max="10000" step="50" inputmode="numeric" placeholder="e.g. 2200"><button class="section-link" id="fuel-use-estimate" type="button" data-i18n="nutrition.useEstimate">Use calorie estimate</button></div>
+      </div>
+      <div class="fuel-progress-track" role="progressbar" aria-label="Daily calories" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="fuel-progress-fill"></div></div>
+      <div class="fuel-remaining" id="fuel-remaining" aria-live="polite" data-i18n="nutrition.setTargetHint">Set a target if you want to see an estimate of what's left.</div>
+      <form id="fuel-entry-form" class="fuel-entry-form">
+        <label class="sr-only" for="fuel-meal-type" data-i18n="nutrition.mealType">Meal</label>
+        <select class="calc-select" id="fuel-meal-type"><option value="Breakfast" data-i18n="nutrition.breakfast">Breakfast</option><option value="Lunch" data-i18n="nutrition.lunch">Lunch</option><option value="Dinner" data-i18n="nutrition.dinner">Dinner</option><option value="Snack" data-i18n="nutrition.snack">Snack</option></select>
+        <label class="sr-only" for="fuel-food-name" data-i18n="nutrition.foodName">Food or meal</label>
+        <input class="calc-input" id="fuel-food-name" type="text" maxlength="80" placeholder="Food or meal" data-i18n-placeholder="nutrition.foodName" required>
+        <label class="sr-only" for="fuel-food-calories" data-i18n="nutrition.caloriesLabel">Calories</label>
+        <input class="calc-input" id="fuel-food-calories" type="number" min="1" max="10000" step="1" inputmode="numeric" placeholder="Calories" data-i18n-placeholder="nutrition.caloriesLabel" required>
+        <button class="btn-accent" type="submit" data-i18n="nutrition.addFood">Add</button>
+      </form>
+      <div class="fuel-entry-list" id="fuel-entry-list" aria-live="polite"></div>
+      <p class="fuel-storage-note" data-i18n="nutrition.localSaveNote">Your log is saved on this device for your account.</p>
+    </section>
     <div class="section-header"><div class="section-title" data-i18n="nutrition.mealPlanTitle">SAMPLE MEAL PLAN</div><span style="font-size:12px;color:var(--muted);" data-i18n="nutrition.mealPlanCals">~2,400 cal — one example, not a template to copy exactly</span></div>
     <div class="meal-grid" style="margin-bottom:20px;">
       <div class="meal-row"><div class="meal-time" data-i18n="nutrition.meal1Time">7 AM</div><div class="meal-name" data-i18n="nutrition.meal1Name">6 egg whites + 2 whole eggs, oats, banana</div><div class="meal-cals">480</div></div>
@@ -833,6 +859,7 @@
       </div>
       <div class="about-card" id="guest-auth-card">
         <div class="oauth-buttons">
+          <div id="google-signin-slot" class="google-signin-slot" aria-label="Continue with Google"></div>
           <button type="button" id="apple-signin-btn" class="oauth-btn oauth-btn-apple">
             <svg width="16" height="18" viewBox="0 0 16 18" aria-hidden="true" fill="currentColor"><path d="M13.15 9.54c-.02-2.1 1.72-3.1 1.8-3.15-1-1.44-2.55-1.64-3.1-1.67-1.32-.13-2.57.77-3.24.77-.67 0-1.7-.75-2.8-.73-1.44.02-2.77.84-3.5 2.12-1.5 2.6-.38 6.44 1.07 8.55.71 1.03 1.56 2.19 2.67 2.15 1.07-.04 1.48-.7 2.78-.7 1.3 0 1.67.7 2.8.67 1.16-.02 1.89-1.05 2.6-2.09.82-1.2 1.16-2.36 1.17-2.42-.03-.01-2.24-.86-2.26-3.4zM11.06 3.2c.6-.73 1-1.73.89-2.74-.86.04-1.9.57-2.52 1.3-.55.64-1.03 1.68-.9 2.66.96.08 1.94-.49 2.53-1.22z"/></svg>
             <span data-i18n="account.continueWithApple">Continue with Apple</span>

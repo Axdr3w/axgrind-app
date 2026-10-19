@@ -1,42 +1,30 @@
 import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE, isSupported, getLanguageMeta } from './languages.js';
 
 import en from './locales/en.js';
-import es from './locales/es.js';
-import pt from './locales/pt.js';
-import fr from './locales/fr.js';
-import de from './locales/de.js';
-import it from './locales/it.js';
-import nl from './locales/nl.js';
-import pl from './locales/pl.js';
-import ru from './locales/ru.js';
-import uk from './locales/uk.js';
-import tr from './locales/tr.js';
-import el from './locales/el.js';
-import cs from './locales/cs.js';
-import sv from './locales/sv.js';
-import ro from './locales/ro.js';
-import ar from './locales/ar.js';
-import he from './locales/he.js';
-import fa from './locales/fa.js';
-import ur from './locales/ur.js';
-import hi from './locales/hi.js';
-import bn from './locales/bn.js';
-import id from './locales/id.js';
-import vi from './locales/vi.js';
-import th from './locales/th.js';
-import zhHans from './locales/zh-Hans.js';
-import zhHant from './locales/zh-Hant.js';
-import ja from './locales/ja.js';
-import ko from './locales/ko.js';
-import sw from './locales/sw.js';
-import tl from './locales/tl.js';
 
-const LOCALES = {
-  en, es, pt, fr, de, it, nl, pl, ru, uk, tr, el, cs, sv, ro,
-  ar, he, fa, ur, hi, bn, id, vi, th,
-  'zh-Hans': zhHans, 'zh-Hant': zhHant,
-  ja, ko, sw, tl,
-};
+// Keep English in the entry bundle as the immediate fallback, and fetch
+// another dictionary only when that language is selected. Importing every
+// locale statically made all 30 dictionaries part of the app's first load.
+const localeLoaders = import.meta.glob('./locales/*.js');
+const LOCALES = { en };
+const localePromises = new Map();
+
+function loadLocale(code) {
+  if (LOCALES[code]) return Promise.resolve(LOCALES[code]);
+  if (!localePromises.has(code)) {
+    const loader = localeLoaders[`./locales/${code}.js`];
+    if (!loader) return Promise.resolve(LOCALES.en);
+    localePromises.set(code, loader().then((module) => {
+      LOCALES[code] = module.default;
+      return LOCALES[code];
+    }).catch((error) => {
+      localePromises.delete(code);
+      console.error(`[i18n] Failed to load ${code}; using English`, error);
+      return LOCALES.en;
+    }));
+  }
+  return localePromises.get(code);
+}
 
 const STORAGE_KEY = 'ax-lang';
 const STORAGE_CHOSEN_KEY = 'ax-lang-chosen';
@@ -69,20 +57,23 @@ export function hasChosenLanguage() {
 
 export function setLanguage(code, { persist = true } = {}) {
   currentLanguage = isSupported(code) ? code : DEFAULT_LANGUAGE;
-  const meta = getLanguageMeta(currentLanguage);
-  document.documentElement.lang = currentLanguage === 'zh-Hans' || currentLanguage === 'zh-Hant' ? 'zh' : currentLanguage;
+  const selectedLanguage = currentLanguage;
+  const meta = getLanguageMeta(selectedLanguage);
+  document.documentElement.lang = selectedLanguage === 'zh-Hans' || selectedLanguage === 'zh-Hant' ? 'zh' : selectedLanguage;
   document.documentElement.dir = meta.rtl ? 'rtl' : 'ltr';
   if (persist) {
-    localStorage.setItem(STORAGE_KEY, currentLanguage);
+    localStorage.setItem(STORAGE_KEY, selectedLanguage);
     localStorage.setItem(STORAGE_CHOSEN_KEY, '1');
   }
-  applyTranslations(document);
-  // Static (data-i18n) text is handled above, but already-rendered dynamic
-  // content (workout cards, the exercise library) was built with whatever
-  // language was active at the time — it doesn't re-render on its own just
-  // because the language changed later. Modules with translated dynamic
-  // content listen for this to refresh themselves.
-  window.dispatchEvent(new CustomEvent('ax:languagechange', { detail: { lang: currentLanguage } }));
+  return loadLocale(selectedLanguage).then(() => {
+    // A user can switch languages again while this dictionary is loading.
+    // Only the latest selection should repaint the page or notify listeners.
+    if (selectedLanguage !== currentLanguage) return;
+    applyTranslations(document);
+    // Static (data-i18n) text is handled above, but already-rendered dynamic
+    // content listens for this event so it can refresh in the selected language.
+    window.dispatchEvent(new CustomEvent('ax:languagechange', { detail: { lang: selectedLanguage } }));
+  });
 }
 
 export function initLanguageFromStorage() {

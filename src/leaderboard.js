@@ -29,7 +29,8 @@ async function renderLeaderboard() {
     const rank = i + 1;
     const medal = medalFor(rank);
     const isMe = p.id === currentUserId;
-    const name = escapeHtml(p.display_name || p.handle || t('common.memberFallback'));
+    const fallbackName = p.member_number ? `AX.GRIND User #${p.member_number}` : t('common.memberFallback');
+    const name = escapeHtml(p.handle || (p.username_prompt_dismissed ? fallbackName : p.display_name || fallbackName));
     return `
       <div class="leaderboard-row${isMe ? ' me' : ''}">
         <div class="leaderboard-rank">${medal || '#' + rank}</div>
