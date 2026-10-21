@@ -728,17 +728,25 @@ function isNativeIOS() {
 const appleSigninBtn = document.getElementById('apple-signin-btn');
 const googleSigninSlot = document.getElementById('google-signin-slot');
 let googleSigninInitialized = false;
+let googleSigninLoadAttempts = 0;
 
 async function initGoogleSignIn() {
   if (googleSigninInitialized || !googleSigninSlot) return;
   if (!window.google?.accounts?.id) {
-    setTimeout(initGoogleSignIn, 150);
+    googleSigninLoadAttempts += 1;
+    if (googleSigninLoadAttempts < 40) {
+      setTimeout(initGoogleSignIn, 150);
+    } else {
+      googleSigninSlot.textContent = 'Google sign-in could not load. Please use Apple or email for now.';
+      googleSigninSlot.setAttribute('role', 'status');
+    }
     return;
   }
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-  if (!clientId) {
-    console.warn('[Google sign-in] VITE_GOOGLE_CLIENT_ID is not configured.');
-    googleSigninSlot.textContent = 'Google sign-in is temporarily unavailable.';
+  if (!clientId?.endsWith('.apps.googleusercontent.com')) {
+    console.warn('[Google sign-in] Add the Google OAuth Web client ID to VITE_GOOGLE_CLIENT_ID.');
+    googleSigninSlot.textContent = 'Google sign-in needs a valid Web client ID. Please use Apple or email for now.';
+    googleSigninSlot.setAttribute('role', 'status');
     return;
   }
 
@@ -757,8 +765,17 @@ async function initGoogleSignIn() {
       if (!credential) return;
       googleSigninSlot.style.pointerEvents = 'none';
       try {
-        const { error } = await signInWithGoogle(credential, nonce);
-        if (error) setAuthMessage(error.message, true);
+        const { data, error } = await signInWithGoogle(credential, nonce);
+        if (error) {
+          setAuthMessage(error.message, true);
+          return;
+        }
+        const session = data?.session || await getSession();
+        if (!session?.user) {
+          setAuthMessage('Google did not create a sign-in session. Please try again or use Apple or email.', true);
+          return;
+        }
+        updateAccountUI(session);
       } catch (err) {
         setAuthMessage(err?.message || 'Google sign-in is unavailable right now.', true);
       } finally {
@@ -767,11 +784,12 @@ async function initGoogleSignIn() {
     },
   });
   window.google.accounts.id.renderButton(googleSigninSlot, {
-    theme: 'outline',
+    theme: 'filled_black',
     size: 'large',
     text: 'continue_with',
     shape: 'rectangular',
-    width: Math.min(400, Math.max(200, Math.floor(googleSigninSlot.getBoundingClientRect().width))),
+    logo_alignment: 'center',
+    width: Math.min(400, Math.max(120, Math.floor(googleSigninSlot.getBoundingClientRect().width))),
   });
 }
 
@@ -937,28 +955,6 @@ getSession().then(updateAccountUI);
 // updateAccountUI itself (which reruns on every auth change, not just
 // once at load — that would double-count a login as a second page view).
 getSession().then((session) => trackPageView('home', session?.user?.id ?? null));
-
-// Dev-only convenience: auto-signs in with a local test account so
-// previewing the app while developing doesn't require logging in by hand
-// every time the dev server restarts. import.meta.env.DEV is a build-time
-// constant Vite inlines as the literal `false` in a production build (via
-// `vite build`), so this entire block is dead code there — not a runtime
-// check that could misfire in production, structurally unreachable outside
-// `vite dev`. Both env vars are optional; with neither set (the default),
-// this does nothing and login works exactly as normal.
-if (import.meta.env.DEV) {
-  const devEmail = import.meta.env.VITE_DEV_AUTO_LOGIN_EMAIL;
-  const devPassword = import.meta.env.VITE_DEV_AUTO_LOGIN_PASSWORD;
-  if (devEmail && devPassword) {
-    getSession().then((session) => {
-      if (session) return; // already logged in — don't fight an existing session
-      signInWithPassword(devEmail, devPassword).then(({ error }) => {
-        if (error) console.warn('[dev auto-login] sign-in failed:', error.message);
-        else console.info('[dev auto-login] signed in as', devEmail);
-      });
-    });
-  }
-}
 
 const resetPasswordModal = document.getElementById('reset-password-modal');
 const resetPasswordForm = document.getElementById('reset-password-form');
